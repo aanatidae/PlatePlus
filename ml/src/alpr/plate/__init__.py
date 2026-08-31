@@ -1,0 +1,1 @@
+"""Plate crop extraction and normalization modules."""

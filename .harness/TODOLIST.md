@@ -47,14 +47,14 @@ Status legend:
 ## OCR And Plate Processing
 
 - [x] Decide OCR engine selection criteria.
-- [ ] Select OCR engine.
-- [ ] Ask user before installing OCR dependencies.
-- [ ] Implement plate crop extraction from YOLO detections.
-- [ ] Implement OCR recognizer service.
-- [ ] Implement Malaysian plate text normalization.
-- [ ] Define detection and OCR confidence thresholds.
-- [ ] Prevent low-confidence recognition from successful automatic charging.
-- [ ] Create OCR ground truth strategy, likely from filenames plus manual correction.
+- [x] Select OCR engine.
+- [x] Ask user before installing OCR dependencies.
+- [x] Implement plate crop extraction from YOLO detections.
+- [x] Implement OCR recognizer service.
+- [x] Implement Malaysian plate text normalization.
+- [x] Define detection and OCR confidence thresholds.
+- [x] Prevent low-confidence recognition from successful automatic charging.
+- [x] Create OCR ground truth strategy, likely from filenames plus manual correction.
 - [ ] Evaluate OCR recognition accuracy.
 
 ## Backend And Database
