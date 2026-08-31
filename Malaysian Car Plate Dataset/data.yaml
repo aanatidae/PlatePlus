@@ -1,0 +1,6 @@
+path: /content/drive/Othercomputers/My Laptop/labeling.v1i.yolov8
+train: /content/drive/Othercomputers/My Laptop/labeling.v1i.yolov8/train/images
+val: /content/drive/Othercomputers/My Laptop/labeling.v1i.yolov8/val/images
+
+nc: 2
+names: ['car', 'car plate']
