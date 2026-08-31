@@ -47,3 +47,64 @@ samples/plate_001.jpg,BKV1234
 Split this curated data into development and final held-out sets. Compare
 normalized OCR output against normalized ground truth, report exact-match
 accuracy, and retain failure samples for the capstone report.
+
+## Local Evaluation Commands
+
+Generate local review crops and OCR candidates from the held-out set:
+
+```powershell
+ml/.venv/Scripts/python.exe scripts/generate_ocr_review_set.py `
+  --images-dir ml/datasets/generated/car_plate_yolo/test/images `
+  --model models/trained/car_plate_yolo_best.pt `
+  --output-dir ml/evaluation/review
+```
+
+Enter visually verified text in `ml/evaluation/ocr_ground_truth_template.csv`, then
+calculate exact-match accuracy and retain result rows for the capstone report:
+
+```powershell
+ml/.venv/Scripts/python.exe scripts/evaluate_ocr_accuracy.py `
+  --ground-truth ml/evaluation/ocr_ground_truth_template.csv `
+  --candidates ml/evaluation/review/ocr_candidates.csv `
+  --output-dir ml/evaluation/results
+```
+
+## Held-Out Evaluation Result
+
+The first OCR baseline was evaluated against 44 manually verified plate-text labels
+from the held-out YOLO test split. The workflow used the trained `car plate` YOLO
+model to generate each crop, then EasyOCR with the uppercase alphanumeric
+allow-list. Both the OCR output and the ground truth were normalized before
+comparison.
+
+| Measure | Result |
+| --- | --- |
+| Evaluated images | 44 |
+| Exact matches | 15 |
+| Exact-match OCR accuracy | 34.1% |
+| Failures | 29 |
+
+This result does not meet the 80% prototype target. The dominant observed failure
+modes are omitted prefix/suffix characters and confusion between visually similar
+letters and digits. Detection confidence was generally high, so the immediate
+improvement work should focus on crop preprocessing and plate-specific OCR
+rather than detector retraining.
+
+The verified label CSV and generated per-image results remain local evaluation
+artifacts. The reusable commands above regenerate the candidates and metric.
+
+## PaddleOCR Comparison
+
+PaddleOCR was evaluated using the same 44 manually verified held-out images,
+YOLO-generated crops, normalization policy, and exact-match metric as EasyOCR.
+
+| Engine | Exact matches | Exact-match accuracy |
+| --- | ---: | ---: |
+| EasyOCR baseline | 15 / 44 | 34.1% |
+| PaddleOCR | 37 / 44 | 84.1% |
+
+PaddleOCR meets the 80% prototype target on this evaluated set and is the selected
+engine for the next integration stage. Its remaining seven errors are partial reads
+or visually similar character substitutions. Because this set was used to compare
+engines, future preprocessing tuning must use a separate labeled development set;
+keep this set unchanged for confirmation only.

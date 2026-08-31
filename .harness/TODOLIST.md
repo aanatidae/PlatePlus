@@ -55,7 +55,7 @@ Status legend:
 - [x] Define detection and OCR confidence thresholds.
 - [x] Prevent low-confidence recognition from successful automatic charging.
 - [x] Create OCR ground truth strategy, likely from filenames plus manual correction.
-- [ ] Evaluate OCR recognition accuracy.
+- [x] Evaluate OCR recognition accuracy.
 
 ## Backend And Database
 
@@ -147,7 +147,7 @@ Status legend:
 - [ ] Add end-to-end system test for the main toll event.
 - [ ] Add UI tests for dashboard readability and responsive behavior.
 - [x] Record ML detection metrics.
-- [ ] Record OCR accuracy metrics.
+- [x] Record OCR accuracy metrics.
 - [ ] Record known limitations and failure cases.
 
 ## Documentation And Demo

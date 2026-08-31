@@ -275,3 +275,8 @@ Future documentation should record actual commands once implementation adds them
 - The 150-epoch Colab-trained YOLO car plate detector was downloaded as `best.pt` and moved to `models/trained/car_plate_yolo_best.pt`.
 - The user reported 93.1 percent accuracy on the test dataset.
 - The `models/` directory is ignored by Git; do not assume the binary model artifact is present after a fresh clone unless it is separately provided.
+## OCR Baseline
+
+- EasyOCR baseline: 34.1 percent exact-match accuracy (15 of 44 held-out images).
+- PaddleOCR: 84.1 percent exact-match accuracy (37 of 44) using the same YOLO-generated crops and uppercase-alphanumeric normalization.
+- PaddleOCR is now selected for the next integration stage and meets the 80 percent prototype target on this set. Use PaddlePaddle 3.2.x on CPU because 3.3.x has a known oneDNN inference regression. Preserve this test set; future tuning requires a separate labeled development set.

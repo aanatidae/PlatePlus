@@ -39,3 +39,10 @@ Malaysian Car Plate Dataset/**/labels.cache
 ml/datasets/generated/
 *.egg-info/
 ml/datasets/*.zip
+
+# Local OCR review crops, contact sheets, and generated evaluation outputs
+/ml/evaluation/review/
+/ml/evaluation/results/
+ml/evaluation/ocr_ground_truth_template.csv
+ml/evaluation/paddleocr_review/
+ml/evaluation/paddleocr_results/

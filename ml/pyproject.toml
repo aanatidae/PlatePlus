@@ -22,6 +22,10 @@ yolo = [
 ocr = [
   "easyocr>=1.7,<2.0"
 ]
+paddleocr = [
+  "paddlepaddle>=3.2,<3.3",
+  "paddleocr>=3.0,<4.0"
+]
 dev = [
   "pytest>=8.0,<9.0",
   "ruff>=0.6,<1.0"
