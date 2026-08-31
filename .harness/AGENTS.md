@@ -73,7 +73,7 @@ Annotation format:
 
 - Label files are YOLO-style normalized coordinates.
 - Many label lines contain more than five fields, which indicates YOLO segmentation polygon annotations rather than plain bounding-box-only detection labels.
-- Some lines contain exactly five fields, so future training code must verify whether the selected YOLO task should be segmentation or detection and whether conversion to boxes is needed.
+- Dataset validation confirmed the source labels are compatible with a YOLO detection workflow after filtering `car plate` annotations, remapping class `1` to class `0`, and converting polygon annotations to bounding boxes for OCR cropping.
 - Class distribution observed from labels:
   - Train: class `1` has 511 objects; class `0` has 441 objects.
   - Validation: class `1` has 95 objects; class `0` has 95 objects.
@@ -253,7 +253,7 @@ Future documentation should record actual commands once implementation adds them
 - The workspace is dataset-only, so the application must be scaffolded from scratch unless code is added later.
 - The dataset `data.yaml` contains stale absolute paths and must be corrected before training.
 - The dataset appears to mix YOLO segmentation-style polygon labels and some five-field labels; training task selection and label compatibility must be verified.
-- The dataset has no test split, only train and validation; future evaluation should create or reserve an independent test split.
+- The source dataset has no test split, so `ml/datasets/car_plate_test_manifest.txt` reserves a deterministic held-out test subset from the original validation split.
 - OCR ground truth is not explicitly present as separate text labels; plate text may need to be inferred from filenames or manually curated for OCR evaluation.
 - Full YOLO training may require GPU, substantial time, and dependency/model downloads; ask before starting.
 - PostgreSQL setup can slow demo readiness if local database configuration is not documented early.
@@ -269,3 +269,9 @@ Future documentation should record actual commands once implementation adds them
 - Preserve modular boundaries so ML, OCR, traffic simulation, pricing, backend, database, and frontend can change independently.
 - Do not imply simulated traffic or toll payments are real.
 - Do not use real vehicle-owner data.
+
+## Latest Model Artifact
+
+- The 150-epoch Colab-trained YOLO car plate detector was downloaded as `best.pt` and moved to `models/trained/car_plate_yolo_best.pt`.
+- The user reported 93.1 percent accuracy on the test dataset.
+- The `models/` directory is ignored by Git; do not assume the binary model artifact is present after a fresh clone unless it is separately provided.

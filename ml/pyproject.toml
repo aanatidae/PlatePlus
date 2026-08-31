@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "capstone-alpr-ml"
 version = "0.1.0"
 description = "ML and OCR pipeline code for Malaysian license plate recognition."
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
   "opencv-python>=4.10,<5.0",
   "numpy>=1.26,<3.0",

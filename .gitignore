@@ -21,7 +21,7 @@ coverage/
 runs/
 outputs/
 artifacts/
-models/
+/models/
 *.pt
 *.onnx
 *.engine
@@ -35,3 +35,7 @@ desktop.ini
 
 # Keep the dataset in the workspace but ignore generated YOLO cache files.
 Malaysian Car Plate Dataset/**/labels.cache
+# Generated prepared datasets and validation outputs
+ml/datasets/generated/
+*.egg-info/
+ml/datasets/*.zip

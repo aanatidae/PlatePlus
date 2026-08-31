@@ -32,17 +32,17 @@ Status legend:
 
 ## Dataset And YOLO
 
-- [ ] Clean or ignore generated files such as `desktop.ini` and label cache files.
-- [ ] Fix or generate a local YOLO `data.yaml`.
-- [ ] Verify whether labels should be trained as YOLO detection boxes or segmentation polygons.
+- [x] Clean or ignore generated files such as `desktop.ini` and label cache files.
+- [x] Fix or generate a local YOLO `data.yaml`.
+- [x] Verify whether labels should be trained as YOLO detection boxes or segmentation polygons.
 - [x] Decide whether to train both `car` and `car plate` classes or only `car plate`.
-- [ ] Create or reserve an independent test split.
-- [ ] Add dataset validation script.
-- [ ] Add training configuration.
-- [ ] Ask user before installing ML dependencies or downloading base weights.
-- [ ] Train YOLO model from the Malaysian dataset.
-- [ ] Evaluate detection precision, recall, and F1 score.
-- [ ] Export trained model for inference.
+- [x] Create or reserve an independent test split.
+- [x] Add dataset validation script.
+- [x] Add training configuration.
+- [x] Ask user before installing ML dependencies or downloading base weights.
+- [x] Train YOLO model from the Malaysian dataset.
+- [x] Evaluate detection precision, recall, and F1 score.
+- [x] Export trained model for inference.
 
 ## OCR And Plate Processing
 
@@ -146,7 +146,7 @@ Status legend:
 - [ ] Add PostgreSQL integration tests for database/API workflows.
 - [ ] Add end-to-end system test for the main toll event.
 - [ ] Add UI tests for dashboard readability and responsive behavior.
-- [ ] Record ML detection metrics.
+- [x] Record ML detection metrics.
 - [ ] Record OCR accuracy metrics.
 - [ ] Record known limitations and failure cases.
 

@@ -1,0 +1,15 @@
+# Generated dataset config for the one-class Malaysian license plate detector.
+# Create the prepared dataset with:
+#   python scripts/prepare_car_plate_yolo_dataset.py --write-prepared-dataset
+#
+# The preparation step filters source class 1 (`car plate`), remaps it to class 0,
+# and converts polygon labels to detection boxes for plate cropping.
+
+path: D:/Capstone Project/ml/datasets/generated/car_plate_yolo
+train: train/images
+val: val/images
+test: test/images
+
+nc: 1
+names:
+  0: car plate

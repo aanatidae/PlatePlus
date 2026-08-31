@@ -1,0 +1,20 @@
+# YOLO training configuration for the first still-image car plate detector prototype.
+# Do not run training before user approval because it may download base weights
+# and can require substantial compute time.
+
+task: detect
+mode: train
+model: models/base/yolo11n.pt
+data: ml/configs/car_plate_data.yaml
+epochs: 150
+imgsz: 640
+batch: 16
+patience: 20
+seed: 20260831
+project: runs/car_plate_yolo
+name: yolov11n_car_plate_detection
+exist_ok: false
+
+# The first prototype only needs the license plate crop region.
+classes:
+  - 0
