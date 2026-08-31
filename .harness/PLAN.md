@@ -8,7 +8,7 @@ This means the project should be planned as a new modular capstone application u
 
 ## Phase 1: Repository And Project Foundation
 
-- Establish source control if the user wants Git tracking.
+- Establish source control when the user gives approval to begin project foundation work.
 - Create a clear project structure for backend, frontend, ML, scripts, tests, and documentation.
 - Add environment configuration conventions.
 - Document setup, launch, test, migration, and seed commands as they are introduced.
@@ -18,6 +18,7 @@ This means the project should be planned as a new modular capstone application u
 
 - Validate the `Malaysian Car Plate Dataset` annotations.
 - Decide whether the YOLO task is detection or segmentation based on annotation compatibility and product needs.
+- Focus the detector on the `car plate` class only for the first prototype.
 - Generate a local YOLO data configuration with workspace-relative paths.
 - Create or reserve a true test split because the current dataset has only train and validation splits.
 - Train a YOLO model from the Malaysian dataset after user approval for dependencies/downloads/training.
@@ -26,10 +27,11 @@ This means the project should be planned as a new modular capstone application u
 
 ## Phase 3: License Plate Recognition Pipeline
 
-- Implement image/frame ingestion for uploaded images and prerecorded video frames.
+- Implement still-image ingestion first.
+- Defer prerecorded video-frame processing until after the still-image prototype works.
 - Run YOLO inference to detect car plates.
 - Crop or extract detected plate regions.
-- Integrate OCR for plate text recognition.
+- Select and integrate the OCR engine based on the easiest reliable local setup.
 - Normalize OCR text for Malaysian plate matching.
 - Preserve detection confidence and OCR confidence.
 - Reject or flag low-confidence recognition instead of allowing automatic successful charges.
@@ -37,7 +39,7 @@ This means the project should be planned as a new modular capstone application u
 ## Phase 4: Backend And PostgreSQL
 
 - Build a FastAPI backend unless future constraints justify another backend.
-- Set up PostgreSQL as the required normal development and demo database.
+- Set up Docker-based PostgreSQL as the required normal development and demo database.
 - Prefer a separate PostgreSQL test database for integration tests.
 - Create database models and migrations for admins, users/accounts, vehicles, transactions, traffic records, toll prices, and detection records.
 - Seed synthetic users, registered vehicles, balances, and one demo admin account.

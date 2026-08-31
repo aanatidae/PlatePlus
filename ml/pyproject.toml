@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "capstone-alpr-ml"
+version = "0.1.0"
+description = "ML and OCR pipeline code for Malaysian license plate recognition."
+requires-python = ">=3.11"
+dependencies = [
+  "opencv-python>=4.10,<5.0",
+  "numpy>=1.26,<3.0",
+  "pillow>=10.0,<12.0",
+  "pydantic>=2.8,<3.0",
+  "pyyaml>=6.0,<7.0"
+]
+
+[project.optional-dependencies]
+yolo = [
+  "ultralytics>=8.3,<9.0"
+]
+ocr = []
+dev = [
+  "pytest>=8.0,<9.0",
+  "ruff>=0.6,<1.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["alpr*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

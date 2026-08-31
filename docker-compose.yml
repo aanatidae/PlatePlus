@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: capstone-alpr-postgres
+    environment:
+      POSTGRES_DB: capstone_alpr
+      POSTGRES_USER: capstone_user
+      POSTGRES_PASSWORD: capstone_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U capstone_user -d capstone_alpr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: capstone-alpr-postgres-test
+    environment:
+      POSTGRES_DB: capstone_alpr_test
+      POSTGRES_USER: capstone_user
+      POSTGRES_PASSWORD: capstone_password
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U capstone_user -d capstone_alpr_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

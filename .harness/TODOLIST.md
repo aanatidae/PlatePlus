@@ -23,19 +23,19 @@ Status legend:
 
 ## Project Foundation
 
-- [ ] Ask user whether to initialize Git.
-- [ ] Create source layout for backend, frontend, ML, scripts, tests, and docs.
-- [ ] Add root project README.
-- [ ] Add environment variable template.
-- [ ] Add dependency manifests after selecting exact tooling.
-- [ ] Document setup commands after manifests exist.
+- [x] Ask user whether to initialize Git.
+- [x] Create source layout for backend, frontend, ML, scripts, tests, and docs.
+- [x] Add root project README.
+- [x] Add environment variable template.
+- [x] Add dependency manifests after selecting exact tooling.
+- [x] Document setup commands after manifests exist.
 
 ## Dataset And YOLO
 
 - [ ] Clean or ignore generated files such as `desktop.ini` and label cache files.
 - [ ] Fix or generate a local YOLO `data.yaml`.
 - [ ] Verify whether labels should be trained as YOLO detection boxes or segmentation polygons.
-- [ ] Decide whether to train both `car` and `car plate` classes or only `car plate`.
+- [x] Decide whether to train both `car` and `car plate` classes or only `car plate`.
 - [ ] Create or reserve an independent test split.
 - [ ] Add dataset validation script.
 - [ ] Add training configuration.
@@ -46,6 +46,7 @@ Status legend:
 
 ## OCR And Plate Processing
 
+- [x] Decide OCR engine selection criteria.
 - [ ] Select OCR engine.
 - [ ] Ask user before installing OCR dependencies.
 - [ ] Implement plate crop extraction from YOLO detections.
@@ -59,7 +60,8 @@ Status legend:
 ## Backend And Database
 
 - [ ] Scaffold FastAPI backend.
-- [ ] Configure PostgreSQL for normal development and demo use.
+- [x] Decide PostgreSQL deployment approach.
+- [ ] Configure Docker-based PostgreSQL for normal development and demo use.
 - [ ] Configure separate PostgreSQL test database for integration tests.
 - [ ] Add database migration tooling.
 - [ ] Create admin model/table.

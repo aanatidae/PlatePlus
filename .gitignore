@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+
+# Local data, model outputs, and generated artifacts
+runs/
+outputs/
+artifacts/
+models/
+*.pt
+*.onnx
+*.engine
+*.cache
+
+# OS/editor files
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# Keep the dataset in the workspace but ignore generated YOLO cache files.
+Malaysian Car Plate Dataset/**/labels.cache

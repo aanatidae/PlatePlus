@@ -11,10 +11,10 @@
 ## Current Repository State
 
 - Workspace root: `D:/Capstone Project`
-- Git status: `git status --short` reports `fatal: not a git repository`; no `.git` directory was found at the workspace root.
+- Git repository metadata now exists at the workspace root. Do not commit, push, or open a pull request until the user gives the green light.
 - The workspace currently contains the dataset folder only:
   - `D:/Capstone Project/Malaysian Car Plate Dataset`
-- No application source code, package manifests, backend, frontend, database migrations, tests, or launch scripts were found outside the dataset folder during repository analysis.
+- Project foundation files now exist, including root documentation, `.env.example`, `.gitignore`, `docker-compose.yml`, backend and ML Python manifests, and a frontend package manifest. Feature implementation is still pending.
 
 ## Git Attribution
 
@@ -22,6 +22,22 @@
 - Codex must never appear as a Git author, committer, co-author, or GitHub contributor for this repository.
 - Attribute repository commits to the actual human contributor or maintainer responsible for the change unless the user explicitly requests a different author.
 - If a generated commit accidentally uses an assistant identity, tool identity, or any non-human identity, rewrite it before pushing so GitHub contributors reflect the correct human account.
+
+## Repository and Publishing Notes
+
+- The user intends to review the harness files first.
+- After approval, future work may be pushed to: https://github.com/aanatidae/capstoneproject
+- Do not push, commit, or open a pull request until the user gives the green light.
+
+## Current User Decisions
+
+- The next work session should start with the Project Foundation items in `.harness/TODOLIST.md`.
+- Initialize Git when the user gives approval to begin project foundation work.
+- Prioritize the YOLO/OCR pipeline before backend, dashboard, and broader app integration.
+- Train/use the detector for `car plate` only, not the broader `car` class.
+- Plan for Docker-based PostgreSQL.
+- Select the OCR engine based on the easiest reliable local setup.
+- Support still-image processing first; video-frame processing can come later.
 
 ## Dataset Findings
 
@@ -220,7 +236,7 @@ Treat these as development targets, not guaranteed outcomes.
 
 ## Launch And Test Commands
 
-No launch or test commands exist yet because no application code, manifests, or scripts were found.
+Foundation launch and setup commands are now documented in `README.md` and `docs/SETUP.md`. No dependencies have been installed and no app has been run yet.
 
 Future documentation should record actual commands once implementation adds them, for example:
 
