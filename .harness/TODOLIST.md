@@ -59,16 +59,17 @@ Status legend:
 
 ## Local Webcam Real-Time ALPR
 
-- [ ] Decide and document the webcam capture approach for this laptop (browser camera API, backend OpenCV capture, or another local-only adapter).
-- [ ] Implement webcam permission, start, stop, and camera-unavailable handling.
-- [ ] Implement configurable frame sampling/rate limiting and bounded frame processing.
-- [ ] Connect sampled webcam frames to YOLO detection, crop extraction, PaddleOCR, normalization, and confidence gates.
-- [ ] Display a live preview with detection boxes, recognized plate, confidence, and simulated-only status.
-- [ ] Keep raw frames and crops ephemeral by default.
-- [~] Implement per-session duplicate recognition/charge cooldown or idempotency protection (session guard added; backend transaction integration remains pending).
-- [ ] Handle missing model artifact and inference failures without recording a successful charge.
-- [ ] Add webcam lifecycle, frame-processing, duplicate-protection, and failure-state tests.
-- [ ] Document model transfer and webcam setup for this laptop.
+- [x] Decide and document the webcam capture approach for this laptop: browser Camera API preview with sampled local FastAPI frame processing.
+- [x] Implement webcam permission, start, stop, and camera-unavailable handling.
+- [x] Implement configurable frame sampling/rate limiting and bounded frame processing.
+- [x] Connect sampled webcam frames to YOLO detection, crop extraction, PaddleOCR, normalization, and confidence gates.
+- [x] Display a live preview with detection boxes, recognized plate, confidence, and simulated-only status.
+- [x] Keep raw frames and crops ephemeral by default.
+- [x] Implement per-session duplicate recognition/charge cooldown protection; database transaction idempotency remains a later toll-payment responsibility.
+- [x] Handle missing model artifact and inference failures without recording a successful charge.
+- [x] Add webcam lifecycle, frame-processing, duplicate-protection, and failure-state tests (17 ML tests and 6 backend webcam tests passing).
+- [x] Document model transfer and webcam setup for this laptop.
+- [~] Complete final physical webcam permission/inference verification in the persisted local browser tab.
 
 ## Backend And Database
 

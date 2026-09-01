@@ -4,7 +4,7 @@
 
 The workspace currently contains the selected dataset only. There is no existing backend, frontend, database schema, test suite, launch script, or Git repository metadata at the workspace root.
 
-This means the project should be planned as a new modular capstone application using the local `Malaysian Car Plate Dataset` as the starting ML asset.
+The project now has a completed ML/OCR baseline, a local webcam implementation, and initial FastAPI/React application surfaces. Database-backed business workflows and the broader administrator dashboard remain pending.
 
 ## Phase 1: Repository And Project Foundation
 
@@ -27,18 +27,11 @@ This means the project should be planned as a new modular capstone application u
 
 ## Phase 3: License Plate Recognition Pipeline And Local Webcam
 
-- Implement this laptop's live webcam as the primary ALPR input, alongside still-image ingestion for testing and demonstration.
-- Defer prerecorded-video support until after the webcam prototype works.
-- Build a start/stop webcam session lifecycle, local preview, configurable frame sampling, and bounded processing queue suitable for CPU inference.
-- Run YOLO inference to detect car plates.
-- Crop or extract detected plate regions.
-- Select and integrate the OCR engine based on the easiest reliable local setup.
-- Normalize OCR text for Malaysian plate matching.
-- Preserve detection confidence and OCR confidence.
-- Reject or flag low-confidence recognition instead of allowing automatic successful charges.
-- Overlay detection/OCR status in the live preview and clearly label all toll and traffic information as simulated.
-- Make frames/crops ephemeral by default and handle unavailable cameras, permission denial, dropped frames, missing model weights, and inference errors safely.
-- Add session-aware cooldown/idempotency controls to prevent repeated observations of one plate from causing duplicate simulated charges.
+- The local webcam implementation uses a browser preview and a FastAPI endpoint for sampled JPEG frames; prerecorded-video support remains deferred.
+- The live path includes start/stop lifecycle control, configurable sampling, bounded frame upload, YOLO detection, crop extraction, PaddleOCR, normalization, confidence gates, preview overlay, and simulated-only status.
+- Frames and crops remain ephemeral by default. Camera permission/device errors, unavailable model weights, frame-size limits, and inference errors fail safely without a charge-eligible result.
+- A per-session cooldown prevents repeated accepted plate recognitions. Database-level transaction idempotency remains part of the later simulated toll-payment phase.
+- Complete the final physical browser-camera test once the retained permission prompt is accepted; all code-level and automated checks have passed.
 
 ## Phase 4: Backend And PostgreSQL
 

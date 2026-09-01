@@ -10,11 +10,10 @@
 
 ## Current Repository State
 
-- Workspace root: `D:/Capstone Project`
-- Git repository metadata now exists at the workspace root. Do not commit, push, or open a pull request until the user gives the green light.
-- The workspace currently contains the dataset folder only:
-  - `D:/Capstone Project/Malaysian Car Plate Dataset`
-- Project foundation files now exist, including root documentation, `.env.example`, `.gitignore`, `docker-compose.yml`, backend and ML Python manifests, and a frontend package manifest. Feature implementation is still pending.
+- Workspace root: `C:/Users/SawJu/OneDrive/Documents/ChatGPT/Capstone Project 2`
+- Git remote: `https://github.com/aanatidae/capstoneproject`; `main` tracks `origin/main`. Do not commit, push, or open a pull request unless the user gives the green light.
+- The workspace contains the Malaysian car-plate dataset, the ML/OCR pipeline, a local webcam FastAPI API, and a React webcam UI.
+- Python 3.12, Node.js LTS, backend/ML dependencies, and frontend dependencies are installed locally. Docker services have not been started.
 
 ## Git Attribution
 
@@ -38,6 +37,7 @@
 - Plan for Docker-based PostgreSQL.
 - Select the OCR engine based on the easiest reliable local setup.
 - Support this laptop's webcam as the primary live ALPR input. Still-image upload remains useful for testing and demonstration. Prerecorded-video support can come later.
+- Use a browser-camera preview with local FastAPI frame processing. Frames are sampled at a configurable interval and are not retained by default.
 
 ## Dataset Findings
 
@@ -248,7 +248,7 @@ Treat these as development targets, not guaranteed outcomes.
 
 ## Launch And Test Commands
 
-Foundation launch and setup commands are now documented in `README.md` and `docs/SETUP.md`. No dependencies have been installed and no app has been run yet.
+Local webcam setup and launch commands are documented in `docs/SETUP.md`. The FastAPI health endpoint and frontend production build have been verified. The final browser hardware-camera test is pending completion of the persisted permission prompt.
 
 Future documentation should record actual commands once implementation adds them, for example:
 
@@ -293,3 +293,4 @@ Future documentation should record actual commands once implementation adds them
 - PaddleOCR: 84.1 percent exact-match accuracy (37 of 44) using the same YOLO-generated crops and uppercase-alphanumeric normalization.
 - PaddleOCR is now selected for the next integration stage and meets the 80 percent prototype target on this set. Use PaddlePaddle 3.2.x on CPU because 3.3.x has a known oneDNN inference regression. Preserve this test set; future tuning requires a separate labeled development set.
 - The trained model remains on the user's home PC. Before webcam inference can run on this laptop, the same `car_plate_yolo_best.pt` artifact must be transferred locally to `models/trained/car_plate_yolo_best.pt`; it must remain Git-ignored.
+- The trained model is now present locally at `models/trained/car_plate_yolo_best.pt` and remains Git-ignored.
