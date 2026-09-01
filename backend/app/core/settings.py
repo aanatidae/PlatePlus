@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     )
     demo_admin_email: str = "admin@example.test"
     demo_admin_password: str = "change-me"
+    auth_token_secret: str = "local-development-secret-change-before-sharing"
+    auth_access_token_minutes: int = 60
     yolo_model_path: Path = Path("../models/trained/car_plate_yolo_best.pt")
     detection_confidence_threshold: float = 0.50
     ocr_confidence_threshold: float = 0.70

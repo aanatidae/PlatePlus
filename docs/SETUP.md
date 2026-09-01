@@ -25,7 +25,7 @@ alembic upgrade head
 python -m app.db.seed
 ```
 
-The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a demo administrator identity. Authentication and the administrator password hash are intentionally configured in the later authentication phase.
+The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a password-hashed demo administrator. Set `DEMO_ADMIN_PASSWORD` and `AUTH_TOKEN_SECRET` to local, non-default values before any shared demo. Sign in through `POST /api/auth/login` and use the returned bearer token for `/api/data/*` routes.
 
 Run PostgreSQL API integration tests against only the temporary test database:
 

@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.auth import require_admin
 from app.db.session import get_db
 from app.models import (
     Account,
@@ -39,7 +40,9 @@ from app.schemas.database import (
     VehicleRead,
 )
 
-router = APIRouter(prefix="/api/data", tags=["database"])
+router = APIRouter(
+    prefix="/api/data", tags=["database"], dependencies=[Depends(require_admin)]
+)
 ModelT = TypeVar("ModelT")
 DatabaseSession = Annotated[Session, Depends(get_db)]
 

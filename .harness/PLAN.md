@@ -6,7 +6,7 @@ Resolve the workspace root as the directory containing `.harness`; it is normall
 
 The repository is initialized and tracks `origin/main`. It contains the Malaysian car-plate dataset, a trained local YOLO car-plate model (Git-ignored), ML/OCR processing, FastAPI webcam endpoints, a React/TypeScript webcam UI, unit tests, and setup documentation.
 
-Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, and the backend/PostgreSQL persistence foundation are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Admin authentication, database-backed business workflows, simulated toll processing, traffic/pricing, the administrator dashboard, and end-to-end integration remain pending.
+Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, and backend administrator login are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Dashboard login UI, database-backed business workflows, simulated toll processing, traffic/pricing, the administrator dashboard, and end-to-end integration remain pending.
 
 ## Phase 1: Repository And Project Foundation
 

@@ -10,6 +10,8 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.settings import Settings
 from app.db.session import get_db
+from app.models import Admin
+from app.services.auth.service import hash_password
 
 
 @pytest.fixture(scope="session")
@@ -49,13 +51,34 @@ def database(test_engine):
 def database_app(database):
     from fastapi import FastAPI
 
-    from app.api.database import router
+    from app.api.auth import router as auth_router
+    from app.api.database import router as database_router
 
     app = FastAPI()
-    app.include_router(router)
+    app.include_router(auth_router)
+    app.include_router(database_router)
 
     def override_database():
         yield database
 
     app.dependency_overrides[get_db] = override_database
     return app
+
+
+@pytest.fixture()
+def admin_auth_headers(database, database_app) -> dict[str, str]:
+    from fastapi.testclient import TestClient
+
+    database.add(
+        Admin(
+            email="admin@example.test",
+            display_name="Test Administrator",
+            password_hash=hash_password("test-password"),
+        )
+    )
+    database.flush()
+    response = TestClient(database_app).post(
+        "/api/auth/login", json={"email": "admin@example.test", "password": "test-password"}
+    )
+    assert response.status_code == 200, response.text
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}

@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app.core.settings import Settings
 from app.db.session import SessionLocal
 from app.models import Account, Admin, TollPrice, TrafficRecord, User, Vehicle
+from app.services.auth.service import hash_password
 
 
 def seed_demo_data() -> None:
@@ -15,7 +16,15 @@ def seed_demo_data() -> None:
     with SessionLocal.begin() as database:
         admin = database.scalar(select(Admin).where(Admin.email == settings.demo_admin_email))
         if admin is None:
-            database.add(Admin(email=settings.demo_admin_email, display_name="Demo Administrator"))
+            database.add(
+                Admin(
+                    email=settings.demo_admin_email,
+                    display_name="Demo Administrator",
+                    password_hash=hash_password(settings.demo_admin_password),
+                )
+            )
+        elif admin.password_hash is None:
+            admin.password_hash = hash_password(settings.demo_admin_password)
 
         demo_people = (
             (

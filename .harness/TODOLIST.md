@@ -92,11 +92,11 @@ Status legend:
 
 ## Basic Admin Authentication
 
-- [ ] Implement seeded admin login.
-- [ ] Hash seeded admin password securely.
+- [x] Implement seeded admin login.
+- [x] Hash seeded admin password securely.
 - [ ] Protect admin dashboard routes.
-- [ ] Protect privileged API routes.
-- [ ] Document demo credentials in the appropriate local-only setup place.
+- [x] Protect privileged API routes.
+- [x] Document demo credentials in the appropriate local-only setup place.
 
 ## Simulated Toll Payment
 

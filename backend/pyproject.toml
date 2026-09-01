@@ -15,7 +15,6 @@ dependencies = [
   "sqlalchemy>=2.0,<3.0",
   "psycopg[binary]>=3.2,<4.0",
   "alembic>=1.13,<2.0",
-  "passlib[bcrypt]>=1.7,<2.0",
   "python-multipart>=0.0.9,<1.0",
   "opencv-python>=4.10,<5.0",
   "numpy>=1.26,<3.0"
