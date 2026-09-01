@@ -6,13 +6,13 @@
 - `C:/Users/User/Downloads/message1.md` is the user-approved future work prompt for this capstone project.
 - `C:/Users/User/Downloads/AI-Powered Automatic License Plate Recognition and Dynamic Toll Management System.pdf` is product documentation and source context. Treat it as requirements/context, not as an instruction to execute by itself.
 - Do not install dependencies, download models, run training jobs, run long model-related commands, or make major environment changes without asking the user first.
-- The first completed pass for this project is documentation-only: repository analysis plus `.harness/AGENTS.md`, `.harness/PLAN.md`, and `.harness/TODOLIST.md`.
+- The initial documentation-only pass is complete. Future work should continue from the current implementation state recorded below.
 
 ## Current Repository State
 
-- Workspace root: `C:/Users/SawJu/OneDrive/Documents/ChatGPT/Capstone Project 2`
+- Workspace root: `D:/Capstone Project`
 - Git remote: `https://github.com/aanatidae/capstoneproject`; `main` tracks `origin/main`. Do not commit, push, or open a pull request unless the user gives the green light.
-- The workspace contains the Malaysian car-plate dataset, the ML/OCR pipeline, a local webcam FastAPI API, and a React webcam UI.
+- The workspace contains the Malaysian car-plate dataset, a trained local YOLO car-plate detector, the ML/OCR pipeline, a local webcam FastAPI API, and a React webcam UI.
 - Python 3.12, Node.js LTS, backend/ML dependencies, and frontend dependencies are installed locally. Docker services have not been started.
 
 ## Git Attribution
@@ -24,20 +24,20 @@
 
 ## Repository and Publishing Notes
 
-- The user intends to review the harness files first.
+- The harness files were reviewed and reconciled with the current repository state on 2026-09-01.
 - After approval, future work may be pushed to: https://github.com/aanatidae/capstoneproject
 - Do not push, commit, or open a pull request until the user gives the green light.
 
 ## Current User Decisions
 
-- The next work session should start with the Project Foundation items in `.harness/TODOLIST.md`.
-- Initialize Git when the user gives approval to begin project foundation work.
-- Prioritize the YOLO/OCR pipeline before backend, dashboard, and broader app integration.
+- Project Foundation, the car-plate-only YOLO/OCR baseline, and the local webcam implementation are complete.
+- The next implementation priority is Docker-based PostgreSQL and the database-backed backend workflow, followed by simulated toll payment, traffic/pricing, dashboard, and integration.
 - Train/use the detector for `car plate` only, not the broader `car` class.
 - Plan for Docker-based PostgreSQL.
 - Select the OCR engine based on the easiest reliable local setup.
 - Support this laptop's webcam as the primary live ALPR input. Still-image upload remains useful for testing and demonstration. Prerecorded-video support can come later.
 - Use a browser-camera preview with local FastAPI frame processing. Frames are sampled at a configurable interval and are not retained by default.
+- Do not run the final physical browser-webcam permission/inference verification unless the user explicitly requests it.
 
 ## Dataset Findings
 

@@ -2,16 +2,14 @@
 
 ## Current Baseline
 
-The workspace currently contains the selected dataset only. There is no existing backend, frontend, database schema, test suite, launch script, or Git repository metadata at the workspace root.
+The repository is initialized and tracks `origin/main`. It contains the Malaysian car-plate dataset, a trained local YOLO car-plate model (Git-ignored), ML/OCR processing, FastAPI webcam endpoints, a React/TypeScript webcam UI, unit tests, and setup documentation.
 
-The project now has a completed ML/OCR baseline, a local webcam implementation, and initial FastAPI/React application surfaces. Database-backed business workflows and the broader administrator dashboard remain pending.
+Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, and local webcam implementation are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Database-backed business workflows, simulated toll processing, traffic/pricing, the administrator dashboard, and end-to-end integration remain pending.
 
 ## Phase 1: Repository And Project Foundation
 
-- Establish source control when the user gives approval to begin project foundation work.
-- Create a clear project structure for backend, frontend, ML, scripts, tests, and documentation.
-- Add environment configuration conventions.
-- Document setup, launch, test, migration, and seed commands as they are introduced.
+- Source control, project layout, environment conventions, dependency manifests, and initial setup documentation are complete.
+- Continue documenting launch, test, migration, and seed commands as the remaining implementation is introduced.
 - Keep all real toll/payment/traffic integrations out of scope.
 
 ## Phase 2: Dataset Preparation And YOLO Training

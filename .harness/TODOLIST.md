@@ -69,11 +69,11 @@ Status legend:
 - [x] Handle missing model artifact and inference failures without recording a successful charge.
 - [x] Add webcam lifecycle, frame-processing, duplicate-protection, and failure-state tests (17 ML tests and 6 backend webcam tests passing).
 - [x] Document model transfer and webcam setup for this laptop.
-- [~] Complete final physical webcam permission/inference verification in the persisted local browser tab.
+- [!] Final physical browser-webcam permission/inference verification is deferred by user instruction; do not run it without explicit approval.
 
 ## Backend And Database
 
-- [ ] Scaffold FastAPI backend.
+- [x] Scaffold FastAPI backend.
 - [x] Decide PostgreSQL deployment approach.
 - [ ] Configure Docker-based PostgreSQL for normal development and demo use.
 - [ ] Configure separate PostgreSQL test database for integration tests.
@@ -124,7 +124,7 @@ Status legend:
 
 ## Admin Dashboard
 
-- [ ] Scaffold React/TypeScript frontend.
+- [x] Scaffold React/TypeScript frontend.
 - [ ] Build admin login view.
 - [ ] Build current metrics view.
 - [ ] Build congestion chart.
