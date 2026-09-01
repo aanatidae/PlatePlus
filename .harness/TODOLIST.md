@@ -57,6 +57,19 @@ Status legend:
 - [x] Create OCR ground truth strategy, likely from filenames plus manual correction.
 - [x] Evaluate OCR recognition accuracy.
 
+## Local Webcam Real-Time ALPR
+
+- [ ] Decide and document the webcam capture approach for this laptop (browser camera API, backend OpenCV capture, or another local-only adapter).
+- [ ] Implement webcam permission, start, stop, and camera-unavailable handling.
+- [ ] Implement configurable frame sampling/rate limiting and bounded frame processing.
+- [ ] Connect sampled webcam frames to YOLO detection, crop extraction, PaddleOCR, normalization, and confidence gates.
+- [ ] Display a live preview with detection boxes, recognized plate, confidence, and simulated-only status.
+- [ ] Keep raw frames and crops ephemeral by default.
+- [~] Implement per-session duplicate recognition/charge cooldown or idempotency protection (session guard added; backend transaction integration remains pending).
+- [ ] Handle missing model artifact and inference failures without recording a successful charge.
+- [ ] Add webcam lifecycle, frame-processing, duplicate-protection, and failure-state tests.
+- [ ] Document model transfer and webcam setup for this laptop.
+
 ## Backend And Database
 
 - [ ] Scaffold FastAPI backend.
@@ -125,6 +138,7 @@ Status legend:
 ## Integration
 
 - [ ] Connect image upload to YOLO inference.
+- [ ] Connect webcam frame ingestion to YOLO inference.
 - [ ] Connect YOLO detection to plate crop extraction.
 - [ ] Connect crop extraction to OCR.
 - [ ] Connect OCR to vehicle lookup.

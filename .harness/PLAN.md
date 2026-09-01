@@ -25,16 +25,20 @@ This means the project should be planned as a new modular capstone application u
 - Evaluate detection precision, recall, and F1 score.
 - Export the trained model for application inference.
 
-## Phase 3: License Plate Recognition Pipeline
+## Phase 3: License Plate Recognition Pipeline And Local Webcam
 
-- Implement still-image ingestion first.
-- Defer prerecorded video-frame processing until after the still-image prototype works.
+- Implement this laptop's live webcam as the primary ALPR input, alongside still-image ingestion for testing and demonstration.
+- Defer prerecorded-video support until after the webcam prototype works.
+- Build a start/stop webcam session lifecycle, local preview, configurable frame sampling, and bounded processing queue suitable for CPU inference.
 - Run YOLO inference to detect car plates.
 - Crop or extract detected plate regions.
 - Select and integrate the OCR engine based on the easiest reliable local setup.
 - Normalize OCR text for Malaysian plate matching.
 - Preserve detection confidence and OCR confidence.
 - Reject or flag low-confidence recognition instead of allowing automatic successful charges.
+- Overlay detection/OCR status in the live preview and clearly label all toll and traffic information as simulated.
+- Make frames/crops ephemeral by default and handle unavailable cameras, permission denial, dropped frames, missing model weights, and inference errors safely.
+- Add session-aware cooldown/idempotency controls to prevent repeated observations of one plate from causing duplicate simulated charges.
 
 ## Phase 4: Backend And PostgreSQL
 
@@ -76,7 +80,7 @@ This means the project should be planned as a new modular capstone application u
 
 ## Phase 8: Integration
 
-- Connect image/video ingestion to detection, OCR, vehicle lookup, simulated payment, detection records, and dashboard updates.
+- Connect still-image upload and webcam-frame ingestion to detection, OCR, vehicle lookup, simulated payment, detection records, and dashboard updates.
 - Connect traffic simulation to congestion calculation, dynamic pricing, pricing records, and dashboard updates.
 - Ensure service boundaries allow detector, OCR engine, traffic simulator, pricing algorithm, backend, database, and frontend to be replaced independently.
 
@@ -85,6 +89,7 @@ This means the project should be planned as a new modular capstone application u
 - Add focused unit tests for business logic and data normalization.
 - Add integration tests using a PostgreSQL test database.
 - Add end-to-end system tests for the main demo flow.
+- Add webcam lifecycle and frame-processing tests, including duplicate-charge prevention and failure states.
 - Add UI tests for dashboard usability and responsiveness.
 - Evaluate ML detection metrics on held-out images.
 - Evaluate OCR accuracy using curated ground truth.
@@ -95,6 +100,6 @@ This means the project should be planned as a new modular capstone application u
 - Prepare a reliable local demo path.
 - Document setup from a clean machine.
 - Document PostgreSQL configuration and seed credentials.
-- Document how to run model inference and dashboard workflows.
+- Document how to transfer the local model artifact, enable this laptop's webcam, run local inference, and use dashboard workflows.
 - Document privacy, security, ethical limitations, and simulated-only scope.
 - Capture screenshots or demo evidence if needed for final submission.

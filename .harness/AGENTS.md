@@ -37,7 +37,7 @@
 - Train/use the detector for `car plate` only, not the broader `car` class.
 - Plan for Docker-based PostgreSQL.
 - Select the OCR engine based on the easiest reliable local setup.
-- Support still-image processing first; video-frame processing can come later.
+- Support this laptop's webcam as the primary live ALPR input. Still-image upload remains useful for testing and demonstration. Prerecorded-video support can come later.
 
 ## Dataset Findings
 
@@ -95,7 +95,7 @@ Prototype intent:
 
 Core product capabilities to build later:
 
-- Detect license plates from images or video frames.
+- Detect license plates from uploaded images and this laptop's live webcam frames.
 - Train a YOLO model from the local Malaysian car plate dataset.
 - Recognize plate text using OCR after detection/cropping.
 - Normalize recognized plate text before database matching.
@@ -170,7 +170,7 @@ Keep pricing thresholds and prices configurable. Do not hard-code these values a
 
 Vehicle processing:
 
-1. Vehicle image or video frame is submitted.
+1. A vehicle image is uploaded or a live frame is captured from this laptop's webcam.
 2. License plate detector locates the plate.
 3. Plate region is cropped/extracted.
 4. OCR reads the plate text.
@@ -182,6 +182,17 @@ Vehicle processing:
 10. Transaction record is stored.
 11. Detection record is stored.
 12. Dashboard data is updated.
+
+## Webcam Real-Time ALPR Requirements
+
+- The application must be able to start and stop a webcam session on the laptop running it.
+- Capture frames at a configurable interval or rate suitable for local CPU inference; do not require inference on every camera frame.
+- Run the existing YOLO `car plate` detector, crop extraction, PaddleOCR recognition, normalization, confidence gates, vehicle lookup, and simulated toll flow for eligible frames.
+- Show a live preview with detection boxes, normalized plate text, confidence/status, and clear simulated-only labels.
+- Keep raw frames and plate crops ephemeral by default. Persist only the existing detection/transaction metadata unless a future explicit retention setting is introduced.
+- Avoid duplicate simulated charges for the same vehicle observed repeatedly in one camera session. Use a configurable cooldown/idempotency key and expose the resulting status.
+- Handle unavailable cameras, permission denial, dropped frames, model-unavailable state, and inference errors without crashing the application or creating a charge.
+- Keep webcam access local to the machine running the application; do not upload webcam footage to third parties.
 
 Traffic management:
 
@@ -220,6 +231,7 @@ Future implementation should include:
 
 - Unit tests for plate normalization, congestion calculation, pricing rules, toll deduction, insufficient balance, low confidence handling, and traffic simulation determinism.
 - Integration tests for detection to OCR, OCR to vehicle lookup, vehicle/account to transaction, traffic simulation to pricing, and database to API/dashboard.
+- Integration/system tests for webcam session lifecycle, frame sampling, duplicate-charge protection, and safe camera/model error handling.
 - System tests for the end-to-end prototype.
 - UI tests for dashboard navigation, chart/table readability, responsive layout, loading states, and error states.
 - ML evaluation for detection precision, recall, F1 score, and OCR recognition accuracy.
@@ -280,3 +292,4 @@ Future documentation should record actual commands once implementation adds them
 - EasyOCR baseline: 34.1 percent exact-match accuracy (15 of 44 held-out images).
 - PaddleOCR: 84.1 percent exact-match accuracy (37 of 44) using the same YOLO-generated crops and uppercase-alphanumeric normalization.
 - PaddleOCR is now selected for the next integration stage and meets the 80 percent prototype target on this set. Use PaddlePaddle 3.2.x on CPU because 3.3.x has a known oneDNN inference regression. Preserve this test set; future tuning requires a separate labeled development set.
+- The trained model remains on the user's home PC. Before webcam inference can run on this laptop, the same `car_plate_yolo_best.pt` artifact must be transferred locally to `models/trained/car_plate_yolo_best.pt`; it must remain Git-ignored.
