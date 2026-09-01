@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from typing import Annotated
 from uuid import uuid4
 
+from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from app.core.settings import Settings
 from app.schemas.webcam import WebcamBoundingBox, WebcamFrameResult
-from app.services.detection.webcam_processor import FrameProcessorError, WebcamFrameProcessor, YoloPlateDetector
+from app.services.detection.webcam_processor import (
+    FrameProcessorError,
+    WebcamFrameProcessor,
+    YoloPlateDetector,
+)
 from app.services.detection.webcam_service import WebcamService
-from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 
 router = APIRouter(prefix="/api/webcam", tags=["webcam"])
 settings = Settings()
@@ -38,9 +43,11 @@ def stop_session(session_id: str) -> None:
 
 
 @router.post("/sessions/{session_id}/frames", response_model=WebcamFrameResult)
-async def process_frame(session_id: str, frame: UploadFile = File(...)) -> WebcamFrameResult:
+async def process_frame(session_id: str, frame: Annotated[UploadFile, File()]) -> WebcamFrameResult:
     if frame.content_type not in {"image/jpeg", "image/png", "image/webp"}:
-        raise HTTPException(status_code=415, detail="Webcam frames must be JPEG, PNG, or WebP images.")
+        raise HTTPException(
+            status_code=415, detail="Webcam frames must be JPEG, PNG, or WebP images."
+        )
     frame_bytes = await frame.read(settings.webcam_max_frame_bytes + 1)
     if len(frame_bytes) > settings.webcam_max_frame_bytes:
         raise HTTPException(status_code=413, detail="Webcam frame exceeds the local size limit.")

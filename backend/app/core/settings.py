@@ -12,6 +12,16 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
 
+    app_name: str = "AI-Powered ALPR Dynamic Toll Prototype"
+    app_env: str = "development"
+    database_url: str = (
+        "postgresql+psycopg://capstone_user:capstone_password@localhost:5432/capstone_alpr"
+    )
+    test_database_url: str = (
+        "postgresql+psycopg://capstone_user:capstone_password@localhost:5433/capstone_alpr_test"
+    )
+    demo_admin_email: str = "admin@example.test"
+    demo_admin_password: str = "change-me"
     yolo_model_path: Path = Path("../models/trained/car_plate_yolo_best.pt")
     detection_confidence_threshold: float = 0.50
     ocr_confidence_threshold: float = 0.70

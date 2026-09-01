@@ -34,7 +34,7 @@ infra/     Docker and local infrastructure configuration
 
 ## Setup Status
 
-The repository includes ML dataset preparation, plate processing, YOLO crop extraction, PaddleOCR recognition, and tests for those components. The trained model is a local, Git-ignored artifact at `models/trained/car_plate_yolo_best.pt`; it is not included in a fresh clone. Do not install dependencies, download models, start training, or start Docker services without explicit approval.
+The repository includes ML dataset preparation, plate processing, YOLO crop extraction, PaddleOCR recognition, PostgreSQL models/migrations, synthetic demo seeding, validated persistence APIs, and tests. The trained model is a local, Git-ignored artifact at `models/trained/car_plate_yolo_best.pt`; it is not included in a fresh clone. Do not install dependencies, download models, start training, or start Docker services without explicit approval.
 
 ## Current ML Baseline
 
@@ -78,7 +78,7 @@ npm run dev
 ## Current Limitations
 
 - No runnable app exists yet.
-- The backend, PostgreSQL schema/migrations, simulated toll workflow, traffic simulation, and frontend dashboard are not yet implemented.
+- The PostgreSQL persistence foundation is implemented; admin authentication, simulated toll business logic, traffic simulation, and the frontend dashboard remain pending.
 - The trained YOLO weights are intentionally ignored by Git and must be supplied locally before inference can run on a fresh clone.
 - PaddleOCR has been selected and evaluated, but dependencies/models must still be installed locally with user approval when integration begins.
-- No database migrations exist yet.
+- The initial Alembic migration creates the complete UUID-based prototype schema.

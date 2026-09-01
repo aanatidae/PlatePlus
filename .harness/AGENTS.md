@@ -12,8 +12,8 @@
 
 - Workspace root: `D:/Capstone Project`
 - Git remote: `https://github.com/aanatidae/capstoneproject`; `main` tracks `origin/main`. Do not commit, push, or open a pull request unless the user gives the green light.
-- The workspace contains the Malaysian car-plate dataset, a trained local YOLO car-plate detector, the ML/OCR pipeline, a local webcam FastAPI API, and a React webcam UI.
-- Python 3.12, Node.js LTS, backend/ML dependencies, and frontend dependencies are installed locally. Docker services have not been started.
+- The workspace contains the Malaysian car-plate dataset, a trained local YOLO car-plate detector, the ML/OCR pipeline, a local webcam FastAPI API, database models/migrations/APIs, and a React webcam UI.
+- Python 3.12.10, a recreated backend `.venv`, backend/core-ML dependencies, and Docker Desktop 29.7.2 are installed. Docker-based PostgreSQL development/test services, migrations, seed data, and integration tests have been verified locally.
 
 ## Git Attribution
 
@@ -31,7 +31,7 @@
 ## Current User Decisions
 
 - Project Foundation, the car-plate-only YOLO/OCR baseline, and the local webcam implementation are complete.
-- The next implementation priority is Docker-based PostgreSQL and the database-backed backend workflow, followed by simulated toll payment, traffic/pricing, dashboard, and integration.
+- Docker-based PostgreSQL configuration, UUID database models, Alembic migration, seed data, and persistence APIs are implemented. The next priority is basic admin authentication, followed by simulated toll payment, traffic/pricing, dashboard, and integration.
 - Train/use the detector for `car plate` only, not the broader `car` class.
 - Plan for Docker-based PostgreSQL.
 - Select the OCR engine based on the easiest reliable local setup.

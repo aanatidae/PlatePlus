@@ -9,7 +9,7 @@ These notes document the project foundation only. Commands that install dependen
 
 ## PostgreSQL
 
-The project is planned around Docker-based PostgreSQL.
+The project uses Docker-based PostgreSQL for development and a separate temporary PostgreSQL service for integration tests.
 
 ```bash
 docker compose up -d postgres postgres_test
@@ -17,9 +17,27 @@ docker compose up -d postgres postgres_test
 
 The normal development database listens on port `5432`. The test database listens on port `5433` and uses temporary storage.
 
+After installing backend dependencies, apply the schema and seed synthetic demo data:
+
+```powershell
+cd backend
+alembic upgrade head
+python -m app.db.seed
+```
+
+The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a demo administrator identity. Authentication and the administrator password hash are intentionally configured in the later authentication phase.
+
+Run PostgreSQL API integration tests against only the temporary test database:
+
+```powershell
+cd backend
+$env:RUN_POSTGRES_TESTS="1"
+pytest tests/integration/test_database_api.py
+```
+
 ## Backend
 
-The backend manifest is in `backend/pyproject.toml`. Planned setup:
+The backend manifest is in `backend/pyproject.toml`:
 
 ```bash
 cd backend

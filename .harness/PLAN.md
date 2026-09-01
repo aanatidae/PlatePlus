@@ -4,7 +4,7 @@
 
 The repository is initialized and tracks `origin/main`. It contains the Malaysian car-plate dataset, a trained local YOLO car-plate model (Git-ignored), ML/OCR processing, FastAPI webcam endpoints, a React/TypeScript webcam UI, unit tests, and setup documentation.
 
-Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, and local webcam implementation are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Database-backed business workflows, simulated toll processing, traffic/pricing, the administrator dashboard, and end-to-end integration remain pending.
+Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, and the backend/PostgreSQL persistence foundation are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Admin authentication, database-backed business workflows, simulated toll processing, traffic/pricing, the administrator dashboard, and end-to-end integration remain pending.
 
 ## Phase 1: Repository And Project Foundation
 
@@ -33,12 +33,9 @@ Project Foundation, dataset preparation, the car-plate-only YOLO detector, Paddl
 
 ## Phase 4: Backend And PostgreSQL
 
-- Build a FastAPI backend unless future constraints justify another backend.
-- Set up Docker-based PostgreSQL as the required normal development and demo database.
-- Prefer a separate PostgreSQL test database for integration tests.
-- Create database models and migrations for admins, users/accounts, vehicles, transactions, traffic records, toll prices, and detection records.
-- Seed synthetic users, registered vehicles, balances, and one demo admin account.
-- Expose API boundaries for vehicle lookup, detection processing, payment simulation, traffic simulation, dynamic pricing, dashboard statistics, and historical records.
+- The FastAPI persistence foundation, Docker-based development/test PostgreSQL configuration, separate users/accounts, UUID models, Alembic migration, synthetic seed data, and validated persistence routes are implemented.
+- Development and test PostgreSQL containers are healthy; the migration, synthetic seed data, and PostgreSQL integration tests have been verified locally.
+- Extend the existing persistence APIs with vehicle lookup, detection processing, payment simulation, traffic simulation, dynamic pricing, dashboard statistics, and authentication workflows.
 
 ## Phase 5: Simulated Toll Payment
 

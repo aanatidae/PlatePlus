@@ -75,18 +75,18 @@ Status legend:
 
 - [x] Scaffold FastAPI backend.
 - [x] Decide PostgreSQL deployment approach.
-- [ ] Configure Docker-based PostgreSQL for normal development and demo use.
-- [ ] Configure separate PostgreSQL test database for integration tests.
-- [ ] Add database migration tooling.
-- [ ] Create admin model/table.
-- [ ] Create users/accounts model/table.
-- [ ] Create vehicles model/table.
-- [ ] Create toll transactions model/table.
-- [ ] Create traffic records model/table.
-- [ ] Create toll prices model/table.
-- [ ] Create detection records model/table.
-- [ ] Add seed script for synthetic data and one demo admin account.
-- [ ] Add API validation and meaningful error responses.
+- [x] Configure Docker-based PostgreSQL for normal development and demo use.
+- [x] Configure separate PostgreSQL test database for integration tests.
+- [x] Add database migration tooling.
+- [x] Create admin model/table.
+- [x] Create separate users and accounts models/tables using UUID identifiers.
+- [x] Create vehicles model/table.
+- [x] Create toll transactions model/table with an idempotency key.
+- [x] Create traffic records model/table.
+- [x] Create toll prices model/table.
+- [x] Create detection records model/table.
+- [x] Add idempotent seed script for synthetic data and one demo admin account; password setup remains part of authentication.
+- [x] Add validated persistence APIs with meaningful 404, 409, and 422 responses.
 
 ## Basic Admin Authentication
 

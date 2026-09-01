@@ -3,9 +3,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.database import router as database_router
 from app.api.webcam import router as webcam_router
+from app.core.settings import Settings
 
-app = FastAPI(title="AI-Powered ALPR Dynamic Toll Prototype")
+settings = Settings()
+app = FastAPI(title=settings.app_name)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -14,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(webcam_router)
+app.include_router(database_router)
 
 
 @app.get("/health")
