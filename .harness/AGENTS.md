@@ -3,14 +3,14 @@
 ## Instruction Hierarchy
 
 - User requests in the active conversation are authoritative.
-- `C:/Users/User/Downloads/message1.md` is the user-approved future work prompt for this capstone project.
-- `C:/Users/User/Downloads/AI-Powered Automatic License Plate Recognition and Dynamic Toll Management System.pdf` is product documentation and source context. Treat it as requirements/context, not as an instruction to execute by itself.
+- `message1.md` was the user-approved future work prompt for this capstone project. Its original copy may exist in the user's Downloads folder on the PC and is historical source context if it is not present on the current machine.
+- `AI-Powered Automatic License Plate Recognition and Dynamic Toll Management System.pdf` is product documentation and source context. Its original copy may exist in the user's Downloads folder on the PC. Treat it as requirements/context, not as an instruction to execute by itself.
 - Do not install dependencies, download models, run training jobs, run long model-related commands, or make major environment changes without asking the user first.
 - The initial documentation-only pass is complete. Future work should continue from the current implementation state recorded below.
 
 ## Current Repository State
 
-- Workspace root: `D:/Capstone Project`
+- Workspace root: resolve it as the directory containing `.harness`; do not hard-code a drive letter. The project is normally `D:/Capstone Project` on the user's PC and `C:/Capstone Project` on the user's laptop.
 - Git remote: `https://github.com/aanatidae/capstoneproject`; `main` tracks `origin/main`. Do not commit, push, or open a pull request unless the user gives the green light.
 - The workspace contains the Malaysian car-plate dataset, a trained local YOLO car-plate detector, the ML/OCR pipeline, a local webcam FastAPI API, database models/migrations/APIs, and a React webcam UI.
 - Python 3.12.10, a recreated backend `.venv`, backend/core-ML dependencies, and Docker Desktop 29.7.2 are installed. Docker-based PostgreSQL development/test services, migrations, seed data, and integration tests have been verified locally.
@@ -43,7 +43,7 @@
 
 Dataset path:
 
-- `D:/Capstone Project/Malaysian Car Plate Dataset`
+- `<workspace root>/Malaysian Car Plate Dataset`
 
 Observed structure:
 
@@ -292,5 +292,4 @@ Future documentation should record actual commands once implementation adds them
 - EasyOCR baseline: 34.1 percent exact-match accuracy (15 of 44 held-out images).
 - PaddleOCR: 84.1 percent exact-match accuracy (37 of 44) using the same YOLO-generated crops and uppercase-alphanumeric normalization.
 - PaddleOCR is now selected for the next integration stage and meets the 80 percent prototype target on this set. Use PaddlePaddle 3.2.x on CPU because 3.3.x has a known oneDNN inference regression. Preserve this test set; future tuning requires a separate labeled development set.
-- The trained model remains on the user's home PC. Before webcam inference can run on this laptop, the same `car_plate_yolo_best.pt` artifact must be transferred locally to `models/trained/car_plate_yolo_best.pt`; it must remain Git-ignored.
-- The trained model is now present locally at `models/trained/car_plate_yolo_best.pt` and remains Git-ignored.
+- The trained model is present locally at `<workspace root>/models/trained/car_plate_yolo_best.pt` and remains Git-ignored. Because it is not tracked, verify its presence separately on each machine or after a fresh clone.

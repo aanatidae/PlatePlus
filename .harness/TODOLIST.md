@@ -1,5 +1,7 @@
 # Implementation Checklist
 
+Resolve the workspace root as the directory containing `.harness`; it is normally `D:/Capstone Project` on the user's PC and `C:/Capstone Project` on the user's laptop. Use repository-relative paths in implementation and documentation wherever practical.
+
 Status legend:
 
 - `[x]` Complete
@@ -139,9 +141,9 @@ Status legend:
 ## Integration
 
 - [ ] Connect image upload to YOLO inference.
-- [ ] Connect webcam frame ingestion to YOLO inference.
-- [ ] Connect YOLO detection to plate crop extraction.
-- [ ] Connect crop extraction to OCR.
+- [x] Connect webcam frame ingestion to YOLO inference.
+- [x] Connect YOLO detection to plate crop extraction.
+- [x] Connect crop extraction to OCR.
 - [ ] Connect OCR to vehicle lookup.
 - [ ] Connect vehicle lookup to simulated payment.
 - [ ] Connect payment and detection outcomes to persistence.
