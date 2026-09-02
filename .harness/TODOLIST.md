@@ -114,15 +114,15 @@ Status legend:
 
 ## Traffic Simulation And Pricing
 
-- [ ] Implement traffic scenarios: normal, moderate, peak hour, severe congestion.
-- [ ] Support simulated time.
-- [ ] Add randomized variation.
-- [ ] Support deterministic seeded simulation for tests.
-- [ ] Calculate congestion percentage.
-- [ ] Classify congestion level.
-- [ ] Implement configurable dynamic pricing rules.
-- [ ] Store traffic records.
-- [ ] Store toll price records.
+- [~] Implement traffic scenarios: normal, moderate, peak hour, severe congestion.
+- [~] Support simulated time.
+- [~] Add randomized variation.
+- [~] Support deterministic seeded simulation for tests.
+- [~] Calculate congestion percentage.
+- [~] Classify congestion level.
+- [~] Implement configurable dynamic pricing rules.
+- [~] Store traffic records.
+- [~] Store toll price records.
 - [ ] Leave extension point for future ML-based traffic prediction.
 
 ## Admin Dashboard

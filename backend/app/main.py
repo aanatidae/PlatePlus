@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.database import router as database_router
+from app.api.traffic import router as traffic_router
 from app.api.webcam import router as webcam_router
 from app.core.settings import Settings
 
@@ -20,6 +21,7 @@ app.add_middleware(
 app.include_router(webcam_router)
 app.include_router(auth_router)
 app.include_router(database_router)
+app.include_router(traffic_router)
 
 
 @app.get("/health")

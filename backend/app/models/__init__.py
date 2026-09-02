@@ -3,10 +3,13 @@
 from app.models.entities import (
     Account,
     Admin,
+    AdminAuditLog,
     DetectionRecord,
+    DynamicPricingRule,
     TollPrice,
     TollTransaction,
     TrafficRecord,
+    TrafficSimulationSettings,
     User,
     Vehicle,
 )
@@ -14,10 +17,13 @@ from app.models.entities import (
 __all__ = [
     "Account",
     "Admin",
+    "AdminAuditLog",
     "DetectionRecord",
+    "DynamicPricingRule",
     "TollPrice",
     "TollTransaction",
     "TrafficRecord",
+    "TrafficSimulationSettings",
     "User",
     "Vehicle",
 ]

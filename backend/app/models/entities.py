@@ -135,6 +135,9 @@ class TrafficRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     congestion_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     congestion_category: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
     scenario: Mapped[str] = mapped_column(String(32), nullable=False, default="normal")
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default="manual")
+    simulation_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="manual")
+    simulation_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_simulated: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
@@ -167,6 +170,68 @@ class TollPrice(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     traffic_record: Mapped[TrafficRecord | None] = relationship(back_populates="toll_prices")
     transactions: Mapped[list[TollTransaction]] = relationship(back_populates="toll_price")
+
+
+class TrafficSimulationSettings(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """The single persisted configuration used by the backend scheduler."""
+
+    __tablename__ = "traffic_simulation_settings"
+    __table_args__ = (
+        CheckConstraint("interval_minutes IN (1, 5, 15)", name="ck_simulation_interval"),
+        CheckConstraint(
+            "simulation_mode IN ('time_patterned', 'fixed_scenario')",
+            name="ck_simulation_mode",
+        ),
+        CheckConstraint(
+            "fixed_scenario IN ('normal', 'moderate', 'peak_hour', 'severe')",
+            name="ck_simulation_fixed_scenario",
+        ),
+        CheckConstraint("time_mode IN ('real', 'simulated')", name="ck_simulation_time_mode"),
+    )
+
+    singleton_key: Mapped[str] = mapped_column(String(32), unique=True, nullable=False, default="default")
+    is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    interval_minutes: Mapped[int] = mapped_column(nullable=False, default=5)
+    simulation_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="time_patterned")
+    fixed_scenario: Mapped[str] = mapped_column(String(32), nullable=False, default="moderate")
+    time_mode: Mapped[str] = mapped_column(String(16), nullable=False, default="real")
+    simulated_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    simulated_time_anchor: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    pricing_rule_version: Mapped[int] = mapped_column(nullable=False, default=1)
+
+
+class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """One administrator-editable, fixed scenario pricing band."""
+
+    __tablename__ = "dynamic_pricing_rules"
+    __table_args__ = (
+        CheckConstraint("minimum_percentage >= 0", name="ck_pricing_rule_minimum"),
+        CheckConstraint("maximum_percentage <= 100", name="ck_pricing_rule_maximum"),
+        CheckConstraint("minimum_percentage <= maximum_percentage", name="ck_pricing_rule_order"),
+        CheckConstraint("amount >= 0", name="ck_pricing_rule_amount"),
+    )
+
+    scenario: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
+    congestion_category: Mapped[str] = mapped_column(String(16), nullable=False)
+    minimum_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    maximum_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+
+
+class AdminAuditLog(UUIDPrimaryKeyMixin, Base):
+    """Append-only record of administrator changes to traffic configuration."""
+
+    __tablename__ = "admin_audit_logs"
+
+    admin_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("admins.id", ondelete="SET NULL"), index=True
+    )
+    action: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    details_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), index=True
+    )
 
 
 class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
