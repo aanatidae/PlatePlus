@@ -10,7 +10,7 @@ The production administrator dashboard is a Vercel-hosted React application. It 
 
 ## Render
 
-Create a new Render Blueprint from this repository's `render.yaml`. Before its first deploy, provide the required `DEMO_ADMIN_PASSWORD` and a comma-separated `CORS_ALLOWED_ORIGINS` value containing the final Vercel URL. Apply migrations with `cd backend && alembic upgrade head`, then run `python -m app.db.seed` once against the Render PostgreSQL database.
+Create a new Render Blueprint from this repository's `render.yaml`. Before its first deploy, provide the required `DEMO_ADMIN_PASSWORD` and a comma-separated `CORS_ALLOWED_ORIGINS` value containing the final Vercel URL. The API start command applies Alembic migrations and idempotently seeds the synthetic demo records before starting FastAPI, so the free deployment does not require Render shell access or a one-off job.
 
 The Render API health URL is `/health`. Use the public API URL, including `https://`, as the Vercel API base URL.
 
