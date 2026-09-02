@@ -8,6 +8,8 @@ The repository is initialized and tracks `origin/main`. It contains the Malaysia
 
 Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, backend administrator login, protected dashboard login UI, simulated toll payment, and configurable traffic simulation/dynamic pricing are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Dashboard expansion and end-to-end integration remain pending.
 
+The administrator frontend has a minimal futuristic visual system: dark teal operational surfaces, high-contrast status states, compact technical labels, responsive data layouts, and reduced-motion support. Existing routes, controls, local-webcam privacy behavior, and simulated-only copy were preserved.
+
 ## Phase 1: Repository And Project Foundation
 
 - Source control, project layout, environment conventions, dependency manifests, and initial setup documentation are complete.
