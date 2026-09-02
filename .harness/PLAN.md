@@ -59,7 +59,10 @@ Project Foundation, dataset preparation, the car-plate-only YOLO detector, Paddl
 
 - Build a responsive administrator-only web dashboard.
 - The dashboard login uses the seeded demo admin account and redirects unauthenticated or expired sessions to `/login`.
+- The administrator overview now has Malaysia-time metrics, filtered recent records with load-more, traffic/price charts, and a live simulated Penchala Toll Plaza map. The local webcam lives at `/webcam`; `/traffic` provides protected scheduling, simulated-clock, pricing-band, manual-run, and audit-history controls.
+- Responsive browser verification passed at desktop, tablet, and mobile viewport sizes for the overview and traffic-administration pages.
 - Prepare the final dashboard for Vercel deployment. Document its API configuration and preserve the local-only webcam/inference boundary unless a separately approved architecture changes it.
+- The Vercel SPA configuration, Render Blueprint, CORS configuration, production webcam feature flag, and deployment runbook are prepared. Provisioning the approved Render/Vercel accounts, applying the remote migration/seed, and validating a preview remain external steps.
 - Display current congestion, congestion category, current toll price, vehicles detected today, transaction counts, simulated revenue, average recognition confidence, recent detections, and recent transactions.
 - Add traffic congestion and toll price charts.
 - Add filtering for date/time, congestion category, license plate, transaction status, registered/unknown status, and toll price where useful.

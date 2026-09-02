@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.dashboard import router as dashboard_router
 from app.api.database import router as database_router
 from app.api.traffic import router as traffic_router
 from app.api.webcam import router as webcam_router
@@ -13,7 +14,7 @@ settings = Settings()
 app = FastAPI(title=settings.app_name)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=settings.allowed_cors_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,6 +22,7 @@ app.add_middleware(
 app.include_router(webcam_router)
 app.include_router(auth_router)
 app.include_router(database_router)
+app.include_router(dashboard_router)
 app.include_router(traffic_router)
 
 

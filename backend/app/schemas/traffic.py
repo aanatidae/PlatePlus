@@ -92,7 +92,7 @@ class PricingRuleRead(ORMModel):
 
 
 class ManualSimulationRequest(BaseModel):
-    scenario: Scenario
+    scenario: Scenario | None = None
 
 
 class SimulationRunRead(BaseModel):

@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.traffic import PricingRulesUpdate
+from app.schemas.traffic import ManualSimulationRequest, PricingRulesUpdate
 
 
 def test_pricing_rules_require_contiguous_complete_ranges() -> None:
@@ -14,3 +14,7 @@ def test_pricing_rules_require_contiguous_complete_ranges() -> None:
                 {"scenario": "severe", "minimum_percentage": "80.01", "maximum_percentage": "100", "amount": "5"},
             ]
         )
+
+
+def test_manual_simulation_uses_saved_settings_when_no_scenario_is_supplied() -> None:
+    assert ManualSimulationRequest().scenario is None

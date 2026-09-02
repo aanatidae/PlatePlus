@@ -120,7 +120,7 @@ def update_pricing_rules(payload: PricingRulesUpdate, database: DatabaseSession,
 @router.post("/simulate", response_model=SimulationRunRead, status_code=status.HTTP_201_CREATED)
 def manual_simulation(payload: ManualSimulationRequest, database: DatabaseSession, admin: CurrentAdmin):
     result = run_simulation(database, _settings(database), source="manual", scenario=payload.scenario)
-    _audit(database, admin, "traffic_simulation_run", "traffic_record", {"source": "manual", "scenario": payload.scenario, "traffic_record_id": result.traffic_record.id})
+    _audit(database, admin, "traffic_simulation_run", "traffic_record", {"source": "manual", "scenario": result.traffic_record.scenario, "traffic_record_id": result.traffic_record.id})
     database.commit()
     return SimulationRunRead(traffic_record_id=result.traffic_record.id, toll_price_id=result.toll_price.id, scenario=result.traffic_record.scenario, congestion_percentage=result.traffic_record.congestion_percentage, congestion_category=result.traffic_record.congestion_category, amount=result.toll_price.amount, simulation_time=result.simulation_time, source="manual")
 

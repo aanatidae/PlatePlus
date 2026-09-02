@@ -129,16 +129,16 @@ Status legend:
 
 - [x] Scaffold React/TypeScript frontend.
 - [x] Build admin login view.
-- [ ] Build current metrics view.
-- [ ] Build congestion chart.
-- [ ] Build toll price chart.
-- [ ] Build recent detections table.
-- [ ] Build recent transactions table.
-- [ ] Build historical traffic view.
-- [ ] Add filters for date/time, congestion category, plate, transaction status, registered/unknown status, and toll price where useful.
-- [ ] Clearly label traffic and financial values as simulated.
-- [ ] Verify responsive layout.
-- [ ] Configure and verify the final administrator dashboard deployment on Vercel.
+- [x] Build current metrics view.
+- [x] Build congestion chart.
+- [x] Build toll price chart.
+- [x] Build recent detections table.
+- [x] Build recent transactions table.
+- [x] Build historical traffic view.
+- [x] Add filters for date/time, congestion category, plate, transaction status, registered/unknown status, and toll price where useful.
+- [x] Clearly label traffic and financial values as simulated.
+- [x] Verify responsive layout.
+- [~] Configure and verify the final administrator dashboard deployment on Vercel (Vercel/Render manifests and runbook prepared; account provisioning and remote verification pending).
 
 ## Integration
 
@@ -179,4 +179,4 @@ Status legend:
 - [ ] Document OCR evaluation workflow.
 - [ ] Document simulated-only scope and exclusions.
 - [ ] Prepare final capstone demo flow.
-- [ ] Document Vercel dashboard deployment, including API configuration and local-service limitations.
+- [x] Document Vercel dashboard deployment, including API configuration and local-service limitations.
