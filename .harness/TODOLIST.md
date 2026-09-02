@@ -138,7 +138,7 @@ Status legend:
 - [x] Add filters for date/time, congestion category, plate, transaction status, registered/unknown status, and toll price where useful.
 - [x] Clearly label traffic and financial values as simulated.
 - [x] Verify responsive layout.
-- [~] Configure and verify the final administrator dashboard deployment on Vercel (Vercel and a free-tier Render Blueprint, with manual traffic simulation instead of a paid scheduler, are prepared; account provisioning and remote verification pending).
+- [x] Configure and verify the final administrator dashboard deployment on Vercel (Vercel dashboard and free-tier Render API/Postgres are deployed; direct dashboard and traffic routes, CORS, administrator sign-in, and local-webcam exclusion are verified. Traffic simulation remains manual because the paid scheduler is intentionally omitted).
 
 ## Integration
 
