@@ -16,7 +16,7 @@ The Render API health URL is `/health`. Use the public API URL, including `https
 
 ### Free-tier operation
 
-This Blueprint uses only Render's free Web Service and free Postgres offerings; it deliberately omits the continuous `traffic_scheduler` worker, which requires paid worker compute. Administrators can still run and audit a simulation from `/traffic` using **Run simulation now**, and the saved simulation mode and pricing rules continue to apply.
+This Blueprint explicitly selects Render's free Web Service plan and free Postgres offering; it deliberately omits the continuous `traffic_scheduler` worker, which requires paid worker compute. Administrators can still run and audit a simulation from `/traffic` using **Run simulation now**, and the saved simulation mode and pricing rules continue to apply.
 
 This is suitable for a capstone demonstration, with these operational limits:
 
