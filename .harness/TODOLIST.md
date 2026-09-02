@@ -100,16 +100,17 @@ Status legend:
 
 ## Simulated Toll Payment
 
-- [ ] Implement registered vehicle lookup by normalized plate.
-- [ ] Implement simulated account retrieval.
-- [ ] Implement toll price retrieval.
-- [ ] Implement sufficient-balance check.
-- [ ] Implement simulated balance deduction.
-- [ ] Record successful transactions.
-- [ ] Record failed transactions.
-- [ ] Record unknown vehicle detections.
-- [ ] Record recognition-failed detections.
-- [ ] Add duplicate processing protection.
+- [x] Add PostgreSQL integration coverage for successful payment, safe failure outcomes, primary-account selection, and idempotent replay.
+- [x] Implement registered vehicle lookup by normalized plate.
+- [x] Implement simulated account retrieval.
+- [x] Implement toll price retrieval.
+- [x] Implement sufficient-balance check.
+- [x] Implement simulated balance deduction.
+- [x] Record successful transactions.
+- [x] Record failed transactions.
+- [x] Record unknown vehicle detections.
+- [x] Record recognition-failed detections.
+- [x] Add duplicate processing protection.
 
 ## Traffic Simulation And Pricing
 

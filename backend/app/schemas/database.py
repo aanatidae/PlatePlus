@@ -35,6 +35,7 @@ class AccountCreate(BaseModel):
     user_id: UUID
     balance: Decimal = Field(default=Decimal("0.00"), ge=0, max_digits=12, decimal_places=2)
     currency: Literal["MYR"] = "MYR"
+    is_primary: bool = False
 
 
 class AccountRead(ORMModel):
@@ -43,6 +44,7 @@ class AccountRead(ORMModel):
     balance: Decimal
     currency: str
     is_active: bool
+    is_primary: bool
     created_at: datetime
     updated_at: datetime
 

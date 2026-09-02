@@ -21,3 +21,7 @@ class WebcamFrameResult(BaseModel):
     bounding_box: WebcamBoundingBox | None = None
     charge_eligible: bool = False
     cooldown_remaining_seconds: float | None = Field(default=None, ge=0)
+    payment_status: str | None = None
+    payment_amount: float | None = Field(default=None, ge=0)
+    payment_balance_after: float | None = Field(default=None, ge=0)
+    payment_duplicate: bool = False

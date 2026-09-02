@@ -37,13 +37,14 @@
 ## Current User Decisions
 
 - Project Foundation, the car-plate-only YOLO/OCR baseline, and the local webcam implementation are complete.
-- Docker-based PostgreSQL configuration, UUID database models, Alembic migration, seed data, persistence APIs, and basic administrator authentication are implemented. The next priority is simulated toll payment, followed by traffic/pricing, dashboard expansion, and integration.
+- Docker-based PostgreSQL configuration, UUID database models, Alembic migration, seed data, persistence APIs, basic administrator authentication, and simulated toll payment are implemented. The next priority is traffic/pricing, followed by dashboard expansion and integration.
 - Train/use the detector for `car plate` only, not the broader `car` class.
 - Plan for Docker-based PostgreSQL.
 - Select the OCR engine based on the easiest reliable local setup.
 - Support this laptop's webcam as the primary live ALPR input. Still-image upload remains useful for testing and demonstration. Prerecorded-video support can come later.
 - Use a browser-camera preview with local FastAPI frame processing. Frames are sampled at a configurable interval and are not retained by default.
 - Run the final administrator dashboard using Vercel. Do not assume the local FastAPI API, webcam inference, or PostgreSQL services are deployed to Vercel; define and obtain approval for any required production integration separately.
+- Automatically process a simulated toll event for each confidence-eligible webcam recognition. Use each vehicle owner's designated active primary account, the latest non-future stored toll price, and an idempotency key that returns the original result without a second deduction.
 - Do not run the final physical browser-webcam permission/inference verification unless the user explicitly requests it.
 
 ## Dataset Findings

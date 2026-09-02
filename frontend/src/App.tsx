@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 
 type BoundingBox = { left: number; top: number; right: number; bottom: number };
-type FrameResult = { status: string; message: string; plate_text?: string; detection_confidence?: number; ocr_confidence?: number; bounding_box?: BoundingBox; charge_eligible: boolean };
+type FrameResult = { status: string; message: string; plate_text?: string; detection_confidence?: number; ocr_confidence?: number; bounding_box?: BoundingBox; charge_eligible: boolean; payment_status?: string; payment_amount?: number; payment_balance_after?: number; payment_duplicate: boolean };
 type Admin = { id: string; email: string; display_name: string };
 type LoginResponse = { access_token: string; token_type: string; expires_at: string; admin: Admin };
 
@@ -161,7 +161,7 @@ function Dashboard({ admin, onLogout }: { admin: Admin; onLogout: () => void }) 
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
       if (!blob) throw new Error("A webcam frame could not be captured.");
       const form = new FormData(); form.append("frame", blob, "webcam-frame.jpg");
-      const response = await fetch(`${API_BASE_URL}/api/webcam/sessions/${sessionId}/frames`, { method: "POST", body: form });
+      const response = await fetch(`${API_BASE_URL}/api/webcam/sessions/${sessionId}/frames`, { method: "POST", headers: { "Idempotency-Key": crypto.randomUUID() }, body: form });
       if (!response.ok) throw new Error((await response.json()).detail ?? "Frame processing failed.");
       setResult((await response.json()) as FrameResult);
     } catch (error) {
@@ -174,7 +174,7 @@ function Dashboard({ admin, onLogout }: { admin: Admin; onLogout: () => void }) 
   return <main>
     <header className="dashboard-header"><div><p className="eyebrow">SIMULATED TOLL PROTOTYPE</p><h1>Local Webcam ALPR</h1><p>{message}</p></div><div className="admin-menu"><span>{admin.display_name}</span><button className="secondary-button" onClick={onLogout}>Sign out</button></div></header>
     <section className="camera-panel" aria-live="polite"><div className="preview"><video ref={videoRef} muted playsInline aria-label="Local webcam preview" />{box && <div className="box" style={{ left: `${(box.left / (videoRef.current?.videoWidth || 1)) * 100}%`, top: `${(box.top / (videoRef.current?.videoHeight || 1)) * 100}%`, width: `${((box.right - box.left) / (videoRef.current?.videoWidth || 1)) * 100}%`, height: `${((box.bottom - box.top) / (videoRef.current?.videoHeight || 1)) * 100}%` }}><span>{label}</span></div>}</div><button onClick={() => void (state === "running" ? stopCamera() : startCamera())} disabled={state === "starting"}>{state === "running" ? "Stop camera" : "Start camera"}</button><canvas ref={canvasRef} hidden /></section>
-    <section className="result" aria-label="Recognition result"><h2>Latest recognition</h2><p><strong>{result?.plate_text ?? "—"}</strong></p><p>{result?.message ?? "No frame has been processed."}</p>{result && <dl><div><dt>Detection</dt><dd>{result.detection_confidence ? `${(result.detection_confidence * 100).toFixed(1)}%` : "—"}</dd></div><div><dt>OCR</dt><dd>{result.ocr_confidence ? `${(result.ocr_confidence * 100).toFixed(1)}%` : "—"}</dd></div><div><dt>Charge status</dt><dd>{result.charge_eligible ? "Eligible for simulated lookup" : "Not eligible"}</dd></div></dl>}</section>
+    <section className="result" aria-label="Recognition result"><h2>Latest recognition</h2><p><strong>{result?.plate_text ?? "—"}</strong></p><p>{result?.message ?? "No frame has been processed."}</p>{result && <dl><div><dt>Detection</dt><dd>{result.detection_confidence ? `${(result.detection_confidence * 100).toFixed(1)}%` : "—"}</dd></div><div><dt>OCR</dt><dd>{result.ocr_confidence ? `${(result.ocr_confidence * 100).toFixed(1)}%` : "—"}</dd></div><div><dt>Simulated payment</dt><dd>{result.payment_status ?? "Not processed"}</dd></div>{result.payment_amount !== undefined && <div><dt>Toll amount</dt><dd>RM{result.payment_amount.toFixed(2)}</dd></div>}{result.payment_balance_after !== undefined && <div><dt>Balance after</dt><dd>RM{result.payment_balance_after.toFixed(2)}</dd></div>}</dl>}</section>
   </main>;
 }
 

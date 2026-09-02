@@ -56,7 +56,6 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
-
     accounts: Mapped[list[Account]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -86,6 +85,9 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
+    )
+    is_primary: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
     )
 
     user: Mapped[User] = relationship(back_populates="accounts")

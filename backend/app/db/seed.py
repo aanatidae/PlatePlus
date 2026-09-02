@@ -65,7 +65,7 @@ def seed_demo_data() -> None:
                 database.add(user)
                 database.flush()
             if database.scalar(select(Account).where(Account.user_id == user.id)) is None:
-                database.add(Account(user_id=user.id, balance=balance))
+                database.add(Account(user_id=user.id, balance=balance, is_primary=True))
             if database.scalar(select(Vehicle).where(Vehicle.plate_number == plate)) is None:
                 database.add(
                     Vehicle(

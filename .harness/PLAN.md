@@ -6,7 +6,7 @@ Resolve the workspace root as the directory containing `.harness`; it is normall
 
 The repository is initialized and tracks `origin/main`. It contains the Malaysian car-plate dataset, a trained local YOLO car-plate model (Git-ignored), ML/OCR processing, FastAPI webcam endpoints, a React/TypeScript webcam UI, unit tests, and setup documentation.
 
-Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, backend administrator login, and protected dashboard login UI are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Database-backed business workflows, simulated toll processing, traffic/pricing, dashboard expansion, and end-to-end integration remain pending.
+Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, backend administrator login, protected dashboard login UI, and simulated toll payment are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Traffic/pricing, dashboard expansion, and end-to-end integration remain pending.
 
 ## Phase 1: Repository And Project Foundation
 
@@ -37,17 +37,13 @@ Project Foundation, dataset preparation, the car-plate-only YOLO detector, Paddl
 
 - The FastAPI persistence foundation, Docker-based development/test PostgreSQL configuration, separate users/accounts, UUID models, Alembic migration, synthetic seed data, and validated persistence routes are implemented.
 - Development and test PostgreSQL containers are healthy; the migration, synthetic seed data, and PostgreSQL integration tests have been verified locally.
-- Extend the existing persistence APIs with vehicle lookup, detection processing, payment simulation, traffic simulation, dynamic pricing, dashboard statistics, and authentication workflows.
+- Extend the existing persistence APIs with traffic simulation, dynamic pricing, dashboard statistics, and remaining integration workflows.
 
 ## Phase 5: Simulated Toll Payment
 
-- Retrieve the current toll price.
-- Match recognized plates to registered simulated vehicles.
-- Retrieve associated synthetic accounts.
-- Check account balance.
-- Deduct the simulated toll only when recognition confidence, registration status, and balance checks pass.
-- Store successful, failed, low-confidence, insufficient-balance, and unknown-vehicle outcomes clearly.
-- Add safeguards against accidental duplicate event processing.
+- Implemented automatic simulated payment for confidence-eligible webcam recognitions.
+- Uses the latest stored toll price whose effective time is not in the future, an active registered vehicle, and its designated primary synthetic account.
+- Safely records successful, failed, low-confidence, insufficient-balance, unknown-vehicle, and idempotent replay outcomes without duplicate deductions.
 
 ## Phase 6: Traffic Simulation And Dynamic Pricing
 
