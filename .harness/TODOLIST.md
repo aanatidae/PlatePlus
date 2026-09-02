@@ -94,7 +94,7 @@ Status legend:
 
 - [x] Implement seeded admin login.
 - [x] Hash seeded admin password securely.
-- [ ] Protect admin dashboard routes.
+- [x] Protect admin dashboard routes.
 - [x] Protect privileged API routes.
 - [x] Document demo credentials in the appropriate local-only setup place.
 
@@ -127,7 +127,7 @@ Status legend:
 ## Admin Dashboard
 
 - [x] Scaffold React/TypeScript frontend.
-- [ ] Build admin login view.
+- [x] Build admin login view.
 - [ ] Build current metrics view.
 - [ ] Build congestion chart.
 - [ ] Build toll price chart.
@@ -137,6 +137,7 @@ Status legend:
 - [ ] Add filters for date/time, congestion category, plate, transaction status, registered/unknown status, and toll price where useful.
 - [ ] Clearly label traffic and financial values as simulated.
 - [ ] Verify responsive layout.
+- [ ] Configure and verify the final administrator dashboard deployment on Vercel.
 
 ## Integration
 
@@ -177,3 +178,4 @@ Status legend:
 - [ ] Document OCR evaluation workflow.
 - [ ] Document simulated-only scope and exclusions.
 - [ ] Prepare final capstone demo flow.
+- [ ] Document Vercel dashboard deployment, including API configuration and local-service limitations.

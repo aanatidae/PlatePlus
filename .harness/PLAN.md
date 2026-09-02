@@ -6,7 +6,7 @@ Resolve the workspace root as the directory containing `.harness`; it is normall
 
 The repository is initialized and tracks `origin/main`. It contains the Malaysian car-plate dataset, a trained local YOLO car-plate model (Git-ignored), ML/OCR processing, FastAPI webcam endpoints, a React/TypeScript webcam UI, unit tests, and setup documentation.
 
-Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, and backend administrator login are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Dashboard login UI, database-backed business workflows, simulated toll processing, traffic/pricing, the administrator dashboard, and end-to-end integration remain pending.
+Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, backend administrator login, and protected dashboard login UI are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Database-backed business workflows, simulated toll processing, traffic/pricing, dashboard expansion, and end-to-end integration remain pending.
 
 ## Phase 1: Repository And Project Foundation
 
@@ -62,7 +62,8 @@ Project Foundation, dataset preparation, the car-plate-only YOLO detector, Paddl
 ## Phase 7: Admin Dashboard
 
 - Build a responsive administrator-only web dashboard.
-- Add login using the seeded demo admin account.
+- The dashboard login uses the seeded demo admin account and redirects unauthenticated or expired sessions to `/login`.
+- Prepare the final dashboard for Vercel deployment. Document its API configuration and preserve the local-only webcam/inference boundary unless a separately approved architecture changes it.
 - Display current congestion, congestion category, current toll price, vehicles detected today, transaction counts, simulated revenue, average recognition confidence, recent detections, and recent transactions.
 - Add traffic congestion and toll price charts.
 - Add filtering for date/time, congestion category, license plate, transaction status, registered/unknown status, and toll price where useful.
@@ -89,6 +90,7 @@ Project Foundation, dataset preparation, the car-plate-only YOLO detector, Paddl
 ## Phase 10: Demo Hardening And Documentation
 
 - Prepare a reliable local demo path.
+- Prepare and document the Vercel deployment path for the final administrator dashboard.
 - Document setup from a clean machine.
 - Document PostgreSQL configuration and seed credentials.
 - Document how to transfer the local model artifact, enable this laptop's webcam, run local inference, and use dashboard workflows.
