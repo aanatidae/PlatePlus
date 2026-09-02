@@ -276,6 +276,7 @@ Future documentation should record actual commands once implementation adds them
 ## Future Agent Operating Rules
 
 - Start future work by reading `.harness/AGENTS.md`, `.harness/PLAN.md`, and `.harness/TODOLIST.md`.
+- After making any repository change, check the `.harness` files and update them as needed so their recorded implementation status, plan, and operating instructions match the repository state.
 - Keep `.harness/TODOLIST.md` updated when implementation tasks are completed or changed.
 - Keep `.harness/PLAN.md` high-level; put granular task status in `.harness/TODOLIST.md`.
 - Preserve modular boundaries so ML, OCR, traffic simulation, pricing, backend, database, and frontend can change independently.

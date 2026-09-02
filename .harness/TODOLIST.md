@@ -160,7 +160,7 @@ Status legend:
 - [ ] Add unit tests for insufficient balance handling.
 - [ ] Add unit tests for low-confidence handling.
 - [ ] Add unit tests for deterministic traffic simulation.
-- [ ] Add PostgreSQL integration tests for database/API workflows.
+- [x] Add and verify PostgreSQL integration tests for the current database/API persistence workflows.
 - [ ] Add end-to-end system test for the main toll event.
 - [ ] Add UI tests for dashboard readability and responsive behavior.
 - [x] Record ML detection metrics.
