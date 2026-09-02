@@ -14,8 +14,8 @@ Status legend:
 - [x] Read and distinguish `message1.md` from the product PDF.
 - [x] Confirm first work session scope is documentation-only.
 - [x] Analyze workspace root contents.
-- [x] Confirm the workspace is not currently a Git repository.
-- [x] Confirm no application code, package manifests, tests, launch scripts, or migrations exist yet.
+- [x] Confirm the workspace is a Git repository tracking `origin/main`.
+- [x] Confirm the repository contains backend, frontend, ML/OCR, tests, migrations, and setup documentation.
 - [x] Inspect `Malaysian Car Plate Dataset` structure.
 - [x] Inspect dataset metadata and label format.
 - [x] Record launch/test command status.
@@ -67,7 +67,7 @@ Status legend:
 - [x] Connect sampled webcam frames to YOLO detection, crop extraction, PaddleOCR, normalization, and confidence gates.
 - [x] Display a live preview with detection boxes, recognized plate, confidence, and simulated-only status.
 - [x] Keep raw frames and crops ephemeral by default.
-- [x] Implement per-session duplicate recognition/charge cooldown protection; database transaction idempotency remains a later toll-payment responsibility.
+- [x] Implement per-session duplicate recognition/charge cooldown protection and database-level transaction idempotency.
 - [x] Handle missing model artifact and inference failures without recording a successful charge.
 - [x] Add webcam lifecycle, frame-processing, duplicate-protection, and failure-state tests (17 ML tests and 6 backend webcam tests passing).
 - [x] Document model transfer and webcam setup for this laptop.
@@ -87,7 +87,7 @@ Status legend:
 - [x] Create traffic records model/table.
 - [x] Create toll prices model/table.
 - [x] Create detection records model/table.
-- [x] Add idempotent seed script for synthetic data and one demo admin account; password setup remains part of authentication.
+- [x] Add idempotent seed script for synthetic data and one demo admin account with securely hashed credentials.
 - [x] Add validated persistence APIs with meaningful 404, 409, and 422 responses.
 
 ## Basic Admin Authentication
@@ -146,9 +146,9 @@ Status legend:
 - [x] Connect webcam frame ingestion to YOLO inference.
 - [x] Connect YOLO detection to plate crop extraction.
 - [x] Connect crop extraction to OCR.
-- [ ] Connect OCR to vehicle lookup.
-- [ ] Connect vehicle lookup to simulated payment.
-- [ ] Connect payment and detection outcomes to persistence.
+- [x] Connect eligible webcam OCR results to vehicle lookup.
+- [x] Connect eligible webcam vehicle lookup results to simulated payment.
+- [x] Connect webcam payment and detection outcomes to persistence.
 - [ ] Connect traffic simulation to dynamic pricing.
 - [ ] Connect backend APIs to dashboard.
 - [ ] Verify complete end-to-end demo flow.
