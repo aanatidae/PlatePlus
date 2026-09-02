@@ -37,7 +37,7 @@
 ## Current User Decisions
 
 - Project Foundation, the car-plate-only YOLO/OCR baseline, and the local webcam implementation are complete.
-- Docker-based PostgreSQL configuration, UUID database models, Alembic migration, seed data, persistence APIs, basic administrator authentication, and simulated toll payment are implemented. The next priority is traffic/pricing, followed by dashboard expansion and integration.
+- Docker-based PostgreSQL configuration, UUID database models, Alembic migration, seed data, persistence APIs, basic administrator authentication, simulated toll payment, and configurable traffic simulation/dynamic pricing are implemented. The next priority is dashboard expansion and remaining integration.
 - Train/use the detector for `car plate` only, not the broader `car` class.
 - Plan for Docker-based PostgreSQL.
 - Select the OCR engine based on the easiest reliable local setup.

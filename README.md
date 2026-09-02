@@ -2,14 +2,14 @@
 
 Capstone prototype for Malaysian automatic license plate recognition (ALPR), OCR-based plate matching, simulated toll transactions, simulated traffic conditions, and configurable dynamic toll pricing.
 
-The computer-vision baseline is complete: a one-class YOLO detector identifies Malaysian car plates and PaddleOCR recognizes plate text from detected crops. The next implementation stage is the FastAPI backend with Docker-based PostgreSQL, followed by the simulated toll, traffic-pricing, and administrator dashboard features.
+The computer-vision baseline is complete: a one-class YOLO detector identifies Malaysian car plates and PaddleOCR recognizes plate text from detected crops. The FastAPI/PostgreSQL foundation, simulated toll workflow, and configurable traffic-pricing backend are complete; administrator dashboard expansion remains next.
 
 ## Scope
 
 - Traffic data is simulated.
 - Toll payments and account balances are simulated.
 - No real banking, toll infrastructure, traffic-feed, enforcement, or vehicle-owner integrations are in scope.
-- The first recognition prototype targets still images only.
+- Recognition supports local browser-webcam frames; still-image upload remains a pending integration item.
 - The detector should focus on the `car plate` class.
 
 ## Planned Stack
@@ -34,7 +34,7 @@ infra/     Docker and local infrastructure configuration
 
 ## Setup Status
 
-The repository includes ML dataset preparation, plate processing, YOLO crop extraction, PaddleOCR recognition, PostgreSQL models/migrations, synthetic demo seeding, validated persistence APIs, and tests. The trained model is a local, Git-ignored artifact at `models/trained/car_plate_yolo_best.pt`; it is not included in a fresh clone. Do not install dependencies, download models, start training, or start Docker services without explicit approval.
+The repository includes ML dataset preparation, plate processing, YOLO crop extraction, PaddleOCR recognition, PostgreSQL models/migrations, synthetic demo seeding, administrator authentication, simulated toll handling, a configurable traffic simulator and pricing engine, and tests. The trained model is a local, Git-ignored artifact at `models/trained/car_plate_yolo_best.pt`; it is not included in a fresh clone. Do not install dependencies, download models, start training, or start Docker services without explicit approval.
 
 ## Current ML Baseline
 
@@ -57,7 +57,7 @@ Start PostgreSQL after Docker is available:
 docker compose up -d postgres postgres_test
 ```
 
-Backend setup command planned for future implementation:
+Backend setup command:
 
 ```bash
 cd backend
@@ -77,8 +77,8 @@ npm run dev
 
 ## Current Limitations
 
-- No runnable app exists yet.
-- The PostgreSQL persistence foundation is implemented; admin authentication, simulated toll business logic, traffic simulation, and the frontend dashboard remain pending.
+- The administrator dashboard has login protection but its traffic/pricing metrics, charts, history, and filters remain pending.
+- The traffic scheduler is a separate local process; it is not part of the Vercel dashboard deployment boundary.
 - The trained YOLO weights are intentionally ignored by Git and must be supplied locally before inference can run on a fresh clone.
 - PaddleOCR has been selected and evaluated, but dependencies/models must still be installed locally with user approval when integration begins.
 - The initial Alembic migration creates the complete UUID-based prototype schema.

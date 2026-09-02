@@ -6,7 +6,7 @@ Resolve the workspace root as the directory containing `.harness`; it is normall
 
 The repository is initialized and tracks `origin/main`. It contains the Malaysian car-plate dataset, a trained local YOLO car-plate model (Git-ignored), ML/OCR processing, FastAPI webcam endpoints, a React/TypeScript webcam UI, unit tests, and setup documentation.
 
-Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, backend administrator login, protected dashboard login UI, and simulated toll payment are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Traffic/pricing is in progress; dashboard expansion and end-to-end integration remain pending.
+Project Foundation, dataset preparation, the car-plate-only YOLO detector, PaddleOCR baseline, local webcam implementation, the backend/PostgreSQL persistence foundation, backend administrator login, protected dashboard login UI, simulated toll payment, and configurable traffic simulation/dynamic pricing are complete. The physical browser-webcam permission/inference verification is intentionally deferred and must not be run without explicit user approval. Dashboard expansion and end-to-end integration remain pending.
 
 ## Phase 1: Repository And Project Foundation
 
@@ -47,7 +47,7 @@ Project Foundation, dataset preparation, the car-plate-only YOLO detector, Paddl
 
 ## Phase 6: Traffic Simulation And Dynamic Pricing
 
-- The first-class backend simulation foundation is in progress: persisted scheduler settings, editable four-band rules, a Malaysia-time profile, real-time simulated-clock support, manual runs, audit history, and a separate scheduler process have been added. PostgreSQL/API integration validation and dashboard controls remain pending.
+- The backend simulation is complete: persisted scheduler settings, editable four-band rules, a Malaysia-time profile, real-time simulated-clock support, deterministic seeded runs for tests, manual runs, audit history, PostgreSQL/API integration coverage, and a separate scheduler process are implemented. A predictor protocol keeps the simulation open to a future ML-based traffic model.
 - Support normal, moderate, peak-hour, and severe congestion scenarios.
 - Support deterministic simulation when a test seed is supplied.
 - Calculate congestion percentage and category from simulated inputs.

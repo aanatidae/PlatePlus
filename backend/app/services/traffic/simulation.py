@@ -6,6 +6,7 @@ import random
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Protocol
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
@@ -29,6 +30,23 @@ TIME_PROFILE = {
 }
 
 
+class TrafficScenarioPredictor(Protocol):
+    """Extension point for a future simulated-traffic prediction model."""
+
+    def scenario_for(self, value: datetime) -> str:
+        """Return one of the configured traffic scenario keys."""
+
+
+class TimeProfileScenarioPredictor:
+    """Rule-based Malaysia-time profile used until a predictor is introduced."""
+
+    def scenario_for(self, value: datetime) -> str:
+        return TIME_PROFILE[value.astimezone(MALAYSIA_TIMEZONE).hour]
+
+
+DEFAULT_SCENARIO_PREDICTOR = TimeProfileScenarioPredictor()
+
+
 @dataclass(frozen=True)
 class SimulationResult:
     traffic_record: TrafficRecord
@@ -45,11 +63,26 @@ def current_simulation_time(settings: TrafficSimulationSettings, now: datetime |
 
 
 def scenario_for_time(value: datetime) -> str:
-    return TIME_PROFILE[value.astimezone(MALAYSIA_TIMEZONE).hour]
+    """Resolve the current rule-based scenario; retained as a simple public helper."""
+    return DEFAULT_SCENARIO_PREDICTOR.scenario_for(value)
 
 
 def _rules_by_scenario(database: Session) -> dict[str, DynamicPricingRule]:
     return {rule.scenario: rule for rule in database.scalars(select(DynamicPricingRule))}
+
+
+def congestion_percentage_for_rule(rule: DynamicPricingRule, *, seed: int | None = None) -> Decimal:
+    """Generate a bounded percentage reproducibly when a test seed is supplied."""
+    generator = random.Random(seed)
+    hundredths = generator.randint(
+        int(rule.minimum_percentage * 100), int(rule.maximum_percentage * 100)
+    )
+    return Decimal(hundredths) / Decimal(100)
+
+
+def vehicle_count_for_congestion(percentage: Decimal, capacity: int) -> int:
+    """Convert a congestion percentage into a whole simulated vehicle count."""
+    return int((percentage * capacity / Decimal(100)).quantize(Decimal(1)))
 
 
 def run_simulation(
@@ -60,11 +93,13 @@ def run_simulation(
     scenario: str | None = None,
     now: datetime | None = None,
     seed: int | None = None,
+    scenario_predictor: TrafficScenarioPredictor | None = None,
 ) -> SimulationResult:
     """Persist one simulated traffic record and its price decision atomically."""
     effective_time = current_simulation_time(settings, now)
+    predictor = scenario_predictor or DEFAULT_SCENARIO_PREDICTOR
     selected_scenario = scenario or (
-        scenario_for_time(effective_time)
+        predictor.scenario_for(effective_time)
         if settings.simulation_mode == "time_patterned"
         else settings.fixed_scenario
     )
@@ -72,13 +107,9 @@ def run_simulation(
     rule = rules.get(selected_scenario)
     if rule is None:
         raise ValueError(f"No dynamic pricing rule exists for {selected_scenario}.")
-    generator = random.Random(seed)
-    hundredths = generator.randint(
-        int(rule.minimum_percentage * 100), int(rule.maximum_percentage * 100)
-    )
-    percentage = Decimal(hundredths) / Decimal(100)
+    percentage = congestion_percentage_for_rule(rule, seed=seed)
     capacity = 1000
-    vehicle_count = int((percentage * capacity / Decimal(100)).quantize(Decimal(1)))
+    vehicle_count = vehicle_count_for_congestion(percentage, capacity)
     traffic = TrafficRecord(
         measured_at=datetime.now(UTC),
         simulation_time=effective_time,

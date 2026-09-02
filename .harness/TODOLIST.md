@@ -114,16 +114,16 @@ Status legend:
 
 ## Traffic Simulation And Pricing
 
-- [~] Implement traffic scenarios: normal, moderate, peak hour, severe congestion.
-- [~] Support simulated time.
-- [~] Add randomized variation.
-- [~] Support deterministic seeded simulation for tests.
-- [~] Calculate congestion percentage.
-- [~] Classify congestion level.
-- [~] Implement configurable dynamic pricing rules.
-- [~] Store traffic records.
-- [~] Store toll price records.
-- [ ] Leave extension point for future ML-based traffic prediction.
+- [x] Implement traffic scenarios: normal, moderate, peak hour, severe congestion.
+- [x] Support simulated time.
+- [x] Add randomized variation.
+- [x] Support deterministic seeded simulation for tests.
+- [x] Calculate congestion percentage.
+- [x] Classify congestion level.
+- [x] Implement configurable dynamic pricing rules.
+- [x] Store traffic records.
+- [x] Store toll price records.
+- [x] Leave extension point for future ML-based traffic prediction.
 
 ## Admin Dashboard
 
@@ -149,19 +149,19 @@ Status legend:
 - [x] Connect eligible webcam OCR results to vehicle lookup.
 - [x] Connect eligible webcam vehicle lookup results to simulated payment.
 - [x] Connect webcam payment and detection outcomes to persistence.
-- [ ] Connect traffic simulation to dynamic pricing.
+- [x] Connect traffic simulation to dynamic pricing.
 - [ ] Connect backend APIs to dashboard.
 - [ ] Verify complete end-to-end demo flow.
 
 ## Testing And Evaluation
 
 - [ ] Add unit tests for plate normalization.
-- [ ] Add unit tests for congestion calculation.
-- [ ] Add unit tests for dynamic pricing.
+- [x] Add unit tests for congestion calculation.
+- [x] Add unit tests for dynamic pricing.
 - [ ] Add unit tests for account balance deduction.
 - [ ] Add unit tests for insufficient balance handling.
 - [ ] Add unit tests for low-confidence handling.
-- [ ] Add unit tests for deterministic traffic simulation.
+- [x] Add unit tests for deterministic traffic simulation.
 - [x] Add and verify PostgreSQL integration tests for the current database/API persistence workflows.
 - [ ] Add end-to-end system test for the main toll event.
 - [ ] Add UI tests for dashboard readability and responsive behavior.

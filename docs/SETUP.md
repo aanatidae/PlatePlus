@@ -25,14 +25,25 @@ alembic upgrade head
 python -m app.db.seed
 ```
 
-The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a password-hashed demo administrator. Set `DEMO_ADMIN_PASSWORD` and `AUTH_TOKEN_SECRET` to local, non-default values before any shared demo. Sign in through `POST /api/auth/login` and use the returned bearer token for `/api/data/*` routes.
+The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a password-hashed demo administrator. Set `DEMO_ADMIN_PASSWORD` and `AUTH_TOKEN_SECRET` to local, non-default values before any shared demo. Sign in through `POST /api/auth/login` and use the returned bearer token for `/api/data/*` and `/api/traffic/*` routes.
 
 Run PostgreSQL API integration tests against only the temporary test database:
 
 ```powershell
 cd backend
 $env:RUN_POSTGRES_TESTS="1"
-pytest tests/integration/test_database_api.py
+pytest tests/integration/test_database_api.py tests/integration/test_toll_payment.py tests/integration/test_traffic_api.py
+```
+
+## Simulated Traffic And Pricing
+
+The traffic scheduler and its prices are synthetic-only. Administrators can configure its schedule, selected scenario mode, and an advancing simulated Malaysia-time clock through `/api/traffic/settings`. The four contiguous pricing bands are editable through `/api/traffic/pricing-rules`; every configuration change and manual run is written to the audit log.
+
+To generate scheduled records, run this alongside the API after applying migrations:
+
+```powershell
+cd backend
+python -m app.traffic_scheduler
 ```
 
 ## Backend
