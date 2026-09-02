@@ -7,7 +7,6 @@ from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
 from app.api.database import router as database_router
 from app.api.traffic import router as traffic_router
-from app.api.webcam import router as webcam_router
 from app.core.settings import Settings
 
 settings = Settings()
@@ -19,7 +18,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(webcam_router)
+if settings.enable_local_webcam:
+    from app.api.webcam import router as webcam_router
+
+    app.include_router(webcam_router)
 app.include_router(auth_router)
 app.include_router(database_router)
 app.include_router(dashboard_router)

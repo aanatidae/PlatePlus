@@ -20,6 +20,8 @@ services:
         sync: false
       - key: APP_ENV
         value: production
+      - key: ENABLE_LOCAL_WEBCAM
+        value: "false"
 databases:
   - name: capstone-alpr-db
     plan: free

@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     auth_token_secret: str = "local-development-secret-change-before-sharing"
     auth_access_token_minutes: int = 60
     cors_allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    enable_local_webcam: bool = True
     yolo_model_path: Path = Path("../models/trained/car_plate_yolo_best.pt")
     detection_confidence_threshold: float = 0.50
     ocr_confidence_threshold: float = 0.70

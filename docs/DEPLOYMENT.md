@@ -6,7 +6,7 @@ The production administrator dashboard is a Vercel-hosted React application. It 
 
 - Vercel hosts only `frontend/`.
 - Render hosts the FastAPI API and PostgreSQL database. The free deployment intentionally does not run a continuous traffic scheduler worker.
-- Browser webcam access, YOLO inference, PaddleOCR, local model files, and raw frame processing remain local-only. Set `VITE_ENABLE_LOCAL_WEBCAM=false` for every Vercel deployment.
+- Browser webcam access, YOLO inference, PaddleOCR, local model files, and raw frame processing remain local-only. Render sets `ENABLE_LOCAL_WEBCAM=false` to exclude the webcam API router, while Vercel must set `VITE_ENABLE_LOCAL_WEBCAM=false` to hide the local-webcam page.
 
 ## Render
 
