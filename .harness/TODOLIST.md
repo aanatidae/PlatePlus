@@ -138,7 +138,7 @@ Status legend:
 - [x] Add filters for date/time, congestion category, plate, transaction status, registered/unknown status, and toll price where useful.
 - [x] Clearly label traffic and financial values as simulated.
 - [x] Verify responsive layout.
-- [x] Redesign the administrator dashboard with a minimal futuristic visual system, including readable theme-matched chart tooltips, while preserving existing behavior and routes.
+- [x] Redesign the administrator dashboard as a responsive command centre with a persistent operations sidebar, top location/sync/status bar, live telemetry KPIs, traffic-flow visualization, AI decision trace, compact data tables, and readable theme-matched chart tooltips, while preserving existing behavior and routes.
 - [x] Configure and verify the final administrator dashboard deployment on Vercel (Vercel dashboard and free-tier Render API/Postgres are deployed; direct dashboard and traffic routes, CORS, administrator sign-in, and local-webcam exclusion are verified. Traffic simulation remains manual because the paid scheduler is intentionally omitted).
 
 ## Integration
