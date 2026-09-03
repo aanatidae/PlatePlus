@@ -7,6 +7,7 @@ from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
 from app.api.database import router as database_router
 from app.api.traffic import router as traffic_router
+from app.api.live import router as live_router
 from app.core.settings import Settings
 
 settings = Settings()
@@ -25,6 +26,7 @@ if settings.enable_local_webcam:
 app.include_router(auth_router)
 app.include_router(database_router)
 app.include_router(dashboard_router)
+app.include_router(live_router)
 app.include_router(traffic_router)
 
 

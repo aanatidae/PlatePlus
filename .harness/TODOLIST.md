@@ -140,6 +140,7 @@ Status legend:
 - [x] Verify responsive layout.
 - [x] Redesign the administrator dashboard as a responsive command centre with a persistent operations sidebar, top location/sync/status bar, live telemetry KPIs, traffic-flow visualization, AI decision trace, compact data tables, and readable theme-matched chart tooltips, while preserving existing behavior and routes.
 - [x] Add protected Plate Recognition, Dynamic Toll Pricing, and AI Intelligence routes with live persisted detection, transaction, pricing-rule, simulation, and dashboard-overview API data.
+- [x] Separate read-only live Overview telemetry from the local Simulator sandbox; add Malaysia-time live traffic/pricing generation and remove the standalone Traffic Analytics frontend route.
 - [x] Configure and verify the final administrator dashboard deployment on Vercel (Vercel dashboard and free-tier Render API/Postgres are deployed; direct dashboard and traffic routes, CORS, administrator sign-in, and local-webcam exclusion are verified. Traffic simulation remains manual because the paid scheduler is intentionally omitted).
 
 ## Integration
