@@ -73,7 +73,8 @@ The administrator frontend uses a dark command-centre visual system: a responsiv
 ## Phase 8: Integration
 
 - Webcam-frame ingestion is already connected through YOLO detection, plate cropping, PaddleOCR, normalization, confidence gates, preview overlays, and per-session cooldown handling.
-- Connect still-image upload to the recognition pipeline, and extend both eligible recognition inputs through vehicle lookup, simulated payment, persistence, and dashboard updates.
+- Still-image upload is connected to the local recognition pipeline and runs YOLO detection, PaddleOCR, confidence gates, vehicle lookup, simulated payment, persistence, and dashboard refresh without retaining source image bytes. It is administrator-authenticated and remains unavailable from the remote production API along with local webcam inference.
+- An automated upload-to-payment end-to-end test is present. Its PostgreSQL execution must be re-verified after the local Docker/PostgreSQL runtime is restored.
 - Connect traffic simulation to congestion calculation, dynamic pricing, pricing records, and dashboard updates.
 - Ensure service boundaries allow detector, OCR engine, traffic simulator, pricing algorithm, backend, database, and frontend to be replaced independently.
 

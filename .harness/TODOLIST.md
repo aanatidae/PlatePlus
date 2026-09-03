@@ -147,7 +147,7 @@ Status legend:
 
 ## Integration
 
-- [ ] Connect image upload to YOLO inference.
+- [x] Connect image upload to YOLO inference, including PaddleOCR, confidence gates, vehicle lookup, simulated payment, persistence, and dashboard refresh without retaining the uploaded image.
 - [x] Connect webcam frame ingestion to YOLO inference.
 - [x] Connect YOLO detection to plate crop extraction.
 - [x] Connect crop extraction to OCR.
@@ -156,7 +156,7 @@ Status legend:
 - [x] Connect webcam payment and detection outcomes to persistence.
 - [x] Connect traffic simulation to dynamic pricing.
 - [x] Connect backend APIs to dashboard.
-- [ ] Verify complete end-to-end demo flow.
+- [~] Verify complete end-to-end demo flow. An automated still-image upload → simulated payment test is implemented; PostgreSQL execution is pending because Docker/PostgreSQL is unavailable on this machine.
 
 ## Testing And Evaluation
 

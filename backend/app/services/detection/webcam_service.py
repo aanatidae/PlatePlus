@@ -54,3 +54,12 @@ class WebcamService:
             bounding_box=result.bounding_box,
             charge_eligible=False,
         )
+
+    def process_image(self, image_bytes: bytes) -> ProcessedFrame:
+        """Process one operator-uploaded still image without webcam-session cooldowns.
+
+        An upload is a distinct, intentional toll-event submission. Database
+        idempotency protects its payment flow; webcam-only cooldown state must
+        not leak into it.
+        """
+        return self._processor.process(image_bytes)
