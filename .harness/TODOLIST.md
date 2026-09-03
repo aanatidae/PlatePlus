@@ -156,7 +156,7 @@ Status legend:
 - [x] Connect webcam payment and detection outcomes to persistence.
 - [x] Connect traffic simulation to dynamic pricing.
 - [x] Connect backend APIs to dashboard.
-- [~] Verify complete end-to-end demo flow. An automated still-image upload → simulated payment test is implemented; PostgreSQL execution is pending because Docker/PostgreSQL is unavailable on this machine.
+- [x] Verify complete end-to-end demo flow. Live still-image upload exercised local YOLO detection (92.3%), PaddleOCR recognition (99.88%), vehicle matching, a simulated RM2.00 payment, persistence, and idempotent replay without an additional deduction. The physical browser-webcam test remains separately deferred.
 
 ## Testing And Evaluation
 
@@ -168,7 +168,7 @@ Status legend:
 - [ ] Add unit tests for low-confidence handling.
 - [x] Add unit tests for deterministic traffic simulation.
 - [x] Add and verify PostgreSQL integration tests for the current database/API persistence workflows.
-- [ ] Add end-to-end system test for the main toll event.
+- [x] Add end-to-end system test for the main toll event (authenticated still-image submission through the simulated toll deduction and persistence workflow), and verify the corresponding live still-image flow locally.
 - [ ] Add UI tests for dashboard readability and responsive behavior.
 - [x] Record ML detection metrics.
 - [x] Record OCR accuracy metrics.
