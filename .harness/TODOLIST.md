@@ -139,6 +139,7 @@ Status legend:
 - [x] Clearly label traffic and financial values as simulated.
 - [x] Verify responsive layout.
 - [x] Redesign the administrator dashboard as a responsive command centre with a persistent operations sidebar, top location/sync/status bar, live telemetry KPIs, traffic-flow visualization, AI decision trace, compact data tables, and readable theme-matched chart tooltips, while preserving existing behavior and routes.
+- [x] Add protected Plate Recognition, Dynamic Toll Pricing, and AI Intelligence routes with live persisted detection, transaction, pricing-rule, simulation, and dashboard-overview API data.
 - [x] Configure and verify the final administrator dashboard deployment on Vercel (Vercel dashboard and free-tier Render API/Postgres are deployed; direct dashboard and traffic routes, CORS, administrator sign-in, and local-webcam exclusion are verified. Traffic simulation remains manual because the paid scheduler is intentionally omitted).
 
 ## Integration
@@ -151,7 +152,7 @@ Status legend:
 - [x] Connect eligible webcam vehicle lookup results to simulated payment.
 - [x] Connect webcam payment and detection outcomes to persistence.
 - [x] Connect traffic simulation to dynamic pricing.
-- [ ] Connect backend APIs to dashboard.
+- [x] Connect backend APIs to dashboard.
 - [ ] Verify complete end-to-end demo flow.
 
 ## Testing And Evaluation
