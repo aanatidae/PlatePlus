@@ -49,7 +49,7 @@ def test_authenticated_image_upload_runs_the_complete_simulated_toll_flow(
 
     response = TestClient(app).post(
         "/api/webcam/images",
-        files={"image": ("plate.jpg", b"image-bytes", "image/jpeg")},
+        files={"image": ("plate.jpg", b"image-bytes", "image/jpg")},
         headers={**admin_auth_headers, "Idempotency-Key": "upload-e2e-test-0001"},
     )
 

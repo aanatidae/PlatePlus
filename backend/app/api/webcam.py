@@ -24,6 +24,7 @@ from app.services.transactions.toll_payment import process_toll_event
 router = APIRouter(
     prefix="/api/webcam", tags=["webcam"], dependencies=[Depends(require_admin)]
 )
+SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"}
 settings = Settings()
 service = WebcamService(
     WebcamFrameProcessor(
@@ -55,7 +56,7 @@ async def process_frame(
     database: Annotated[Session, Depends(get_db)],
     idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
 ) -> WebcamFrameResult:
-    if frame.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+    if frame.content_type not in SUPPORTED_IMAGE_TYPES:
         raise HTTPException(
             status_code=415, detail="Webcam frames must be JPEG, PNG, or WebP images."
         )
@@ -104,7 +105,7 @@ async def process_image(
 
     Image bytes are used only for inference and are never written to disk.
     """
-    if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+    if image.content_type not in SUPPORTED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail="Uploaded images must be JPEG, PNG, or WebP files.")
     image_bytes = await image.read(settings.webcam_max_frame_bytes + 1)
     if len(image_bytes) > settings.webcam_max_frame_bytes:

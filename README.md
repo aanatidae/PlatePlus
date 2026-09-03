@@ -9,7 +9,7 @@ The computer-vision baseline is complete: a one-class YOLO detector identifies M
 - Traffic data is simulated.
 - Toll payments and account balances are simulated.
 - No real banking, toll infrastructure, traffic-feed, enforcement, or vehicle-owner integrations are in scope.
-- Recognition supports local browser-webcam frames; still-image upload remains a pending integration item.
+- Recognition supports local browser-webcam frames and one-time still-image uploads. Both local inference paths remain unavailable from the cloud dashboard by design.
 - The detector should focus on the `car plate` class.
 
 ## Planned Stack
@@ -41,7 +41,7 @@ The repository includes ML dataset preparation, plate processing, YOLO crop extr
 - Detector: one-class `car plate` YOLO model, trained for 150 epochs; user-reported held-out test accuracy: 93.1%.
 - OCR: PaddleOCR reached 37 exact matches out of 44 held-out crops (84.1%) using uppercase-alphanumeric normalization.
 - Confidence gates remain required before any downstream simulated charge; low-confidence or unknown results must fail safely.
-- The still-image pipeline is the current target. Video-frame processing is deferred.
+- Still-image and browser-frame processing are available locally; prerecorded-video processing remains deferred.
 
 ## Initial Commands
 
