@@ -142,6 +142,7 @@ Status legend:
 - [x] Add protected Plate Recognition, Dynamic Toll Pricing, and AI Intelligence routes with live persisted detection, transaction, pricing-rule, simulation, and dashboard-overview API data.
 - [x] Separate read-only live Overview telemetry from the local Simulator sandbox; add Malaysia-time live traffic/pricing generation and remove the standalone Traffic Analytics frontend route.
 - [x] Align sandbox preset toll prices to Normal RM2, Moderate RM3, Peak Hour RM4, and Severe RM5; derive sandbox traffic volume/speed from congestion and add a ticking Malaysia-time Overview clock.
+- [x] Update custom-sandbox pricing to derive congestion from a bounded 0–5,000 vehicles/hour input and apply base toll plus RM0/RM1/RM2/RM3 congestion bands.
 - [x] Configure and verify the final administrator dashboard deployment on Vercel (Vercel dashboard and free-tier Render API/Postgres are deployed; direct dashboard and traffic routes, CORS, administrator sign-in, and local-webcam exclusion are verified. Traffic simulation remains manual because the paid scheduler is intentionally omitted).
 
 ## Integration
