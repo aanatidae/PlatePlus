@@ -160,19 +160,19 @@ Status legend:
 
 ## Testing And Evaluation
 
-- [ ] Add unit tests for plate normalization.
+- [x] Add unit tests for plate normalization (normalization, plausibility, crop extraction, and recognition gates are covered in `ml/tests/test_plate_processing.py`).
 - [x] Add unit tests for congestion calculation.
 - [x] Add unit tests for dynamic pricing.
-- [ ] Add unit tests for account balance deduction.
-- [ ] Add unit tests for insufficient balance handling.
-- [ ] Add unit tests for low-confidence handling.
+- [x] Add unit tests for account balance deduction (`backend/tests/unit/test_toll_payment_logic.py`).
+- [x] Add unit tests for insufficient balance handling (`backend/tests/unit/test_toll_payment_logic.py`, with PostgreSQL workflow coverage in `backend/tests/integration/test_toll_payment.py`).
+- [x] Add unit tests for low-confidence handling (`backend/tests/unit/test_toll_payment_logic.py`, with ML confidence-gate coverage in `ml/tests/test_plate_processing.py`).
 - [x] Add unit tests for deterministic traffic simulation.
 - [x] Add and verify PostgreSQL integration tests for the current database/API persistence workflows.
 - [x] Add end-to-end system test for the main toll event (authenticated still-image submission through the simulated toll deduction and persistence workflow), and verify the corresponding live still-image flow locally.
-- [ ] Add UI tests for dashboard readability and responsive behavior.
+- [x] Add UI tests for dashboard readability and responsive behavior (`frontend/src/App.ui-contract.test.ts` checks routes, user-visible states, accessibility labels, and tablet/mobile/reduced-motion CSS rules; deployed login was visually checked).
 - [x] Record ML detection metrics.
 - [x] Record OCR accuracy metrics.
-- [ ] Record known limitations and failure cases.
+- [x] Record known limitations and failure cases in `docs/TESTING_EVALUATION.md`.
 
 ## Documentation And Demo
 

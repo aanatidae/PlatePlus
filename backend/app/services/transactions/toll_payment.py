@@ -22,6 +22,25 @@ class PaymentOutcome:
     duplicate: bool = False
 
 
+def recognition_is_charge_eligible(
+    recognition_accepted: bool, normalized_plate: str | None
+) -> bool:
+    """Return whether a recognition can enter the simulated payment workflow."""
+    return recognition_accepted and bool(normalized_plate)
+
+
+def has_sufficient_balance(balance: Decimal, amount: Decimal) -> bool:
+    """Return whether a simulated account can cover a toll without overdrafting."""
+    return balance >= amount
+
+
+def balance_after_toll(balance: Decimal, amount: Decimal) -> Decimal:
+    """Deduct a covered simulated toll, rejecting any overdraft attempt."""
+    if not has_sufficient_balance(balance, amount):
+        raise ValueError("Simulated account balance is insufficient for this toll.")
+    return balance - amount
+
+
 def process_toll_event(
     database: Session,
     *,
@@ -67,7 +86,7 @@ def process_toll_event(
         .order_by(TollPrice.effective_at.desc())
         .limit(1)
     )
-    if not recognition_accepted or not normalized_plate:
+    if not recognition_is_charge_eligible(recognition_accepted, normalized_plate):
         return _record_failure(
             database, detection, idempotency_key, now, "low_confidence", "Recognition did not pass confidence checks."
         )
@@ -114,7 +133,7 @@ def process_toll_event(
             vehicle=vehicle,
             price=price,
         )
-    if account.balance < price.amount:
+    if not has_sufficient_balance(account.balance, price.amount):
         detection.status = "accepted"
         return _record_failure(
             database,
@@ -128,7 +147,7 @@ def process_toll_event(
             price=price,
         )
 
-    account.balance -= price.amount
+    account.balance = balance_after_toll(account.balance, price.amount)
     transaction = TollTransaction(
         account_id=account.id,
         vehicle_id=vehicle.id,
