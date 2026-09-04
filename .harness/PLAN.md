@@ -10,6 +10,8 @@ Project Foundation, dataset preparation, the car-plate-only YOLO detector, Paddl
 
 Testing and evaluation coverage is complete for the current prototype: focused plate-normalization, toll-payment, traffic, webcam, database/API, still-image end-to-end, and dashboard UI-contract tests are recorded in `docs/TESTING_EVALUATION.md`. The deployed login UI has also been visually checked. The physical browser-webcam verification remains intentionally deferred.
 
+Documentation and demo hardening are complete for the current prototype: `docs/SETUP.md` records launch, database, seed, and test commands; `docs/DEMO.md` provides the controlled simulated-only presentation flow; and the README links to setup, evaluation, training, OCR, deployment, and demo guidance.
+
 The administrator frontend uses a dark command-centre visual system: a responsive operations sidebar, top location/sync/status bar, dark teal operational surfaces, high-contrast traffic states, live telemetry KPIs, compact technical labels, a toll-flow visualization, and responsive data layouts. The Overview is exclusively backed by the read-only Malaysia-time live telemetry service and persisted ALPR/payment activity. Plate Recognition, Dynamic Toll Management, AI Intelligence, Simulator, and local-webcam routes remain protected. On the production dashboard, Plate Recognition clearly explains that raw-image ALPR remains local-only rather than presenting an unavailable upload control. AI Intelligence exposes its recognition gates, traffic-model mode/cadence, four-band pricing policy, Malaysia-time clock, and useful telemetry-recovery states instead of generic `N/A` values. The Simulator copies live values only as a baseline and calculates local sandbox state/history without writing live traffic, prices, or transactions.
 
 ## Phase 1: Repository And Project Foundation
@@ -93,10 +95,8 @@ The administrator frontend uses a dark command-centre visual system: a responsiv
 
 ## Phase 10: Demo Hardening And Documentation
 
-- Prepare a reliable local demo path.
-- Prepare and document the Vercel deployment path for the final administrator dashboard.
-- Document setup from a clean machine.
-- Document PostgreSQL configuration and seed credentials.
-- Document how to transfer the local model artifact, enable this laptop's webcam, run local inference, and use dashboard workflows.
-- Document privacy, security, ethical limitations, and simulated-only scope.
-- Capture screenshots or demo evidence if needed for final submission.
+- A reliable local demo path and controlled presentation script are documented in `docs/SETUP.md` and `docs/DEMO.md`.
+- The Vercel deployment path for the administrator dashboard is documented in `docs/DEPLOYMENT.md`.
+- Setup, PostgreSQL configuration, synthetic seed/admin behavior, model transfer, local inference, OCR evaluation, and dashboard workflows are documented in the setup and ML guides.
+- Privacy, security, ethical limitations, simulated-only scope, metrics, and failure cases are documented in `README.md`, `docs/DEMO.md`, and `docs/TESTING_EVALUATION.md`.
+- Capture screenshots or additional demo evidence only if needed for final submission.

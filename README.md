@@ -1,8 +1,8 @@
-# AI-Powered Automatic License Plate Recognition and Dynamic Toll Management System
+# PlatePlus
 
 Capstone prototype for Malaysian automatic license plate recognition (ALPR), OCR-based plate matching, simulated toll transactions, simulated traffic conditions, and configurable dynamic toll pricing.
 
-The computer-vision baseline is complete: a one-class YOLO detector identifies Malaysian car plates and PaddleOCR recognizes plate text from detected crops. The FastAPI/PostgreSQL foundation, simulated toll workflow, and configurable traffic-pricing backend are complete; administrator dashboard expansion remains next.
+The computer-vision baseline is complete: a one-class YOLO detector identifies Malaysian car plates and PaddleOCR recognizes plate text from detected crops. The FastAPI/PostgreSQL foundation, simulated toll workflow, configurable traffic-pricing backend, and administrator dashboard are complete.
 
 ## Scope
 
@@ -12,7 +12,7 @@ The computer-vision baseline is complete: a one-class YOLO detector identifies M
 - Recognition supports local browser-webcam frames and one-time still-image uploads. Both local inference paths remain unavailable from the cloud dashboard by design.
 - The detector should focus on the `car plate` class.
 
-## Planned Stack
+## Stack
 
 - Backend/API: FastAPI
 - Database: Docker-based PostgreSQL
@@ -43,6 +43,15 @@ The repository includes ML dataset preparation, plate processing, YOLO crop extr
 - Confidence gates remain required before any downstream simulated charge; low-confidence or unknown results must fail safely.
 - Still-image and browser-frame processing are available locally; prerecorded-video processing remains deferred.
 
+## Documentation
+
+- [Local setup, database, launch, and test commands](docs/SETUP.md)
+- [Capstone demo flow](docs/DEMO.md)
+- [Testing, metrics, limitations, and failure cases](docs/TESTING_EVALUATION.md)
+- [OCR workflow](docs/OCR_PLATE_PROCESSING.md)
+- [YOLO training workflow](docs/COLAB_TRAINING.md)
+- [Vercel and Render deployment](docs/DEPLOYMENT.md)
+
 ## Initial Commands
 
 Copy environment defaults before running future services:
@@ -67,7 +76,7 @@ pip install -e .[dev]
 uvicorn app.main:app --reload
 ```
 
-Frontend setup command planned for future implementation:
+Frontend setup command:
 
 ```bash
 cd frontend
@@ -77,7 +86,7 @@ npm run dev
 
 ## Current Limitations
 
-- The administrator dashboard has login protection but its traffic/pricing metrics, charts, history, and filters remain pending.
+- The administrator dashboard is administrator-only, and all of its traffic, pricing, financial, and vehicle data remain simulated.
 - The traffic scheduler is a separate local process; it is not part of the Vercel dashboard deployment boundary.
 - The trained YOLO weights are intentionally ignored by Git and must be supplied locally before inference can run on a fresh clone.
 - PaddleOCR has been selected and evaluated, but dependencies/models must still be installed locally with user approval when integration begins.

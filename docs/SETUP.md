@@ -1,11 +1,12 @@
-# Setup Notes
+# Local Setup and Operations
 
-These notes document the project foundation only. Commands that install dependencies, download models, or run training should be executed only after user approval.
+These are the current local commands for the prototype. Installing dependencies, downloading OCR assets, training models, starting Docker, and granting browser-camera permission can change the local environment; do those actions only with approval.
 
 ## Environment
 
 1. Copy `.env.example` to `.env`.
-2. Change demo secrets before sharing the application beyond a local capstone demo.
+2. Set non-default `DEMO_ADMIN_PASSWORD` and `AUTH_TOKEN_SECRET` values before any shared demonstration.
+3. Keep `ENABLE_LOCAL_WEBCAM=true` only on a local operator machine. The deployed dashboard uses `false`.
 
 ## PostgreSQL
 
@@ -25,7 +26,7 @@ alembic upgrade head
 python -m app.db.seed
 ```
 
-The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a password-hashed demo administrator. Set `DEMO_ADMIN_PASSWORD` and `AUTH_TOKEN_SECRET` to local, non-default values before any shared demo. Sign in through `POST /api/auth/login` and use the returned bearer token for `/api/data/*` and `/api/traffic/*` routes.
+The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a password-hashed demo administrator. Use the `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` values from your untracked `.env` to sign in to the dashboard or `POST /api/auth/login`.
 
 Run PostgreSQL API integration tests against only the temporary test database:
 
@@ -34,6 +35,8 @@ cd backend
 $env:RUN_POSTGRES_TESTS="1"
 pytest tests/integration/test_database_api.py tests/integration/test_toll_payment.py tests/integration/test_traffic_api.py
 ```
+
+Do not point `RUN_POSTGRES_TESTS` at the development database: the integration fixture migrates and resets the dedicated temporary test database.
 
 ## Simulated Traffic And Pricing
 
@@ -46,7 +49,7 @@ cd backend
 python -m app.traffic_scheduler
 ```
 
-## Backend
+## Launch the local application
 
 The backend manifest is in `backend/pyproject.toml`:
 
@@ -60,7 +63,7 @@ uvicorn app.main:app --reload
 
 ## Frontend
 
-The frontend manifest is in `frontend/package.json`. Planned setup:
+The frontend manifest is in `frontend/package.json`:
 
 ```bash
 cd frontend
@@ -70,7 +73,7 @@ npm run dev
 
 ## ML Pipeline
 
-The ML manifest is in `ml/pyproject.toml`. YOLO and OCR dependencies are intentionally separated because model downloads and OCR engine choice require explicit approval.
+YOLO and PaddleOCR dependencies are intentionally separated because their first use can download assets. Transfer the trained model to `models/trained/car_plate_yolo_best.pt` without adding it to Git. See [COLAB_TRAINING.md](COLAB_TRAINING.md) for training and [OCR_PLATE_PROCESSING.md](OCR_PLATE_PROCESSING.md) for OCR evaluation.
 
 ## Local Webcam ALPR
 
@@ -93,12 +96,32 @@ pip install -e "../ml[paddleocr,yolo]"
 uvicorn app.main:app --reload
 ```
 
+The health check is available at `http://127.0.0.1:8000/health`. Keep this terminal open while using the local dashboard.
+
 In a second terminal, install and start the frontend:
 
 ```powershell
 cd frontend
 npm install
 npm run dev
+```
+
+Open the Vite URL (normally `http://127.0.0.1:5173`) and sign in with the seed values from `.env`.
+
+## Test commands
+
+Run each Python suite from its own project directory because both `backend` and `ml` define a `tests` package.
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m pytest tests\unit -q
+
+cd ..\ml
+..\backend\.venv\Scripts\python.exe -m pytest tests -q
+
+cd ..\frontend
+npm test
+npm run build
 ```
 
 Open the local frontend shown by Vite, then choose **Start camera** and grant browser camera access. The first PaddleOCR use may download OCR models locally. No Docker service is needed for this webcam-only flow.

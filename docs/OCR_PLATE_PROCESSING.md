@@ -2,15 +2,12 @@
 
 ## Selected OCR Engine
 
-The first prototype uses EasyOCR. It is a Python-native OCR library that can run
-on the existing CPU PyTorch environment and does not require the separate
-operating-system installation that Tesseract needs. The recognizer is configured
-for English characters and an uppercase alphanumeric allow-list, which matches
-Malaysian plate recognition.
-
-EasyOCR remains an optional ML dependency. Installing it will also cause EasyOCR
-to download its recognition model the first time it is initialized. Keep model
-files local and ignored by Git.
+The integrated prototype uses PaddleOCR on CPU with PaddlePaddle 3.2.x. It was
+selected after reaching 37 exact matches out of 44 preserved held-out crops
+(84.1%), compared with EasyOCR's 15/44 (34.1%) on the same evaluation protocol.
+The recognizer uses uppercase-alphanumeric normalization suited to Malaysian
+plates. PaddleOCR assets remain local and Git-ignored; its first use can download
+models, so prepare them only with approval.
 
 ## Still-Image Flow
 
@@ -53,7 +50,7 @@ accuracy, and retain failure samples for the capstone report.
 Generate local review crops and OCR candidates from the held-out set:
 
 ```powershell
-ml/.venv/Scripts/python.exe scripts/generate_ocr_review_set.py `
+backend/.venv/Scripts/python.exe scripts/generate_ocr_review_set.py `
   --images-dir ml/datasets/generated/car_plate_yolo/test/images `
   --model models/trained/car_plate_yolo_best.pt `
   --output-dir ml/evaluation/review
@@ -63,7 +60,7 @@ Enter visually verified text in `ml/evaluation/ocr_ground_truth_template.csv`, t
 calculate exact-match accuracy and retain result rows for the capstone report:
 
 ```powershell
-ml/.venv/Scripts/python.exe scripts/evaluate_ocr_accuracy.py `
+backend/.venv/Scripts/python.exe scripts/evaluate_ocr_accuracy.py `
   --ground-truth ml/evaluation/ocr_ground_truth_template.csv `
   --candidates ml/evaluation/review/ocr_candidates.csv `
   --output-dir ml/evaluation/results

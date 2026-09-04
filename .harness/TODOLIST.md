@@ -176,12 +176,12 @@ Status legend:
 
 ## Documentation And Demo
 
-- [ ] Document all launch commands.
-- [ ] Document all test commands.
-- [ ] Document PostgreSQL setup.
-- [ ] Document seed/admin setup.
-- [ ] Document YOLO training and inference commands.
-- [ ] Document OCR evaluation workflow.
-- [ ] Document simulated-only scope and exclusions.
-- [ ] Prepare final capstone demo flow.
+- [x] Document all launch commands in `docs/SETUP.md`.
+- [x] Document all test commands in `docs/SETUP.md` and `docs/TESTING_EVALUATION.md`.
+- [x] Document PostgreSQL setup in `docs/SETUP.md`.
+- [x] Document seed/admin setup in `docs/SETUP.md`.
+- [x] Document YOLO training and inference commands in `docs/COLAB_TRAINING.md` and `docs/SETUP.md`.
+- [x] Document OCR evaluation workflow in `docs/OCR_PLATE_PROCESSING.md`.
+- [x] Document simulated-only scope and exclusions in `README.md` and `docs/DEMO.md`.
+- [x] Prepare final capstone demo flow in `docs/DEMO.md`.
 - [x] Document Vercel dashboard deployment, including API configuration and local-service limitations.
