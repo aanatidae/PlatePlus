@@ -65,17 +65,17 @@ The checklist below tracks **improvements**, not the original development phase.
 
 ## Toll Location APIs
 
-- [ ] Add API to list toll locations.
-- [ ] Add API to retrieve one toll location.
-- [ ] Add API for one location's live operational state.
-- [ ] Add API for network-wide live state.
-- [ ] Add location-aware traffic queries.
-- [ ] Add location-aware pricing queries.
-- [ ] Add location-aware detection queries.
-- [ ] Add location-aware transaction queries.
-- [ ] Add network-level aggregate metrics.
-- [ ] Validate unknown location IDs safely.
-- [ ] Ensure one location's records cannot leak into another location's response.
+- [x] Add API to list toll locations.
+- [x] Add API to retrieve one toll location.
+- [x] Add API for one location's live operational state.
+- [x] Add API for network-wide live state.
+- [x] Add location-aware traffic queries.
+- [x] Add location-aware pricing queries.
+- [x] Add location-aware detection queries.
+- [x] Add location-aware transaction queries.
+- [x] Add network-level aggregate metrics.
+- [x] Validate unknown location IDs safely.
+- [x] Ensure one location's records cannot leak into another location's response.
 
 ## Interactive Overview Map
 

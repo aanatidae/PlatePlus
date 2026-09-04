@@ -16,6 +16,7 @@ from app.models import (
     Account,
     Admin,
     DetectionRecord,
+    TollLocation,
     TollPrice,
     TollTransaction,
     TrafficRecord,
@@ -69,6 +70,12 @@ def _require(database: Session, model: type[ModelT], entity_id: UUID, label: str
 
 def _list(database: Session, model: type[ModelT], offset: int, limit: int) -> list[ModelT]:
     return list(database.scalars(select(model).offset(offset).limit(limit)))
+
+
+def _location(database: Session, location_id: UUID | None) -> UUID | None:
+    if location_id is not None and database.get(TollLocation, location_id) is None:
+        raise HTTPException(status_code=404, detail="Toll location was not found.")
+    return location_id
 
 
 @router.get("/admins", response_model=list[AdminRead])
@@ -129,10 +136,12 @@ def create_traffic_record(payload: TrafficRecordCreate, database: DatabaseSessio
 
 @router.get("/traffic-records", response_model=list[TrafficRecordRead])
 def list_traffic_records(
-    database: DatabaseSession, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
+    database: DatabaseSession, location_id: UUID | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
 ):
+    location_id = _location(database, location_id)
     statement = (
-        select(TrafficRecord).order_by(TrafficRecord.measured_at.desc()).offset(offset).limit(limit)
+        select(TrafficRecord).where(TrafficRecord.location_id == location_id).order_by(TrafficRecord.measured_at.desc()).offset(offset).limit(limit)
+        if location_id else select(TrafficRecord).order_by(TrafficRecord.measured_at.desc()).offset(offset).limit(limit)
     )
     return list(database.scalars(statement))
 
@@ -148,10 +157,12 @@ def create_toll_price(payload: TollPriceCreate, database: DatabaseSession):
 
 @router.get("/toll-prices", response_model=list[TollPriceRead])
 def list_toll_prices(
-    database: DatabaseSession, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
+    database: DatabaseSession, location_id: UUID | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
 ):
+    location_id = _location(database, location_id)
     statement = (
-        select(TollPrice).order_by(TollPrice.effective_at.desc()).offset(offset).limit(limit)
+        select(TollPrice).where(TollPrice.location_id == location_id).order_by(TollPrice.effective_at.desc()).offset(offset).limit(limit)
+        if location_id else select(TollPrice).order_by(TollPrice.effective_at.desc()).offset(offset).limit(limit)
     )
     return list(database.scalars(statement))
 
@@ -169,10 +180,15 @@ def create_detection(payload: DetectionRecordCreate, database: DatabaseSession):
 
 @router.get("/detections", response_model=list[DetectionRecordRead])
 def list_detections(
-    database: DatabaseSession, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
+    database: DatabaseSession, location_id: UUID | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
 ):
+    location_id = _location(database, location_id)
     statement = (
         select(DetectionRecord)
+        .where(DetectionRecord.location_id == location_id) if location_id else select(DetectionRecord)
+    )
+    statement = (
+        statement
         .order_by(DetectionRecord.detected_at.desc())
         .offset(offset)
         .limit(limit)
@@ -201,10 +217,14 @@ def create_transaction(payload: TollTransactionCreate, database: DatabaseSession
 
 @router.get("/transactions", response_model=list[TollTransactionRead])
 def list_transactions(
-    database: DatabaseSession, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
+    database: DatabaseSession, location_id: UUID | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
 ):
+    location_id = _location(database, location_id)
     statement = (
-        select(TollTransaction)
+        select(TollTransaction).where(TollTransaction.location_id == location_id) if location_id else select(TollTransaction)
+    )
+    statement = (
+        statement
         .order_by(TollTransaction.processed_at.desc())
         .offset(offset)
         .limit(limit)

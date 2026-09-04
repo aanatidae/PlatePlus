@@ -53,11 +53,13 @@ def database_app(database):
 
     from app.api.auth import router as auth_router
     from app.api.database import router as database_router
+    from app.api.locations import router as locations_router
     from app.api.traffic import router as traffic_router
 
     app = FastAPI()
     app.include_router(auth_router)
     app.include_router(database_router)
+    app.include_router(locations_router)
     app.include_router(traffic_router)
 
     def override_database():
