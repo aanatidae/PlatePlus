@@ -11,7 +11,7 @@
 ## Current Repository State
 
 - Workspace root: resolve it as the directory containing `.harness`; do not hard-code a drive letter. The project is normally `D:/Capstone Project` on the user's PC and `C:/Capstone Project` on the user's laptop.
-- Git remote: `https://github.com/aanatidae/capstoneproject`; `main` tracks `origin/main`. Do not commit, push, or open a pull request unless the user gives the green light.
+- Git remote: `https://github.com/aanatidae/PlatePlus`; `main` tracks `origin/main`. Do not commit, push, or open a pull request unless the user gives the green light.
 - The workspace contains the Malaysian car-plate dataset, a trained local YOLO car-plate detector, the ML/OCR pipeline, a local webcam FastAPI API, database models/migrations/APIs, and a React webcam UI.
 - Python 3.12.10, a recreated backend `.venv`, and backend/core-ML dependencies are installed. Docker-based PostgreSQL development/test services, migrations, seed data, and integration tests were verified previously, but Docker Desktop/CLI and local PostgreSQL ports were unavailable on this machine on 2026-09-03; re-verify the local container runtime before relying on PostgreSQL integration tests.
 
@@ -25,7 +25,7 @@
 ## Repository and Publishing Notes
 
 - The harness files were reviewed and reconciled with the current repository state on 2026-09-01.
-- After approval, future work may be pushed to: https://github.com/aanatidae/capstoneproject
+- After approval, future work may be pushed to: https://github.com/aanatidae/PlatePlus
 - Do not push, commit, or open a pull request until the user gives the green light.
 
 ## Dashboard Deployment
