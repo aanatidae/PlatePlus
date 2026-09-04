@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Account, DetectionRecord, TollPrice, TollTransaction, Vehicle
+from app.services.locations import default_toll_location_id
 
 
 @dataclass(frozen=True)
@@ -68,7 +69,9 @@ def process_toll_event(
         )
 
     now = detected_at or datetime.now(UTC)
+    location_id = default_toll_location_id(database)
     detection = DetectionRecord(
+        location_id=location_id,
         detected_at=now,
         raw_plate_text=raw_plate_text,
         normalized_plate=normalized_plate,
@@ -82,18 +85,28 @@ def process_toll_event(
 
     price = database.scalar(
         select(TollPrice)
-        .where(TollPrice.effective_at <= now)
+        .where(TollPrice.location_id == location_id, TollPrice.effective_at <= now)
         .order_by(TollPrice.effective_at.desc())
         .limit(1)
     )
     if not recognition_is_charge_eligible(recognition_accepted, normalized_plate):
         return _record_failure(
-            database, detection, idempotency_key, now, "low_confidence", "Recognition did not pass confidence checks."
+            database,
+            detection,
+            idempotency_key,
+            now,
+            "low_confidence",
+            "Recognition did not pass confidence checks.",
         )
     if price is None:
         detection.status = "error"
         return _record_failure(
-            database, detection, idempotency_key, now, "failed", "No current simulated toll price is available."
+            database,
+            detection,
+            idempotency_key,
+            now,
+            "failed",
+            "No current simulated toll price is available.",
         )
 
     vehicle = database.scalar(
@@ -149,6 +162,7 @@ def process_toll_event(
 
     account.balance = balance_after_toll(account.balance, price.amount)
     transaction = TollTransaction(
+        location_id=location_id,
         account_id=account.id,
         vehicle_id=vehicle.id,
         toll_price_id=price.id,
@@ -184,6 +198,7 @@ def _record_failure(
     price: TollPrice | None = None,
 ) -> PaymentOutcome:
     transaction = TollTransaction(
+        location_id=detection.location_id,
         account_id=account.id if account else None,
         vehicle_id=vehicle.id if vehicle else detection.vehicle_id,
         toll_price_id=price.id if price else None,
@@ -198,4 +213,6 @@ def _record_failure(
     database.add(transaction)
     database.commit()
     database.refresh(transaction)
-    return PaymentOutcome(status, message, transaction.amount, transaction.balance_after, str(transaction.id))
+    return PaymentOutcome(
+        status, message, transaction.amount, transaction.balance_after, str(transaction.id)
+    )

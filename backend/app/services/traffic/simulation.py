@@ -12,7 +12,14 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import DynamicPricingRule, TollPrice, TrafficRecord, TrafficSimulationSettings
+from app.models import (
+    DynamicPricingRule,
+    TollLocation,
+    TollPrice,
+    TrafficRecord,
+    TrafficSimulationSettings,
+)
+from app.services.locations import default_toll_location_id
 
 MALAYSIA_TIMEZONE = ZoneInfo("Asia/Kuala_Lumpur")
 SCENARIO_CATEGORIES = {
@@ -22,11 +29,30 @@ SCENARIO_CATEGORIES = {
     "severe": "severe",
 }
 TIME_PROFILE = {
-    0: "normal", 1: "normal", 2: "normal", 3: "normal", 4: "normal",
-    5: "moderate", 6: "peak_hour", 7: "severe", 8: "severe", 9: "peak_hour",
-    10: "moderate", 11: "moderate", 12: "moderate", 13: "moderate", 14: "moderate",
-    15: "moderate", 16: "peak_hour", 17: "severe", 18: "severe", 19: "peak_hour",
-    20: "moderate", 21: "moderate", 22: "normal", 23: "normal",
+    0: "normal",
+    1: "normal",
+    2: "normal",
+    3: "normal",
+    4: "normal",
+    5: "moderate",
+    6: "peak_hour",
+    7: "severe",
+    8: "severe",
+    9: "peak_hour",
+    10: "moderate",
+    11: "moderate",
+    12: "moderate",
+    13: "moderate",
+    14: "moderate",
+    15: "moderate",
+    16: "peak_hour",
+    17: "severe",
+    18: "severe",
+    19: "peak_hour",
+    20: "moderate",
+    21: "moderate",
+    22: "normal",
+    23: "normal",
 }
 
 
@@ -54,7 +80,9 @@ class SimulationResult:
     simulation_time: datetime
 
 
-def current_simulation_time(settings: TrafficSimulationSettings, now: datetime | None = None) -> datetime:
+def current_simulation_time(
+    settings: TrafficSimulationSettings, now: datetime | None = None
+) -> datetime:
     now = now or datetime.now(UTC)
     if settings.time_mode != "simulated" or settings.simulated_time is None:
         return now.astimezone(MALAYSIA_TIMEZONE)
@@ -107,10 +135,15 @@ def run_simulation(
     rule = rules.get(selected_scenario)
     if rule is None:
         raise ValueError(f"No dynamic pricing rule exists for {selected_scenario}.")
+    location_id = default_toll_location_id(database)
+    location = database.get(TollLocation, location_id)
+    if location is None:  # Defensive guard for a partially migrated database.
+        raise ValueError("The default Penchala toll location is not initialized. Run migrations.")
     percentage = congestion_percentage_for_rule(rule, seed=seed)
-    capacity = 1000
+    capacity = location.road_capacity
     vehicle_count = vehicle_count_for_congestion(percentage, capacity)
     traffic = TrafficRecord(
+        location_id=location.id,
         measured_at=datetime.now(UTC),
         simulation_time=effective_time,
         vehicle_count=vehicle_count,
@@ -125,6 +158,7 @@ def run_simulation(
     database.flush()
     price = TollPrice(
         traffic_record_id=traffic.id,
+        location_id=location.id,
         effective_at=datetime.now(UTC),
         amount=rule.amount,
         congestion_category=rule.congestion_category,

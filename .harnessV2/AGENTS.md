@@ -5,8 +5,8 @@
 - User requests in the active conversation are authoritative.
 - The current repository is `https://github.com/aanatidae/PlatePlus`.
 - `AI-Powered Automatic License Plate Recognition and Dynamic Toll Management System.pdf` remains the product documentation and source context.
-- `.harness/PLAN.md` defines the current high-level improvement roadmap.
-- `.harness/TODOLIST.md` defines the granular improvement checklist and task status.
+- `.harnessV2/PLAN.md` defines the current high-level improvement roadmap.
+- `.harnessV2/TODOLIST.md` defines the granular improvement checklist and task status.
 - The original implementation phase is essentially complete. Future work should focus on product improvement, refinement, realism, scalability, usability, explainability, testing, and capstone presentation quality.
 - Do not re-implement completed core features unless an improvement requires a targeted refactor.
 - Do not install new dependencies, download models, retrain models, run long model-related commands, or make major environment changes without asking the user first.
@@ -57,7 +57,7 @@
   - `feature/ai-explainability`
   - `feature/demo-mode`
 - Keep commits focused and descriptive.
-- After a repository change, update `.harness/AGENTS.md`, `.harness/PLAN.md`, and `.harness/TODOLIST.md` when project state or priorities materially change.
+- After a repository change, update `.harnessV2/AGENTS.md`, `.harnessV2/PLAN.md`, and `.harnessV2/TODOLIST.md` when project state or priorities materially change.
 - Do not create a separate PlatePlus v2 repository. Major improvements remain part of the same project history.
 - A Git tag or release may be used later to preserve the current stable prototype before major improvement work begins, but only with user approval.
 
@@ -426,12 +426,12 @@ Existing core tests should remain passing.
 
 ## Future Agent Operating Rules
 
-- Start future work by reading `.harness/AGENTS.md`, `.harness/PLAN.md`, and `.harness/TODOLIST.md`.
+- Start future work by reading `.harnessV2/AGENTS.md`, `.harnessV2/PLAN.md`, and `.harnessV2/TODOLIST.md`.
 - Treat the repository state as the source of truth for what is already implemented.
 - Do not blindly follow stale completed tasks from older documentation.
-- Prioritize improvement work according to `.harness/PLAN.md`.
-- Keep granular task status in `.harness/TODOLIST.md`.
-- Keep `.harness/PLAN.md` high-level.
+- Prioritize improvement work according to `.harnessV2/PLAN.md`.
+- Keep granular task status in `.harnessV2/TODOLIST.md`.
+- Keep `.harnessV2/PLAN.md` high-level.
 - Update harness documentation after meaningful architecture, scope, or priority changes.
 - Preserve modular boundaries so ALPR, OCR, payment, traffic, pricing, persistence, frontend, and deployment can evolve independently.
 - Do not imply simulated data is real.

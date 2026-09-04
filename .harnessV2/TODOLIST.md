@@ -40,28 +40,28 @@ The checklist below tracks **improvements**, not the original development phase.
 
 ## Multi-Toll Location Foundation
 
-- [ ] Create `toll_locations` database model.
-- [ ] Add location ID.
-- [ ] Add display name.
-- [ ] Add highway/route label.
-- [ ] Add latitude.
-- [ ] Add longitude.
-- [ ] Add operational status.
-- [ ] Add base toll.
-- [ ] Add road capacity.
-- [ ] Add simulation profile or equivalent configuration.
-- [ ] Add timestamps where appropriate.
-- [ ] Create database migration for toll locations.
-- [ ] Seed multiple simulated toll locations.
-- [ ] Add `location_id` to traffic records where appropriate.
-- [ ] Add `location_id` to toll-price records where appropriate.
-- [ ] Add `location_id` to detection records where appropriate.
-- [ ] Add `location_id` to toll transactions where appropriate.
-- [ ] Add `location_id` to simulation history where appropriate.
-- [ ] Add indexes for location-aware queries.
-- [ ] Add foreign-key constraints.
-- [ ] Verify migration against development PostgreSQL.
-- [ ] Verify migration against test PostgreSQL.
+- [x] Create `toll_locations` database model.
+- [x] Add location ID.
+- [x] Add display name.
+- [x] Add highway/route label.
+- [x] Add latitude.
+- [x] Add longitude.
+- [x] Add operational status.
+- [x] Add base toll.
+- [x] Add road capacity.
+- [x] Add simulation profile or equivalent configuration.
+- [x] Add timestamps where appropriate.
+- [x] Create database migration for toll locations.
+- [x] Seed multiple simulated toll locations.
+- [x] Add `location_id` to traffic records where appropriate.
+- [x] Add `location_id` to toll-price records where appropriate.
+- [x] Add `location_id` to detection records where appropriate.
+- [x] Add `location_id` to toll transactions where appropriate.
+- [x] Add `location_id` to simulation history where appropriate.
+- [x] Add indexes for location-aware queries.
+- [x] Add foreign-key constraints.
+- [x] Verify migration against development PostgreSQL.
+- [x] Verify migration against test PostgreSQL.
 
 ## Toll Location APIs
 

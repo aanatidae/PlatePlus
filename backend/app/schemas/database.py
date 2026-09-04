@@ -97,6 +97,7 @@ class TrafficRecordCreate(BaseModel):
 
 class TrafficRecordRead(ORMModel):
     id: UUID
+    location_id: UUID
     measured_at: datetime
     vehicle_count: int
     road_capacity: int
@@ -119,6 +120,7 @@ class TollPriceCreate(BaseModel):
 class TollPriceRead(ORMModel):
     id: UUID
     traffic_record_id: UUID | None
+    location_id: UUID
     effective_at: datetime
     amount: Decimal
     currency: str
@@ -147,6 +149,7 @@ class DetectionRecordCreate(BaseModel):
 class DetectionRecordRead(ORMModel):
     id: UUID
     vehicle_id: UUID | None
+    location_id: UUID
     detected_at: datetime
     raw_plate_text: str | None
     normalized_plate: str | None
@@ -183,6 +186,7 @@ class TollTransactionCreate(BaseModel):
 class TollTransactionRead(ORMModel):
     id: UUID
     account_id: UUID | None
+    location_id: UUID
     vehicle_id: UUID | None
     toll_price_id: UUID | None
     detection_id: UUID | None
