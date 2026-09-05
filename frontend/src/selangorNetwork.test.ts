@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { mapPositionForLocation, NETWORK_ROUTES, SELANGOR_OUTLINE } from "./selangorNetwork";
+
+const styles = readFileSync(resolve(import.meta.dirname, "styles.css"), "utf8");
 
 describe("Selangor toll-road network", () => {
   it("renders only the four simulated highway routes inside a state outline", () => {
@@ -13,5 +17,9 @@ describe("Selangor toll-road network", () => {
     expect(mapPositionForLocation(location("KESAS")).route).toBe("KESAS");
     expect(mapPositionForLocation(location("NPE")).route).toBe("NPE");
     expect(mapPositionForLocation(location("SIMULATOR")).webcam).toBe(true);
+  });
+  it("preserves the marker anchor translation for hover and active visual states", () => {
+    expect(styles).toContain(".network-marker:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.015); }");
+    expect(styles).toContain(".network-marker:active:not(:disabled) { transform: translate(-50%, -50%) scale(.995); }");
   });
 });
