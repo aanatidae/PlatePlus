@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated, TypeVar
 from uuid import UUID
 
@@ -76,6 +78,50 @@ def _location(database: Session, location_id: UUID | None) -> UUID | None:
     if location_id is not None and database.get(TollLocation, location_id) is None:
         raise HTTPException(status_code=404, detail="Toll location was not found.")
     return location_id
+
+
+def history_options(
+    start_at: datetime | None = None, end_at: datetime | None = None,
+    congestion_category: str | None = None, plate: str | None = None,
+    detection_status: str | None = None, registration: str | None = None,
+    transaction_status: str | None = None,
+    minimum_amount: Annotated[Decimal | None, Query(ge=0)] = None,
+) -> dict:
+    start = start_at.replace(tzinfo=UTC) if start_at and start_at.tzinfo is None else start_at
+    end = end_at.replace(tzinfo=UTC) if end_at and end_at.tzinfo is None else end_at
+    if start and end and start > end:
+        raise HTTPException(status_code=422, detail="Start date must be before end date.")
+    return dict(start=start, end=end, congestion_category=congestion_category, plate=plate,
+                detection_status=detection_status, registration=registration,
+                transaction_status=transaction_status, minimum_amount=minimum_amount)
+
+
+def filtered_history(database, model, timestamp, location_id, options, offset, limit):
+    _location(database, location_id)
+    statement = select(model)
+    if location_id:
+        statement = statement.where(model.location_id == location_id)
+    if options["start"]:
+        statement = statement.where(timestamp >= options["start"])
+    if options["end"]:
+        statement = statement.where(timestamp <= options["end"])
+    if model is TollPrice and options["congestion_category"]:
+        aliases = {"low": ["low", "normal"], "high": ["high", "peak_hour"]}
+        category = options["congestion_category"]
+        statement = statement.where(model.congestion_category.in_(aliases.get(category, [category])))
+    if model is DetectionRecord:
+        if options["plate"]:
+            statement = statement.where(model.normalized_plate.contains(options["plate"].upper(), autoescape=True))
+        if options["detection_status"]:
+            statement = statement.where(model.status == options["detection_status"])
+        if options["registration"]:
+            statement = statement.where(model.vehicle_id.is_not(None) if options["registration"] == "registered" else model.vehicle_id.is_(None))
+    if model is TollTransaction:
+        if options["transaction_status"]:
+            statement = statement.where(model.status == options["transaction_status"])
+        if options["minimum_amount"] is not None:
+            statement = statement.where(model.amount >= options["minimum_amount"])
+    return list(database.scalars(statement.order_by(timestamp.desc(), model.id).offset(offset).limit(limit)))
 
 
 @router.get("/admins", response_model=list[AdminRead])
@@ -157,14 +203,11 @@ def create_toll_price(payload: TollPriceCreate, database: DatabaseSession):
 
 @router.get("/toll-prices", response_model=list[TollPriceRead])
 def list_toll_prices(
-    database: DatabaseSession, location_id: UUID | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
+    database: DatabaseSession, options: Annotated[dict, Depends(history_options)],
+    location_id: UUID | None = None,
+    offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200),
 ):
-    location_id = _location(database, location_id)
-    statement = (
-        select(TollPrice).where(TollPrice.location_id == location_id).order_by(TollPrice.effective_at.desc()).offset(offset).limit(limit)
-        if location_id else select(TollPrice).order_by(TollPrice.effective_at.desc()).offset(offset).limit(limit)
-    )
-    return list(database.scalars(statement))
+    return filtered_history(database, TollPrice, TollPrice.effective_at, location_id, options, offset, limit)
 
 
 @router.post("/detections", response_model=DetectionRecordRead, status_code=status.HTTP_201_CREATED)
@@ -180,20 +223,11 @@ def create_detection(payload: DetectionRecordCreate, database: DatabaseSession):
 
 @router.get("/detections", response_model=list[DetectionRecordRead])
 def list_detections(
-    database: DatabaseSession, location_id: UUID | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
+    database: DatabaseSession, options: Annotated[dict, Depends(history_options)],
+    location_id: UUID | None = None,
+    offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200),
 ):
-    location_id = _location(database, location_id)
-    statement = (
-        select(DetectionRecord)
-        .where(DetectionRecord.location_id == location_id) if location_id else select(DetectionRecord)
-    )
-    statement = (
-        statement
-        .order_by(DetectionRecord.detected_at.desc())
-        .offset(offset)
-        .limit(limit)
-    )
-    return list(database.scalars(statement))
+    return filtered_history(database, DetectionRecord, DetectionRecord.detected_at, location_id, options, offset, limit)
 
 
 @router.post(
@@ -217,16 +251,8 @@ def create_transaction(payload: TollTransactionCreate, database: DatabaseSession
 
 @router.get("/transactions", response_model=list[TollTransactionRead])
 def list_transactions(
-    database: DatabaseSession, location_id: UUID | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
+    database: DatabaseSession, options: Annotated[dict, Depends(history_options)],
+    location_id: UUID | None = None,
+    offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200),
 ):
-    location_id = _location(database, location_id)
-    statement = (
-        select(TollTransaction).where(TollTransaction.location_id == location_id) if location_id else select(TollTransaction)
-    )
-    statement = (
-        statement
-        .order_by(TollTransaction.processed_at.desc())
-        .offset(offset)
-        .limit(limit)
-    )
-    return list(database.scalars(statement))
+    return filtered_history(database, TollTransaction, TollTransaction.processed_at, location_id, options, offset, limit)

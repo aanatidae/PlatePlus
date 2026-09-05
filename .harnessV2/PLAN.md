@@ -21,6 +21,8 @@ PlatePlus is no longer in its initial development phase. The repository already 
 
 The next project phase is **post-development improvement and capstone hardening**.
 
+The roadmap is a set of optional personal improvements, not a list of mandatory capstone requirements. Select implementation milestones with the user. The multi-location database foundation and location-aware APIs are complete; the interactive multi-location Overview and PlatePlus branding milestone is now implemented.
+
 The purpose of this roadmap is to improve realism, scalability, clarity, explainability, and demo quality without expanding into real banking, government traffic feeds, real enforcement, or real vehicle-owner tracking.
 
 ## Phase 1: Multi-Toll Location Foundation
@@ -372,3 +374,14 @@ The improved PlatePlus prototype should:
 - Preserve simulated-only financial and traffic scope.
 - Preserve local-webcam privacy boundaries.
 - Remain reliable and understandable during the final capstone demonstration.
+
+
+## Milestone Status — 2026-09-05
+
+Phases 1–3 are implemented for the agreed scope: four existing locations, selectable schematic map, location-aware KPIs and activity, network aggregates, persisted shared selection, real-time Overview cleanup, and PlatePlus branding. Two-location comparison remains optional and unimplemented.
+
+The Simulator has its own location selector and uses that location’s capacity/base toll. Full multi-location scenario runs and richer profiles remain future work. Recognition and pricing now have functional location/date/history filters. A targeted still-image integration change preserves location ownership through payment.
+
+Validation passed: 52 backend tests (including PostgreSQL), 8 frontend tests, and production build. Browser checks covered desktop/mobile layout, marker and keyboard selection, refresh persistence, relevant-page context, Simulator isolation, and stale/offline states. No physical webcam inference was performed.
+
+The next milestone is a user choice among the remaining personal improvements; do not automatically start all later roadmap phases.

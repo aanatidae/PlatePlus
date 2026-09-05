@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Annotated
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile, status
@@ -100,11 +100,16 @@ async def process_image(
     image: Annotated[UploadFile, File()],
     database: Annotated[Session, Depends(get_db)],
     idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+    location_id: UUID | None = None,
 ) -> WebcamFrameResult:
     """Run local ALPR once for an administrator-uploaded still image.
 
     Image bytes are used only for inference and are never written to disk.
     """
+    if location_id is not None:
+        from app.api.locations import require_location
+
+        require_location(database, location_id)
     if image.content_type not in SUPPORTED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail="Uploaded images must be JPEG, PNG, or WebP files.")
     image_bytes = await image.read(settings.webcam_max_frame_bytes + 1)
@@ -126,6 +131,7 @@ async def process_image(
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
             source="upload",
+            location_id=location_id,
         )
     box = result.bounding_box
     return WebcamFrameResult(

@@ -81,7 +81,7 @@ def _state(database: Session, location: TollLocation) -> dict:
     if traffic:
         fallback.update(
             {
-                "measured_at": traffic.measured_at,
+                "measured_at": traffic.measured_at.replace(tzinfo=UTC) if traffic.measured_at.tzinfo is None else traffic.measured_at,
                 "vehicle_count": traffic.vehicle_count,
                 "vehicles_per_hour": traffic.vehicle_count,
                 "road_capacity": traffic.road_capacity,
@@ -90,9 +90,14 @@ def _state(database: Session, location: TollLocation) -> dict:
             }
         )
         source = "persisted"
+        fallback["average_speed_kmh"] = round(max(18, 82 - float(traffic.congestion_percentage) * 0.62), 1)
     if price:
         fallback["current_toll_price"] = price.amount
+        fallback["congestion_multiplier"] = (price.amount / location.base_toll).quantize(Decimal("0.01")) if location.base_toll else Decimal("1")
         source = "persisted" if traffic else "mixed"
+    fallback["plaza_status"] = location.status
+    fallback["system_status"] = "healthy" if location.status == "operational" else location.status
+    fallback["camera_status"] = "online" if location.status == "operational" else "offline"
     hour_ago = now - timedelta(hours=1)
     detections = list(
         database.scalars(

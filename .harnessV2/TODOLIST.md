@@ -79,85 +79,85 @@ The checklist below tracks **improvements**, not the original development phase.
 
 ## Interactive Overview Map
 
-- [ ] Add multiple simulated toll locations to the Overview map.
-- [ ] Make each toll marker selectable.
-- [ ] Track selected toll location in frontend state.
-- [ ] Use congestion condition to determine marker state.
-- [ ] Add marker hover/click card.
-- [ ] Show toll price in location card.
-- [ ] Show congestion percentage in location card.
-- [ ] Show congestion category in location card.
-- [ ] Show vehicles per hour in location card.
-- [ ] Show average speed in location card.
-- [ ] Show camera status in location card.
-- [ ] Show system status in location card.
-- [ ] Show last update time in location card.
-- [ ] Make selected marker visually clear.
-- [ ] Update Overview KPIs when selected location changes.
-- [ ] Update recent ALPR activity by selected location.
-- [ ] Update transaction activity by selected location.
-- [ ] Update charts by selected location where appropriate.
-- [ ] Add map behavior for mobile/tablet layouts.
-- [ ] Add keyboard-accessible alternative to map marker selection.
+- [x] Add multiple simulated toll locations to the Overview map.
+- [x] Make each toll marker selectable.
+- [x] Track selected toll location in frontend state.
+- [x] Use congestion condition to determine marker state.
+- [x] Add marker hover/click card.
+- [x] Show toll price in location card.
+- [x] Show congestion percentage in location card.
+- [x] Show congestion category in location card.
+- [x] Show vehicles per hour in location card.
+- [x] Show average speed in location card.
+- [x] Show camera status in location card.
+- [x] Show system status in location card.
+- [x] Show last update time in location card.
+- [x] Make selected marker visually clear.
+- [x] Update Overview KPIs when selected location changes.
+- [x] Update recent ALPR activity by selected location.
+- [x] Update transaction activity by selected location.
+- [x] Keep historical charts off the real-time Overview; historical analysis remains in detailed pages.
+- [x] Add map behavior for mobile/tablet layouts.
+- [x] Add keyboard-accessible alternative to map marker selection.
 
 ## All Locations Network View
 
-- [ ] Add `All Locations` selection.
-- [ ] Show total simulated traffic flow.
-- [ ] Show total simulated toll revenue.
-- [ ] Show network average congestion.
-- [ ] Show number of severe-congestion locations.
-- [ ] Show number of locations online.
-- [ ] Show number of cameras offline.
-- [ ] Show total detections.
-- [ ] Show total transactions.
-- [ ] Show network payment success rate.
-- [ ] Add network health summary.
-- [ ] Add network map state that does not incorrectly imply one location is active.
+- [x] Add `All Locations` selection.
+- [x] Show total simulated traffic flow.
+- [x] Show total simulated toll revenue.
+- [x] Show network average congestion.
+- [x] Show number of severe-congestion locations.
+- [x] Show number of locations online.
+- [x] Show number of cameras offline.
+- [x] Show total detections.
+- [x] Show total transactions.
+- [x] Show network payment success rate.
+- [x] Add network health summary.
+- [x] Add network map state that does not incorrectly imply one location is active.
 - [ ] Consider side-by-side comparison between two locations.
 
 ## Overview Simplification
 
-- [ ] Remove historical date filtering from the live Overview if it does not affect the live endpoint.
-- [ ] Remove congestion-history filtering from the live Overview if it does not affect current telemetry.
-- [ ] Remove plate-history filtering from the live Overview if it does not affect current telemetry.
-- [ ] Remove transaction-history filtering from the live Overview if it does not affect current telemetry.
-- [ ] Move relevant filters to Plate Recognition.
-- [ ] Move relevant filters to Dynamic Pricing.
-- [ ] Keep Overview focused on current state.
-- [ ] Add `Last updated` indicator.
-- [ ] Add data freshness/stale-data state.
-- [ ] Keep Simulator state isolated from Overview.
-- [ ] Verify live Overview remains read-only.
+- [x] Remove historical date filtering from the live Overview if it does not affect the live endpoint.
+- [x] Remove congestion-history filtering from the live Overview if it does not affect current telemetry.
+- [x] Remove plate-history filtering from the live Overview if it does not affect current telemetry.
+- [x] Remove transaction-history filtering from the live Overview if it does not affect current telemetry.
+- [x] Move relevant filters to Plate Recognition.
+- [x] Move relevant filters to Dynamic Pricing.
+- [x] Keep Overview focused on current state.
+- [x] Add `Last updated` indicator.
+- [x] Add data freshness/stale-data state.
+- [x] Keep Simulator state isolated from Overview.
+- [x] Verify live Overview remains read-only.
 
 ## Dynamic Toll Location Context
 
-- [ ] Remove hard-coded `Penchala Toll Plaza` from the top bar.
-- [ ] Remove hard-coded `LDP / E11` from the top bar.
-- [ ] Show selected toll location name.
-- [ ] Show selected location route/highway.
-- [ ] Show appropriate label for `All Locations`.
-- [ ] Keep selected location consistent while navigating relevant pages where useful.
-- [ ] Decide whether selected location should persist across browser refreshes.
-- [ ] Add tests for selected-location context.
+- [x] Remove hard-coded `Penchala Toll Plaza` from the top bar.
+- [x] Remove hard-coded `LDP / E11` from the top bar.
+- [x] Show selected toll location name.
+- [x] Show selected location route/highway.
+- [x] Show appropriate label for `All Locations`.
+- [x] Keep selected location consistent while navigating relevant pages where useful.
+- [x] Decide whether selected location should persist across browser refreshes.
+- [x] Verify selected-location context in browser navigation and refresh checks; unit-test scope request construction.
 
 ## PlatePlus Branding
 
-- [ ] Replace `TOLL//VISION` with `PlatePlus`.
-- [ ] Update sidebar brand.
-- [ ] Update login branding.
-- [ ] Update browser/document title.
-- [ ] Update deployment metadata.
-- [ ] Update major page headings if needed.
-- [ ] Update loading states.
-- [ ] Update error states.
-- [ ] Add a PlatePlus wordmark/logo treatment.
-- [ ] Keep branding consistent on mobile navigation.
-- [ ] Standardize `Simulated Prototype` label.
-- [ ] Remove redundant long simulation warnings where a shorter consistent label is sufficient.
-- [ ] Standardize terminology across frontend.
-- [ ] Standardize terminology across backend/API messages.
-- [ ] Standardize congestion category capitalization.
+- [x] Replace `TOLL//VISION` with `PlatePlus`.
+- [x] Update sidebar brand.
+- [x] Update login branding.
+- [x] Update browser/document title.
+- [x] Update browser title/description and API product name; retain existing deployed infrastructure resource identifiers.
+- [x] Update major page headings if needed.
+- [x] Update loading states.
+- [x] Update error states.
+- [x] Add a PlatePlus wordmark/logo treatment.
+- [x] Keep branding consistent on mobile navigation.
+- [x] Standardize `Simulated Prototype` label.
+- [x] Remove redundant long simulation warnings where a shorter consistent label is sufficient.
+- [x] Standardize terminology across frontend.
+- [x] Standardize terminology across backend/API messages.
+- [x] Standardize congestion category capitalization.
 
 ## Multi-Location Traffic Profiles
 
@@ -173,8 +173,8 @@ The checklist below tracks **improvements**, not the original development phase.
 
 ## Multi-Location Simulator
 
-- [ ] Add toll-location selector to Simulator.
-- [ ] Allow custom scenario for one selected location.
+- [x] Add toll-location selector to Simulator.
+- [x] Allow custom scenario for one selected location.
 - [ ] Support multiple locations in one simulation run.
 - [ ] Add weekday morning peak preset.
 - [ ] Add weekday evening peak preset.
@@ -190,10 +190,10 @@ The checklist below tracks **improvements**, not the original development phase.
 - [ ] Show dynamic toll.
 - [ ] Show before/after pricing comparison.
 - [ ] Show per-location output.
-- [ ] Keep Simulator state local/sandboxed.
-- [ ] Confirm Simulator never writes live Overview traffic.
-- [ ] Confirm Simulator never writes live Overview toll price.
-- [ ] Confirm Simulator never creates live payment transactions.
+- [x] Keep Simulator state local/sandboxed.
+- [x] Confirm Simulator never writes live Overview traffic.
+- [x] Confirm Simulator never writes live Overview toll price.
+- [x] Confirm Simulator never creates live payment transactions.
 
 ## Dynamic Pricing Refinement
 
@@ -312,8 +312,8 @@ The checklist below tracks **improvements**, not the original development phase.
 
 ## Location-Aware Historical Analysis
 
-- [ ] Add location filter to Dynamic Pricing history.
-- [ ] Add date filter to Dynamic Pricing history.
+- [x] Add location filter to Dynamic Pricing history.
+- [x] Add date filter to Dynamic Pricing history.
 - [ ] Add congestion-versus-price chart.
 - [ ] Add per-location congestion history.
 - [ ] Add per-location toll-price history.
@@ -322,8 +322,8 @@ The checklist below tracks **improvements**, not the original development phase.
 - [ ] Add transaction success-rate trend.
 - [ ] Add per-location simulated revenue trend.
 - [ ] Add normal/moderate/peak/severe scenario comparison.
-- [ ] Keep historical analysis inside relevant existing pages.
-- [ ] Do not restore standalone Traffic Analytics page unless explicitly requested.
+- [x] Keep historical analysis inside relevant existing pages.
+- [x] Do not restore standalone Traffic Analytics page unless explicitly requested.
 - [ ] Decide whether CSV export is useful for capstone presentation.
 
 ## Demo Mode
@@ -358,45 +358,45 @@ The checklist below tracks **improvements**, not the original development phase.
 - [ ] Unit test toll-location creation and validation.
 - [ ] Unit test per-location pricing selection.
 - [ ] Unit test per-location traffic generation.
-- [ ] Unit test network aggregation.
+- [x] Unit test network aggregation.
 - [ ] Integration test location-aware traffic persistence.
 - [ ] Integration test location-aware pricing persistence.
 - [ ] Integration test location-aware detection persistence.
 - [ ] Integration test location-aware transaction persistence.
-- [ ] Integration test cross-location isolation.
-- [ ] Integration test All Locations aggregation.
+- [x] Integration test cross-location isolation.
+- [x] Integration test All Locations aggregation.
 
 ### Frontend
 
-- [ ] Test map marker selection.
-- [ ] Test selected-location state.
-- [ ] Test All Locations state.
-- [ ] Test dynamic top-bar location.
-- [ ] Test location-aware KPIs.
-- [ ] Test map card content.
+- [x] Test map marker selection.
+- [x] Test selected-location state.
+- [x] Test All Locations state.
+- [x] Test dynamic top-bar location.
+- [x] Test location-aware KPIs.
+- [x] Test map card content.
 - [ ] Test alert states.
-- [ ] Test responsive map layout.
-- [ ] Test mobile location selection.
-- [ ] Test Simulator location selection.
+- [x] Test responsive map layout.
+- [x] Test mobile location selection.
+- [x] Test Simulator location selection.
 
 ### Accessibility
 
-- [ ] Test keyboard navigation.
-- [ ] Test visible focus states.
+- [x] Test keyboard navigation.
+- [x] Test visible focus states.
 - [ ] Test form and button labels.
 - [ ] Test colour contrast.
-- [ ] Add accessible non-map alternative for toll selection.
-- [ ] Test screen-reader labels for location status.
+- [x] Add accessible non-map alternative for toll selection.
+- [x] Test screen-reader labels for location status.
 
 ### Reliability / Performance
 
 - [ ] Test slow live-overview API.
-- [ ] Test temporary backend failure.
+- [x] Test temporary backend failure.
 - [ ] Test database failure state.
-- [ ] Test stale telemetry handling.
+- [x] Test stale telemetry handling.
 - [ ] Test multiple toll locations with larger history.
-- [ ] Test map rendering with all seeded locations.
-- [ ] Confirm existing core tests remain passing.
+- [x] Test map rendering with all seeded locations.
+- [x] Confirm existing core tests remain passing.
 
 ## Documentation and Capstone
 
@@ -424,17 +424,28 @@ The checklist below tracks **improvements**, not the original development phase.
 - [ ] Do not commit model binaries that remain intentionally Git-ignored.
 - [ ] Do not use AI/tool identities as commit authors.
 - [ ] Do not push without user approval.
-- [ ] Update `.harness` files after meaningful milestone changes.
+- [x] Update `.harnessV2` files after this milestone.
 
 ## Highest-Priority Next Tasks
 
-1. [ ] Add `toll_locations` model and migration.
-2. [ ] Seed multiple simulated toll locations.
-3. [ ] Add location-aware relationships and APIs.
-4. [ ] Add multiple locations to the Overview map.
-5. [ ] Make map markers interactive.
-6. [ ] Make Overview KPIs location-aware.
-7. [ ] Add `All Locations` network view.
-8. [ ] Replace hard-coded Penchala top-bar context.
-9. [ ] Remove historical filters from the live Overview.
-10. [ ] Replace `TOLL//VISION` with PlatePlus branding.
+1. [x] Add `toll_locations` model and migration.
+2. [x] Seed multiple simulated toll locations.
+3. [x] Add location-aware relationships and APIs.
+4. [x] Add multiple locations to the Overview map.
+5. [x] Make map markers interactive.
+6. [x] Make Overview KPIs location-aware.
+7. [x] Add `All Locations` network view.
+8. [x] Replace hard-coded Penchala top-bar context.
+9. [x] Remove historical filters from the live Overview.
+10. [x] Replace `TOLL//VISION` with PlatePlus branding.
+
+
+## Current Follow-Up — 2026-09-05
+
+- [x] Complete the agreed Overview/context/branding milestone using the existing design and seeded locations.
+- [x] Verify Docker and development/test PostgreSQL are healthy; development migration is at head.
+- [x] Pass 52 backend tests including PostgreSQL integration and 8 frontend tests; production build passes.
+- [x] Browser-verify desktop/mobile, keyboard selection, refresh persistence, page context, functional plate filtering, Simulator isolation, and outage/stale-state behavior using disposable synthetic fixtures.
+- [ ] Choose the next optional personal-improvement milestone with the user.
+
+Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -53,6 +54,7 @@ def process_toll_event(
     recognition_accepted: bool,
     source: str = "webcam",
     detected_at: datetime | None = None,
+    location_id: UUID | None = None,
 ) -> PaymentOutcome:
     """Persist one recognition event and deduct only once when it is eligible."""
     existing = database.scalar(
@@ -69,7 +71,7 @@ def process_toll_event(
         )
 
     now = detected_at or datetime.now(UTC)
-    location_id = default_toll_location_id(database)
+    location_id = location_id or default_toll_location_id(database)
     detection = DetectionRecord(
         location_id=location_id,
         detected_at=now,

@@ -35,6 +35,8 @@
   - Vercel frontend deployment and Render backend/database deployment configuration.
 - Core implementation, integration, and testing are substantially complete.
 - The current project phase is **post-development improvement and capstone hardening**.
+- The roadmap phases are optional personal improvements, not mandatory capstone requirements. Resolve milestone requirements with the user before proceeding into implementation.
+- The multi-location database foundation and location-aware APIs are complete. The interactive multi-location Overview, shared persisted location selection, All Locations metrics, historical-filter relocation, and PlatePlus branding are implemented. Select the next optional improvement milestone with the user.
 
 ## Git Attribution
 
@@ -135,8 +137,8 @@ Current dashboard behavior includes:
 - Responsive command-centre styling.
 - Vercel deployment.
 - Remote API deployment that excludes local webcam inference.
-- A currently fixed top-bar toll location context that should be replaced during the multi-location improvement phase.
-- Existing prototype branding such as `TOLL//VISION` that should be replaced with consistent PlatePlus branding.
+- A shared toll-location selector defaults to All Locations, persists across refreshes, and scopes Overview, Plate Recognition, Dynamic Pricing, and AI Intelligence. Simulator selection remains independent; local webcam retains its explicitly labelled default toll.
+- PlatePlus branding and a consistent Simulated Prototype indicator across the dashboard and login.
 
 ## Primary Improvement Direction
 
@@ -437,3 +439,16 @@ Existing core tests should remain passing.
 - Do not imply simulated data is real.
 - Do not use real vehicle-owner data.
 - Do not push changes without user approval.
+
+
+## Verified Improvement Milestone — 2026-09-05
+
+- Retain the existing dark command-centre design and four seeded toll locations. Run broader design suggestions by the user before implementing them.
+- Overview uses a responsive, keyboard-selectable schematic map, explicitly labelled not to scale. It has no historical filters or historical charts.
+- `/api/live/overview?scope=all_locations` returns network monitoring data; `location_id` returns one location. Activity metrics and recent records cover the last hour. Congestion is capacity-weighted; network toll is an arithmetic mean of reporting locations.
+- History filters operate server-side before pagination in Recognition and Dynamic Pricing, with Malaysia-time date boundaries. A still-image recognition requires a specific frontend location and persists its detection/payment at that location.
+- Polling is every 30 seconds, requests time out after 15 seconds, and previous-location responses are cancelled. Overview distinguishes stale measurements (older than two minutes), unavailable telemetry, and partial network coverage.
+- Camera/system states are simulated from location operational status; average speed remains an estimate. Rich independent traffic profiles and pricing smoothing are future work.
+- Verified: 52 backend tests including PostgreSQL integration, 8 frontend tests, production build, and desktop/mobile browser checks with disposable synthetic fixtures. Physical webcam/model inference was not run.
+- Docker Desktop and PostgreSQL development/test containers are available and healthy. Development schema is at `20260904_0004`. Test fixtures recreate only `capstone_alpr_test` on port 5433.
+- No dependencies installed, no real data or payment integration, and no commits, pushes, or deployments performed.

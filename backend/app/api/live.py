@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from math import sin
+from typing import Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -37,26 +38,15 @@ def _telemetry(now: datetime, rules: dict[str, DynamicPricingRule]) -> dict:
 
 
 @router.get("/overview")
-def live_overview(location_id: UUID | None = None, database: Session = Depends(get_db)):
+def live_overview(location_id: UUID | None = None, database: Session = Depends(get_db), scope: Literal["all_locations"] | None = None):
     """Return live time-patterned telemetry and persisted ALPR/payment activity.
 
     This endpoint does not create or update traffic, price, or transaction records.
     """
-    if location_id is not None:
-        from app.api.locations import _state, require_location
+    if location_id is not None or scope == "all_locations":
+        from app.services.overview import scoped_overview
 
-        state = _state(database, require_location(database, location_id))
-        return {
-            "scope": "location",
-            "location_id": location_id,
-            "live": {"traffic": state["telemetry"], "price": {"amount": state["telemetry"]["current_toll_price"]} if state["telemetry"] else None},
-            "metrics": state["metrics"],
-            "telemetry_source": state["telemetry_source"],
-            "traffic_series": [],
-            "price_series": [],
-            "detections": {"items": [], "has_more": False},
-            "transactions": {"items": [], "has_more": False},
-        }
+        return scoped_overview(database, location_id)
     now = datetime.now(UTC)
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
     if not {"normal", "moderate", "peak_hour", "severe"}.issubset(rules):

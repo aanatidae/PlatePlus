@@ -15,9 +15,9 @@ describe("administrator dashboard UI contract", () => {
   });
 
   it("communicates loading, errors, simulation scope, and the local-only inference boundary", () => {
-    expect(appSource).toContain("Loading command telemetry");
+    expect(appSource).toContain("Loading PlatePlus telemetry");
     expect(appSource).toContain("form-error");
-    expect(appSource).toContain("SIMULATED TOLL PROTOTYPE");
+    expect(appSource).toContain("Simulated Prototype");
     expect(appSource).toContain("Image upload is unavailable here by design");
   });
 
