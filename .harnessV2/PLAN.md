@@ -54,7 +54,7 @@ Goal: make the Overview function as a real-time network operations screen.
 
 High-level work:
 
-- Add multiple toll markers to the interactive map.
+- Add multiple toll markers to a stylized Selangor toll-road network map.
 - Make markers selectable.
 - Use marker state to show congestion condition.
 - Add compact location details on marker interaction.
@@ -65,6 +65,7 @@ High-level work:
 - Optionally allow two-location comparison.
 - Add clear data-freshness indicators.
 - Keep the Overview read-only.
+- Keep the map a lightweight custom dashboard visualization, with panning, limited zoom, and a fit-network control rather than general-purpose GIS navigation.
 
 Overview simplification:
 
@@ -205,6 +206,7 @@ High-level work:
 - Use a separate development set for further tuning.
 - Preserve the held-out test set.
 - Preserve local webcam privacy boundaries.
+- Support the special Simulator Toll Plaza as a live local-webcam ALPR crossing location: use accepted crossings for its rolling traffic/congestion/pricing state, never generated fallback traffic, and retain only existing processed-event metadata.
 
 Success condition:
 
@@ -378,7 +380,7 @@ The improved PlatePlus prototype should:
 
 ## Milestone Status — 2026-09-05
 
-Phases 1–3 are implemented for the agreed scope: four existing locations, selectable schematic map, location-aware KPIs and activity, network aggregates, persisted shared selection, real-time Overview cleanup, and PlatePlus branding. Two-location comparison remains optional and unimplemented.
+Phases 1–3 are implemented for the agreed scope: a selectable stylized Selangor network map with LDP, DUKE, KESAS and NPE routes, location-aware KPIs and activity, network aggregates, persisted shared selection, real-time Overview cleanup, and PlatePlus branding. Simulator Toll Plaza is an additional webcam-derived live location with a 10-vehicles/hour demonstration capacity. Two-location comparison remains optional and unimplemented.
 
 The Simulator has its own location selector and uses that location’s capacity/base toll. Full multi-location scenario runs and richer profiles remain future work. Recognition and pricing now have functional location/date/history filters. A targeted still-image integration change preserves location ownership through payment.
 

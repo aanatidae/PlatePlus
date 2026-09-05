@@ -79,6 +79,8 @@ def scoped_overview(database: Session, location_id: UUID | None) -> dict:
         else None
     )
     traffic = active[0] if location_id and active else None
+    speed_reporting = [item for item in active if item["average_speed_kmh"] is not None]
+    speed_capacity = sum(item["road_capacity"] for item in speed_reporting)
     if not location_id and active:
         traffic = {
             "measured_at": min(item["measured_at"] for item in active),
@@ -88,10 +90,9 @@ def scoped_overview(database: Session, location_id: UUID | None) -> dict:
             "vehicles_per_hour": flow,
             "road_capacity": capacity,
             "average_speed_kmh": sum(
-                Decimal(str(item["average_speed_kmh"])) * item["road_capacity"] for item in active
-            )
-            / capacity
-            if capacity
+                Decimal(str(item["average_speed_kmh"])) * item["road_capacity"] for item in speed_reporting
+            ) / speed_capacity
+            if speed_capacity
             else None,
         }
     price = (

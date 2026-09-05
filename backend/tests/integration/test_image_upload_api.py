@@ -2,7 +2,6 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
-
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -10,7 +9,15 @@ from sqlalchemy import select
 from app.api import webcam as webcam_api
 from app.api.auth import router as auth_router
 from app.db.session import get_db
-from app.models import Account, DetectionRecord, TollPrice, TollTransaction, User, Vehicle, TollLocation
+from app.models import (
+    Account,
+    DetectionRecord,
+    TollLocation,
+    TollPrice,
+    TollTransaction,
+    User,
+    Vehicle,
+)
 from app.services.detection.webcam_processor import ProcessedFrame
 
 
@@ -31,7 +38,7 @@ class _SuccessfulImageService:
 def test_authenticated_image_upload_runs_the_complete_simulated_toll_flow(
     database, admin_auth_headers, monkeypatch, selected_location
 ) -> None:
-    location = database.scalar(select(TollLocation).where(TollLocation.code == ("SUNGAI_BESI" if selected_location else "PENCHALA")))
+    location = database.scalar(select(TollLocation).where(TollLocation.code == ("DUKE" if selected_location else "PENCHALA")))
     user = User(full_name="Upload Test User", email="upload@example.test")
     database.add(user)
     database.flush()

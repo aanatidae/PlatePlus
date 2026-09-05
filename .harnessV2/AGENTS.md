@@ -79,6 +79,7 @@ Prototype boundaries:
 - Real Malaysian toll names or map locations may be used as geographic context, but all operational, congestion, payment, pricing, and vehicle activity shown by PlatePlus must remain clearly identified as simulated.
 - Local webcam inference remains local to the machine running it.
 - Raw webcam frames and plate crops remain ephemeral by default.
+- `Simulator Toll Plaza` is a special live, webcam-driven location on the LDP display route. Its rolling one-hour traffic flow, congestion, and dynamic toll derive only from accepted local-webcam ALPR crossings; it must never receive generated/fallback traffic telemetry. Raw frames and crops remain local and ephemeral, while only the existing processed detection/payment metadata is persisted.
 
 ## Current Product Baseline
 
@@ -445,6 +446,7 @@ Existing core tests should remain passing.
 
 - Retain the existing dark command-centre design and four seeded toll locations. Run broader design suggestions by the user before implementing them.
 - Overview uses a responsive, keyboard-selectable schematic map, explicitly labelled not to scale. It has no historical filters or historical charts.
+- Overview now uses a pannable, limited-zoom stylized Selangor silhouette with the four simulated highway routes (LDP, DUKE, KESAS, NPE) and compact markers placed on their routes. It is intentionally a dashboard visualization, not a GIS map; do not add unrelated roads, tiles, POIs, or a heavy map dependency without user approval.
 - `/api/live/overview?scope=all_locations` returns network monitoring data; `location_id` returns one location. Activity metrics and recent records cover the last hour. Congestion is capacity-weighted; network toll is an arithmetic mean of reporting locations.
 - History filters operate server-side before pagination in Recognition and Dynamic Pricing, with Malaysia-time date boundaries. A still-image recognition requires a specific frontend location and persists its detection/payment at that location.
 - Polling is every 30 seconds, requests time out after 15 seconds, and previous-location responses are cancelled. Overview distinguishes stale measurements (older than two minutes), unavailable telemetry, and partial network coverage.

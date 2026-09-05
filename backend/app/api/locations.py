@@ -57,6 +57,25 @@ def _state(database: Session, location: TollLocation) -> dict:
             "telemetry_source": "unavailable",
             "metrics": {},
         }
+    from app.services.traffic.webcam_crossings import is_webcam_toll, webcam_crossing_state
+
+    if is_webcam_toll(location):
+        webcam = webcam_crossing_state(database, location, now)
+        telemetry = webcam["telemetry"]
+        hour_ago = now - timedelta(hours=1)
+        detections = list(database.scalars(select(DetectionRecord).where(
+            DetectionRecord.location_id == location.id, DetectionRecord.detected_at >= hour_ago
+        )))
+        transactions = list(database.scalars(select(TollTransaction).where(
+            TollTransaction.location_id == location.id, TollTransaction.processed_at >= hour_ago
+        )))
+        successful = [item for item in transactions if item.status == "successful"]
+        return {
+            "location": location, "telemetry": telemetry, "telemetry_source": webcam["source"],
+            "metrics": {"detections": len(detections), "transactions": len(transactions),
+                        "successful_transactions": len(successful),
+                        "revenue": sum((item.amount for item in successful), Decimal(0))},
+        }
     fallback = _telemetry(now, rules)
     fallback["road_capacity"] = location.road_capacity
     fallback["vehicle_count"] = round(
@@ -93,7 +112,7 @@ def _state(database: Session, location: TollLocation) -> dict:
         fallback["average_speed_kmh"] = round(max(18, 82 - float(traffic.congestion_percentage) * 0.62), 1)
     if price:
         fallback["current_toll_price"] = price.amount
-        fallback["congestion_multiplier"] = (price.amount / location.base_toll).quantize(Decimal("0.01")) if location.base_toll else Decimal("1")
+        fallback["congestion_multiplier"] = (price.amount / location.base_toll).quantize(Decimal("0.01")) if location.base_toll else Decimal(1)
         source = "persisted" if traffic else "mixed"
     fallback["plaza_status"] = location.status
     fallback["system_status"] = "healthy" if location.status == "operational" else location.status

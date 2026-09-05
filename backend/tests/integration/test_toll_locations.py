@@ -21,9 +21,9 @@ def test_live_overview_scopes_activity_and_network_totals(database, database_app
     client = TestClient(database_app)
     network = client.get("/api/live/overview?scope=all_locations", headers=admin_auth_headers)
     assert network.status_code == 200, network.text
-    assert network.json()["metrics"]["transactions"] == 4
+    assert network.json()["metrics"]["transactions"] == 5
     assert network.json()["metrics"]["successful_transactions"] == 1
-    assert Decimal(network.json()["metrics"]["revenue"]) == Decimal("2")
+    assert Decimal(network.json()["metrics"]["revenue"]) == Decimal(2)
     location = client.get(f"/api/live/overview?location_id={locations[1].id}", headers=admin_auth_headers)
     assert location.status_code == 200, location.text
     assert location.json()["metrics"]["detections"] == 1
@@ -51,15 +51,13 @@ def test_location_history_filters_use_malaysia_date_boundaries(database, databas
 def test_migration_seeds_the_simulated_toll_network(database) -> None:
     locations = list(database.scalars(select(TollLocation).order_by(TollLocation.code)))
 
-    assert [location.code for location in locations] == [
-        "AYER_KEROH",
-        "LIMA_KEDAI",
-        "PENCHALA",
-        "SUNGAI_BESI",
-    ]
+    assert [location.code for location in locations] == ["DUKE", "KESAS", "NPE", "PENCHALA", "SIMULATOR"]
     assert all(location.status == "operational" for location in locations)
     assert all(location.road_capacity > 0 for location in locations)
     assert all(location.base_toll >= Decimal("0.00") for location in locations)
+    simulator = next(location for location in locations if location.code == "SIMULATOR")
+    assert simulator.road_capacity == 10
+    assert simulator.simulation_profile["telemetry_source"] == "webcam_alpr"
 
 
 def test_operational_records_default_to_penchala_and_keep_location_ownership(database) -> None:
@@ -137,7 +135,7 @@ def test_location_endpoints_filter_records_and_reject_unknown_ids(
     missing = client.get(
         "/api/locations/00000000-0000-0000-0000-000000000000", headers=admin_auth_headers
     )
-    assert listed.status_code == 200 and len(listed.json()) == 4
+    assert listed.status_code == 200 and len(listed.json()) == 5
     assert filtered.status_code == 200 and {item["location_id"] for item in filtered.json()} == {
         str(penchala.id)
     }

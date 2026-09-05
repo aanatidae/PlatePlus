@@ -99,6 +99,10 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Keep historical charts off the real-time Overview; historical analysis remains in detailed pages.
 - [x] Add map behavior for mobile/tablet layouts.
 - [x] Add keyboard-accessible alternative to map marker selection.
+- [x] Replace abstract map lines with a stylized, pannable Selangor state/network visualization.
+- [x] Draw and label only the simulated LDP, DUKE, KESAS, and NPE routes.
+- [x] Position compact toll markers along their associated highway routes.
+- [x] Add limited zoom and fit/reset network-map controls.
 
 ## All Locations Network View
 
@@ -170,6 +174,17 @@ The checklist below tracks **improvements**, not the original development phase.
 - [ ] Verify one location can be low congestion while another is severe.
 - [ ] Persist location-specific traffic history.
 - [ ] Add deterministic location-aware simulation for tests.
+
+## Webcam-Driven Simulator Toll Plaza
+
+- [x] Add `Simulator Toll Plaza` as a live, selectable map location on LDP.
+- [x] Set its demonstration road capacity to 10 vehicles per hour.
+- [x] Associate local webcam ALPR detections and simulated payments with this location.
+- [x] Derive rolling-hour traffic flow, congestion, category, and dynamic price from accepted webcam crossings.
+- [x] Exclude this location from generated/fallback traffic telemetry.
+- [x] Keep average speed unavailable rather than fabricated.
+- [x] Keep raw webcam frames/crops local and ephemeral.
+- [x] Test rolling-window, rejected-result, congestion-cap, and pricing behavior.
 
 ## Multi-Location Simulator
 
