@@ -372,10 +372,10 @@ The checklist below tracks **improvements**, not the original development phase.
 
 - [ ] Unit test toll-location creation and validation.
 - [ ] Unit test per-location pricing selection.
-- [ ] Unit test per-location traffic generation.
+- [x] Unit test per-location traffic generation.
 - [x] Unit test network aggregation.
-- [ ] Integration test location-aware traffic persistence.
-- [ ] Integration test location-aware pricing persistence.
+- [x] Integration test location-aware traffic persistence.
+- [x] Integration test location-aware pricing persistence.
 - [ ] Integration test location-aware detection persistence.
 - [ ] Integration test location-aware transaction persistence.
 - [x] Integration test cross-location isolation.

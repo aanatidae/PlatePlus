@@ -140,3 +140,20 @@ def test_location_endpoints_filter_records_and_reject_unknown_ids(
         str(penchala.id)
     }
     assert missing.status_code == 404
+
+
+def test_profiled_fallback_is_independent_and_matches_the_selected_overview(database, database_app, admin_auth_headers):
+    client = TestClient(database_app)
+    network = client.get("/api/live/overview?scope=all_locations", headers=admin_auth_headers)
+    assert network.status_code == 200, network.text
+    states = {item["location"]["code"]: item for item in network.json()["locations"]}
+    percentages = {states[code]["telemetry"]["congestion_percentage"] for code in ("DUKE", "KESAS", "NPE")}
+    assert len(percentages) > 1
+
+    selected = client.get(
+        f"/api/live/overview?location_id={states['NPE']['location']['id']}", headers=admin_auth_headers
+    )
+    assert selected.status_code == 200, selected.text
+    selected_telemetry = selected.json()["locations"][0]["telemetry"]
+    assert selected_telemetry["congestion_percentage"] == states["NPE"]["telemetry"]["congestion_percentage"]
+    assert selected_telemetry["congestion_category"] == states["NPE"]["telemetry"]["congestion_category"]

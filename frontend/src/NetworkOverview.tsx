@@ -33,16 +33,20 @@ export default function NetworkOverview() {
   const network = useFeed<NetworkData>("/api/live/overview?scope=all_locations");
   const scoped = useFeed<NetworkData>(locationPath("/api/live/overview", selected), selected !== "all");
   const { data, error, receivedAt } = selected === "all" ? network : scoped;
+  // Map, selected card and live KPIs share this snapshot; scoped data is only for activity records.
+  const canonical = selected === "all" ? data : network.data;
   const [now, setNow] = useState(Date.now());
   const mapRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [view, setView] = useState({ x: 0, y: 0, zoom: 1 });
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 10_000); return () => window.clearInterval(timer); }, []);
   const states = network.data?.locations ?? [];
-  const current = data?.locations.find(state => state.location.id === selected);
-  const metrics = data?.metrics;
-  const oldMeasurement = data?.live.traffic && now - new Date(data.live.traffic.measured_at).getTime() > 120_000;
-  const stale = Boolean(error || network.error || (receivedAt && now - receivedAt > 65_000) || oldMeasurement);
+  const current = states.find(state => state.location.id === selected);
+  const live = selected === "all" ? canonical?.live : current?.telemetry ? { traffic: current.telemetry, price: { amount: current.telemetry.current_toll_price } } : undefined;
+  const metrics = selected === "all" ? canonical?.metrics : data?.metrics;
+  const oldMeasurement = live?.traffic && now - new Date(live.traffic.measured_at).getTime() > 120_000;
+  const canonicalReceivedAt = selected === "all" ? receivedAt : network.receivedAt;
+  const stale = Boolean(error || network.error || (canonicalReceivedAt && now - canonicalReceivedAt > 65_000) || oldMeasurement);
   const title = selected === "all" ? "Network operations" : locations.find(item => item.id === selected)?.display_name ?? "Toll operations";
   const selectedRoute = selected === "all" ? null : locations.find(item => item.id === selected) ? mapPositionForLocation(locations.find(item => item.id === selected)!).route : null;
   const fitNetwork = () => setView({ x: 0, y: 0, zoom: 1 });
@@ -55,9 +59,9 @@ export default function NetworkOverview() {
     setView({ zoom: 1.04, x: (50 - point.x) * rect.width * .16 / 100, y: (50 - point.y) * rect.height * .16 / 100 });
   }, [selected, locations]);
   const values = metrics ? [
-    { label: "Traffic flow", value: data?.live.traffic ? Number(data.live.traffic.vehicles_per_hour).toLocaleString() : "—", detail: "Simulated vehicles / hour" },
-    { label: selected === "all" ? "Average congestion" : "Congestion", value: data?.live.traffic ? `${Number(data.live.traffic.congestion_percentage).toFixed(1)}%` : "—", detail: selected === "all" ? "Weighted by road capacity" : categoryLabel(data?.live.traffic?.congestion_category ?? "Unavailable") },
-    { label: selected === "all" ? "Average toll" : "Current toll", value: data?.live.price ? money(data.live.price.amount) : "—", detail: selected === "all" ? "Mean across reporting locations" : "Simulated toll price" },
+    { label: "Traffic flow", value: live?.traffic ? Number(live.traffic.vehicles_per_hour).toLocaleString() : "—", detail: "Simulated vehicles / hour" },
+    { label: selected === "all" ? "Average congestion" : "Congestion", value: live?.traffic ? `${Number(live.traffic.congestion_percentage).toFixed(1)}%` : "—", detail: selected === "all" ? "Weighted by road capacity" : categoryLabel(live?.traffic?.congestion_category ?? "Unavailable") },
+    { label: selected === "all" ? "Average toll" : "Current toll", value: live?.price ? money(live.price.amount) : "—", detail: selected === "all" ? "Mean across reporting locations" : "Simulated toll price" },
     { label: "Simulated revenue", value: money(metrics.revenue), detail: "Successful payments · last hour" },
     { label: "Detections", value: String(metrics.detections), detail: "Last hour" },
     { label: "Transactions", value: String(metrics.transactions), detail: "All payment outcomes · last hour" },
@@ -67,7 +71,7 @@ export default function NetworkOverview() {
   return <main className="dashboard-page"><section className="page-heading"><div><p className="eyebrow">REAL-TIME TELEMETRY</p><h1>{title}</h1><p>Current traffic, recognition and simulated toll operations.</p></div><div className="refresh-note" role="status">{stale ? "STALE / RECONNECTING" : data ? "MONITORING" : "LOADING"}<br />Last updated: {receivedAt ? time(new Date(receivedAt).toISOString()) : "Awaiting data"}</div></section>
     {(error || network.error) && <p className="form-error" role="alert">{error || network.error}</p>}
     {oldMeasurement && <p className="traffic-notice">The latest traffic measurement is more than two minutes old. Values below are the last available simulated state.</p>}
-    {!data && !error && <p role="status">Loading PlatePlus telemetry…</p>}
+    {!canonical && !error && <p role="status">Loading PlatePlus telemetry…</p>}
     {metrics && metrics.locations_reporting < metrics.locations_total && <p className="traffic-notice">Partial telemetry: {metrics.locations_reporting} of {metrics.locations_total} locations reporting. Traffic averages exclude unavailable locations.</p>}
     <section className="metric-grid network-metrics">{values.map(value => <Stat key={value.label} {...value} />)}</section>
     <section className="detail-card"><div className="section-title"><div><p className="eyebrow">SIMULATED TOLL NETWORK</p><h2>Select a toll location</h2></div><button className="secondary-button" aria-pressed={selected === "all"} onClick={() => select("all")}>All Locations</button></div>

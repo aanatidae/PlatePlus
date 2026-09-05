@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { mapPositionForLocation, NETWORK_ROUTES, SELANGOR_OUTLINE } from "./selangorNetwork";
 
 const styles = readFileSync(resolve(import.meta.dirname, "styles.css"), "utf8");
+const overview = readFileSync(resolve(import.meta.dirname, "NetworkOverview.tsx"), "utf8");
 
 describe("Selangor toll-road network", () => {
   it("renders only the four simulated highway routes inside a state outline", () => {
@@ -21,5 +22,9 @@ describe("Selangor toll-road network", () => {
   it("preserves the marker anchor translation for hover and active visual states", () => {
     expect(styles).toContain(".network-marker:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.015); }");
     expect(styles).toContain(".network-marker:active:not(:disabled) { transform: translate(-50%, -50%) scale(.995); }");
+  });
+  it("uses the network snapshot as the selected marker and panel telemetry source", () => {
+    expect(overview).toContain("const current = states.find(state => state.location.id === selected);");
+    expect(overview).toContain("const live = selected === \"all\" ? canonical?.live : current?.telemetry");
   });
 });

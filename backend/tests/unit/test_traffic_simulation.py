@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
+from app.api.locations import _profiled_fallback
 from app.services.traffic.simulation import (
     MALAYSIA_TIMEZONE,
     average_speed_for_profile,
@@ -59,3 +60,20 @@ def test_profile_variation_and_speed_are_location_specific_and_deterministic() -
 
     assert percentage == profile_congestion_percentage(rule, location, seed=9)
     assert average_speed_for_profile(location, Decimal(100)) == Decimal("22.0")
+
+
+def test_profiled_fallback_is_independent_and_stable_within_its_minute_bucket() -> None:
+    rules = {
+        "normal": SimpleNamespace(minimum_percentage=0, maximum_percentage=30, amount=Decimal(2), congestion_category="low"),
+        "moderate": SimpleNamespace(minimum_percentage=Decimal("30.01"), maximum_percentage=60, amount=Decimal(3), congestion_category="moderate"),
+        "peak_hour": SimpleNamespace(minimum_percentage=Decimal("60.01"), maximum_percentage=80, amount=Decimal(4), congestion_category="high"),
+        "severe": SimpleNamespace(minimum_percentage=Decimal("80.01"), maximum_percentage=100, amount=Decimal(5), congestion_category="severe"),
+    }
+    at_time = datetime(2026, 9, 2, 23, 20, tzinfo=UTC)
+    duke = SimpleNamespace(code="DUKE", road_capacity=1200, base_toll=Decimal("2.40"), status="operational", simulation_profile={"baseline_demand": .68, "peak_hours": [7], "peak_factor": 1.65, "variation": .08, "speed_free_flow_kmh": 68, "speed_floor_kmh": 18})
+    npe = SimpleNamespace(code="NPE", road_capacity=1300, base_toll=Decimal("2.80"), status="operational", simulation_profile={"baseline_demand": .32, "peak_hours": [8], "peak_factor": 1.25, "variation": .04, "speed_free_flow_kmh": 74, "speed_floor_kmh": 22})
+
+    duke_state = _profiled_fallback(duke, rules, at_time)
+    assert duke_state == _profiled_fallback(duke, rules, at_time.replace(second=55))
+    assert duke_state["congestion_category"] == "severe"
+    assert _profiled_fallback(npe, rules, at_time)["congestion_category"] == "low"

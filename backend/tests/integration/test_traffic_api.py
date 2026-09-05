@@ -103,4 +103,7 @@ def test_network_simulation_persists_independent_profiles_and_excludes_webcam_to
     assert states["DUKE"].congestion_category == "severe"
     assert states["NPE"].congestion_category == "low"
     assert states["DUKE"].vehicle_count != states["NPE"].vehicle_count
+    assert {result.toll_price.location_id for result in results} == {
+        result.traffic_record.location_id for result in results
+    }
     assert database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR")) is not None

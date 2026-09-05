@@ -12,7 +12,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_admin
-from app.api.live import _telemetry
 from app.db.session import get_db
 from app.models import (
     DetectionRecord,
@@ -35,6 +34,40 @@ def require_location(database: Session, location_id: UUID) -> TollLocation:
     if location is None:
         raise HTTPException(status_code=404, detail="Toll location was not found.")
     return location
+
+
+def _profiled_fallback(location: TollLocation, rules: dict[str, DynamicPricingRule], now: datetime) -> dict:
+    """Return the canonical minute-bucketed fallback for one generated toll location."""
+    from app.services.traffic.simulation import (
+        average_speed_for_profile,
+        location_scenario_for_time,
+        profile_congestion_percentage,
+        vehicle_count_for_congestion,
+    )
+
+    measured_at = now.replace(second=0, microsecond=0)
+    scenario = location_scenario_for_time(location, measured_at)
+    rule = rules[scenario]
+    congestion = profile_congestion_percentage(
+        rule, location, seed=int(measured_at.strftime("%Y%m%d%H%M"))
+    )
+    normal_amount = rules["normal"].amount
+    multiplier = rule.amount / normal_amount if normal_amount else Decimal("1.00")
+    return {
+        "measured_at": measured_at,
+        "congestion_percentage": congestion,
+        "congestion_category": rule.congestion_category,
+        "vehicle_count": vehicle_count_for_congestion(congestion, location.road_capacity),
+        "road_capacity": location.road_capacity,
+        "vehicles_per_hour": vehicle_count_for_congestion(congestion, location.road_capacity),
+        "average_speed_kmh": average_speed_for_profile(location, congestion),
+        "base_toll_price": location.base_toll,
+        "congestion_multiplier": multiplier.quantize(Decimal("0.01")),
+        "current_toll_price": (location.base_toll * multiplier).quantize(Decimal("0.01")),
+        "plaza_status": location.status,
+        "camera_status": "online" if location.status == "operational" else "offline",
+        "system_status": "healthy" if location.status == "operational" else location.status,
+    }
 
 
 @router.get("", response_model=list[TollLocationRead])
@@ -76,16 +109,7 @@ def _state(database: Session, location: TollLocation) -> dict:
                         "successful_transactions": len(successful),
                         "revenue": sum((item.amount for item in successful), Decimal(0))},
         }
-    fallback = _telemetry(now, rules)
-    fallback["road_capacity"] = location.road_capacity
-    fallback["vehicle_count"] = round(
-        location.road_capacity * fallback["congestion_percentage"] / 100
-    )
-    fallback["vehicles_per_hour"] = fallback["vehicle_count"]
-    fallback["base_toll_price"] = location.base_toll
-    fallback["current_toll_price"] = (
-        location.base_toll * fallback["congestion_multiplier"]
-    ).quantize(Decimal("0.01"))
+    fallback = _profiled_fallback(location, rules, now)
     traffic = database.scalar(
         select(TrafficRecord)
         .where(TrafficRecord.location_id == location.id)
@@ -111,9 +135,7 @@ def _state(database: Session, location: TollLocation) -> dict:
         source = "persisted"
         from app.services.traffic.simulation import average_speed_for_profile
 
-        fallback["average_speed_kmh"] = average_speed_for_profile(
-            location, traffic.congestion_percentage
-        )
+        fallback["average_speed_kmh"] = average_speed_for_profile(location, traffic.congestion_percentage)
     if price:
         fallback["current_toll_price"] = price.amount
         fallback["congestion_multiplier"] = (price.amount / location.base_toll).quantize(Decimal("0.01")) if location.base_toll else Decimal(1)
