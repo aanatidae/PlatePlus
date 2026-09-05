@@ -165,15 +165,15 @@ The checklist below tracks **improvements**, not the original development phase.
 
 ## Multi-Location Traffic Profiles
 
-- [ ] Add location-specific road capacity.
-- [ ] Add location-specific baseline traffic demand.
-- [ ] Add location-specific peak periods.
-- [ ] Add location-specific average speed profile.
-- [ ] Add location-specific variation parameters.
-- [ ] Generate independent traffic state per location.
-- [ ] Verify one location can be low congestion while another is severe.
-- [ ] Persist location-specific traffic history.
-- [ ] Add deterministic location-aware simulation for tests.
+- [x] Add location-specific road capacity.
+- [x] Add location-specific baseline traffic demand.
+- [x] Add location-specific peak periods.
+- [x] Add location-specific average speed profile.
+- [x] Add location-specific variation parameters.
+- [x] Generate independent traffic state per location.
+- [x] Verify one location can be low congestion while another is severe.
+- [x] Persist location-specific traffic history.
+- [x] Add deterministic location-aware simulation for tests.
 
 ## Webcam-Driven Simulator Toll Plaza
 
@@ -461,6 +461,6 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Verify Docker and development/test PostgreSQL are healthy; development migration is at head.
 - [x] Pass 52 backend tests including PostgreSQL integration and 8 frontend tests; production build passes.
 - [x] Browser-verify desktop/mobile, keyboard selection, refresh persistence, page context, functional plate filtering, Simulator isolation, and outage/stale-state behavior using disposable synthetic fixtures.
-- [ ] Choose the next optional personal-improvement milestone with the user.
+- [x] Complete Multi-Location Traffic Profiles with independent scheduled traffic for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains webcam-only.
 
 Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.

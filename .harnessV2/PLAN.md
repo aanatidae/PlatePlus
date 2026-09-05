@@ -104,7 +104,7 @@ Success condition:
 
 ## Phase 4: Multi-Location Traffic Simulation
 
-Goal: improve realism by giving each toll location its own simulated traffic behavior.
+Goal: improve realism by giving each generated toll location its own simulated traffic behavior. This is implemented for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains intentionally webcam-derived.
 
 High-level work:
 
@@ -380,7 +380,7 @@ The improved PlatePlus prototype should:
 
 ## Milestone Status — 2026-09-05
 
-Phases 1–3 are implemented for the agreed scope: a selectable stylized Selangor network map with LDP, DUKE, KESAS and NPE routes, location-aware KPIs and activity, network aggregates, persisted shared selection, real-time Overview cleanup, and PlatePlus branding. Simulator Toll Plaza is an additional webcam-derived live location with a 10-vehicles/hour demonstration capacity. Two-location comparison remains optional and unimplemented.
+Phases 1–4 are implemented for the agreed scope: a selectable stylized Selangor network map with LDP, DUKE, KESAS and NPE routes, location-aware KPIs and activity, network aggregates, persisted shared selection, real-time Overview cleanup, PlatePlus branding, and independent profile-driven scheduled traffic. Simulator Toll Plaza is an additional webcam-derived live location with a 10-vehicles/hour demonstration capacity and remains excluded from generated traffic. Two-location comparison remains optional and unimplemented.
 
 The Simulator has its own location selector and uses that location’s capacity/base toll. Full multi-location scenario runs and richer profiles remain future work. Recognition and pricing now have functional location/date/history filters. A targeted still-image integration change preserves location ownership through payment.
 

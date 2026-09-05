@@ -109,7 +109,11 @@ def _state(database: Session, location: TollLocation) -> dict:
             }
         )
         source = "persisted"
-        fallback["average_speed_kmh"] = round(max(18, 82 - float(traffic.congestion_percentage) * 0.62), 1)
+        from app.services.traffic.simulation import average_speed_for_profile
+
+        fallback["average_speed_kmh"] = average_speed_for_profile(
+            location, traffic.congestion_percentage
+        )
     if price:
         fallback["current_toll_price"] = price.amount
         fallback["congestion_multiplier"] = (price.amount / location.base_toll).quantize(Decimal("0.01")) if location.base_toll else Decimal(1)

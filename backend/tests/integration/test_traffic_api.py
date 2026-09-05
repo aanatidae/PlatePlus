@@ -4,8 +4,14 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.models import AdminAuditLog, TollPrice, TrafficRecord, TrafficSimulationSettings
-from app.services.traffic.simulation import run_simulation
+from app.models import (
+    AdminAuditLog,
+    TollLocation,
+    TollPrice,
+    TrafficRecord,
+    TrafficSimulationSettings,
+)
+from app.services.traffic.simulation import run_network_simulation, run_simulation
 
 
 def test_traffic_routes_require_administrator_authentication(database_app) -> None:
@@ -82,3 +88,19 @@ def test_pricing_rule_change_creates_a_new_current_price_and_audit_entry(
     assert latest_price.amount == Decimal("2.50")
     assert latest_price.rule_version == "v2"
     assert database.scalar(select(AdminAuditLog).where(AdminAuditLog.action == "pricing_rules_updated"))
+
+
+def test_network_simulation_persists_independent_profiles_and_excludes_webcam_toll(database) -> None:
+    settings = database.scalar(select(TrafficSimulationSettings))
+    assert settings is not None
+    results = run_network_simulation(
+        database, settings, source="scheduled", now=datetime(2026, 9, 1, 23, tzinfo=UTC), seed=4
+    )
+    database.commit()
+
+    assert {result.traffic_record.location.code for result in results} == {"PENCHALA", "DUKE", "KESAS", "NPE"}
+    states = {result.traffic_record.location.code: result.traffic_record for result in results}
+    assert states["DUKE"].congestion_category == "severe"
+    assert states["NPE"].congestion_category == "low"
+    assert states["DUKE"].vehicle_count != states["NPE"].vehicle_count
+    assert database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR")) is not None

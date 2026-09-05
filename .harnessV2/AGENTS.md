@@ -80,6 +80,7 @@ Prototype boundaries:
 - Local webcam inference remains local to the machine running it.
 - Raw webcam frames and plate crops remain ephemeral by default.
 - `Simulator Toll Plaza` is a special live, webcam-driven location on the LDP display route. Its rolling one-hour traffic flow, congestion, and dynamic toll derive only from accepted local-webcam ALPR crossings; it must never receive generated/fallback traffic telemetry. Raw frames and crops remain local and ephemeral, while only the existing processed detection/payment metadata is persisted.
+- Scheduled network generation uses each operational non-webcam location's `simulation_profile` for baseline demand, Malaysia-time peak hours, variation, and speed bounds. It writes independent traffic/price history for LDP, DUKE, KESAS, and NPE in one scheduler run; do not route this generated telemetry to Simulator Toll Plaza.
 
 ## Current Product Baseline
 

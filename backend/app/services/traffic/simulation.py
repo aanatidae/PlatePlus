@@ -20,6 +20,7 @@ from app.models import (
     TrafficSimulationSettings,
 )
 from app.services.locations import default_toll_location_id
+from app.services.traffic.webcam_crossings import is_webcam_toll
 
 MALAYSIA_TIMEZONE = ZoneInfo("Asia/Kuala_Lumpur")
 SCENARIO_CATEGORIES = {
@@ -113,6 +114,38 @@ def vehicle_count_for_congestion(percentage: Decimal, capacity: int) -> int:
     return int((percentage * capacity / Decimal(100)).quantize(Decimal(1)))
 
 
+def location_scenario_for_time(location: TollLocation, value: datetime) -> str:
+    """Choose an independent, profile-backed scenario for one simulated road."""
+    profile = location.simulation_profile or {}
+    hour = value.astimezone(MALAYSIA_TIMEZONE).hour
+    baseline = Decimal(str(profile.get("baseline_demand", 0.5)))
+    if hour in profile.get("peak_hours", []):
+        return "severe" if Decimal(str(profile.get("peak_factor", 1))) >= Decimal("1.55") else "peak_hour"
+    if baseline >= Decimal("0.60"):
+        return "moderate"
+    return "normal"
+
+
+def profile_congestion_percentage(
+    rule: DynamicPricingRule, location: TollLocation, *, seed: int | None = None
+) -> Decimal:
+    """Return a bounded, reproducible congestion percentage using location variation."""
+    profile = location.simulation_profile or {}
+    variation = Decimal(str(profile.get("variation", 0.05)))
+    low, high = Decimal(rule.minimum_percentage), Decimal(rule.maximum_percentage)
+    midpoint = (low + high) / 2
+    generator = random.Random(f"{seed}:{location.code}" if seed is not None else None)
+    spread = (high - low) * variation
+    return max(low, min(high, (midpoint + Decimal(str(generator.uniform(-float(spread), float(spread))))).quantize(Decimal("0.01"))))
+
+
+def average_speed_for_profile(location: TollLocation, congestion: Decimal) -> Decimal:
+    profile = location.simulation_profile or {}
+    free_flow = Decimal(str(profile.get("speed_free_flow_kmh", 72)))
+    floor = Decimal(str(profile.get("speed_floor_kmh", 20)))
+    return max(floor, free_flow - congestion * Decimal("0.55")).quantize(Decimal("0.1"))
+
+
 def run_simulation(
     database: Session,
     settings: TrafficSimulationSettings,
@@ -122,12 +155,20 @@ def run_simulation(
     now: datetime | None = None,
     seed: int | None = None,
     scenario_predictor: TrafficScenarioPredictor | None = None,
+    location: TollLocation | None = None,
 ) -> SimulationResult:
     """Persist one simulated traffic record and its price decision atomically."""
     effective_time = current_simulation_time(settings, now)
     predictor = scenario_predictor or DEFAULT_SCENARIO_PREDICTOR
+    if location is None:
+        location_id = default_toll_location_id(database)
+        location = database.get(TollLocation, location_id)
+    if location is None:
+        raise ValueError("The default Penchala toll location is not initialized. Run migrations.")
     selected_scenario = scenario or (
-        predictor.scenario_for(effective_time)
+        location_scenario_for_time(location, effective_time)
+        if settings.simulation_mode == "time_patterned" and location.simulation_profile
+        else predictor.scenario_for(effective_time)
         if settings.simulation_mode == "time_patterned"
         else settings.fixed_scenario
     )
@@ -135,11 +176,7 @@ def run_simulation(
     rule = rules.get(selected_scenario)
     if rule is None:
         raise ValueError(f"No dynamic pricing rule exists for {selected_scenario}.")
-    location_id = default_toll_location_id(database)
-    location = database.get(TollLocation, location_id)
-    if location is None:  # Defensive guard for a partially migrated database.
-        raise ValueError("The default Penchala toll location is not initialized. Run migrations.")
-    percentage = congestion_percentage_for_rule(rule, seed=seed)
+    percentage = profile_congestion_percentage(rule, location, seed=seed)
     capacity = location.road_capacity
     vehicle_count = vehicle_count_for_congestion(percentage, capacity)
     traffic = TrafficRecord(
@@ -167,3 +204,15 @@ def run_simulation(
     database.add(price)
     database.flush()
     return SimulationResult(traffic, price, effective_time)
+
+
+def run_network_simulation(
+    database: Session, settings: TrafficSimulationSettings, *, source: str, now: datetime | None = None, seed: int | None = None
+) -> list[SimulationResult]:
+    """Persist independent traffic and pricing records for all generated toll roads."""
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.status == "operational").order_by(TollLocation.code)))
+    return [
+        run_simulation(database, settings, source=source, now=now, seed=seed, location=location)
+        for location in locations
+        if not is_webcam_toll(location)
+    ]
