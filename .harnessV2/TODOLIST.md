@@ -205,6 +205,10 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Recalculate traffic volume, congestion, speed, congestion band, and dynamic toll when the active frame changes.
 - [x] Keep playback speed independent from simulated timestamps and frame data.
 - [x] Use a fixed five-minute frame interval for time-range runs.
+- [x] Stop playback at the final frame without looping.
+- [x] Retain completed frame data and show a summary derived from the entire run.
+- [x] Add Replay for the same generated frames and keep Reset separate.
+- [x] Summarize location/network congestion, traffic, speed, dynamic tolls, and price changes.
 - [x] Show baseline toll.
 - [x] Show dynamic toll.
 - [x] Show before/after pricing comparison.
@@ -214,6 +218,7 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Confirm Simulator never writes live Overview toll price.
 - [x] Confirm Simulator never creates live payment transactions.
 - [x] Unit-test deterministic per-frame progression, pricing-band changes, location independence, and scenario-specific time patterns.
+- [x] Unit-test summary aggregation, peak timestamps, toll-change counts, and multi-location summaries.
 
 ## Dynamic Pricing Refinement
 

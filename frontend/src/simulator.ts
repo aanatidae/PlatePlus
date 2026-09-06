@@ -3,6 +3,9 @@ export type SimulatorLocation = { id: string; code: string; display_name: string
 export type SimulatorParameters = { congestion: number; lanes: number; baseToll: number };
 export type SimulatorOutput = { locationId: string; locationName: string; scenario: SimulatorScenario; volume: number; capacity: number; congestion: number; category: "normal" | "moderate" | "peak_hour" | "severe"; speed: number; baseToll: number; dynamicToll: number; multiplier: number };
 export type SimulatorFrame = { timestamp: string; outputs: SimulatorOutput[] };
+export type LocationSimulationSummary = { locationId: string; locationName: string; baselineToll: number; averageVolume: number; minVolume: number; maxVolume: number; averageCongestion: number; minCongestion: number; maxCongestion: number; peakCategory: SimulatorOutput["category"]; peakTimestamp: string; averageSpeed: number; minSpeed: number; maxSpeed: number; averageToll: number; minToll: number; maxToll: number; priceChanges: number; highestTollTimestamp: string };
+export type SimulationSummary = { locations: LocationSimulationSummary[]; networkAverageCongestion: number; mostCongestedLocation: LocationSimulationSummary | null; highestCongestion: number; highestTrafficLocation: LocationSimulationSummary | null; highestTollLocation: LocationSimulationSummary | null };
+export type PlaybackStatus = "idle" | "running" | "completed";
 
 export const scenarioDetails: Record<Exclude<SimulatorScenario, "custom">, { title: string; description: string }> = {
   normal: { title: "Normal traffic", description: "Free-flowing toll approach" }, moderate: { title: "Moderate traffic", description: "Steady weekday demand" }, peak_hour: { title: "Peak hour", description: "Rush-hour demand" }, severe: { title: "Severe congestion", description: "Near-capacity road demand" }, weekday_morning_peak: { title: "Weekday morning peak", description: "Inbound commuter demand" }, weekday_evening_peak: { title: "Weekday evening peak", description: "Outbound commuter demand" }, weekend: { title: "Weekend traffic", description: "Later, flatter leisure demand" }, event_surge: { title: "Event surge", description: "Temporary venue or event demand" }, incident: { title: "Accident / incident", description: "Temporary constrained road flow" }, roadworks: { title: "Roadworks", description: "Reduced capacity across the window" }, low_traffic: { title: "Low traffic", description: "Off-peak light demand" },
@@ -18,6 +21,13 @@ export function createTimeline(start: string, durationMinutes: number, _playback
   const isoStart = start.includes("Z") || /[+-]\d\d:\d\d$/.test(start) ? start : `${start}:00+08:00`;
   const first = new Date(isoStart).getTime();
   return Array.from({ length: Math.max(1, Math.floor(durationMinutes / 5) + 1) }, (_, index) => new Date(first + index * 300_000).toISOString());
+}
+
+/** Bounded playback transition; never wraps the final simulation frame back to zero. */
+export function advancePlayback(frameIndex: number, frameCount: number): { frameIndex: number; status: PlaybackStatus } {
+  if (frameCount <= 1 || frameIndex >= frameCount - 1) return { frameIndex: Math.max(0, frameCount - 1), status: "completed" };
+  const nextIndex = frameIndex + 1;
+  return { frameIndex: nextIndex, status: nextIndex === frameCount - 1 ? "completed" : "running" };
 }
 
 function locationProfile(location: SimulatorLocation) {
@@ -57,4 +67,24 @@ export function createSimulationFrames(locations: SimulatorLocation[], scenario:
 /** Compatibility helper for the retired single-snapshot component; new UI uses createSimulationFrames. */
 export function createSimulatorOutput(location: SimulatorLocation, scenario: SimulatorScenario, parameters: SimulatorParameters): SimulatorOutput {
   return createSimulationFrames([location], scenario, parameters, "2026-09-07T08:00", 0)[0].outputs[0];
+}
+
+const average = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+const categoryRank = { normal: 0, moderate: 1, peak_hour: 2, severe: 3 } as const;
+
+/** Summaries consume stored frame data only; they never rerun the traffic model. */
+export function summarizeSimulation(frames: SimulatorFrame[]): SimulationSummary {
+  const byLocation = new Map<string, { name: string; values: Array<SimulatorOutput & { timestamp: string }> }>();
+  for (const frame of frames) for (const output of frame.outputs) {
+    const item = byLocation.get(output.locationId) ?? { name: output.locationName, values: [] };
+    item.values.push({ ...output, timestamp: frame.timestamp }); byLocation.set(output.locationId, item);
+  }
+  const locations = Array.from(byLocation, ([locationId, item]) => {
+    const values = item.values; const volumes = values.map(value => value.volume); const congestions = values.map(value => value.congestion); const speeds = values.map(value => value.speed); const tolls = values.map(value => value.dynamicToll); const peak = values.reduce((best, value) => value.congestion > best.congestion ? value : best); const highToll = values.reduce((best, value) => value.dynamicToll > best.dynamicToll ? value : best); const peakCategory = values.reduce((best, value) => categoryRank[value.category] > categoryRank[best] ? value.category : best, "normal" as SimulatorOutput["category"]); const priceChanges = values.slice(1).filter((value, index) => value.dynamicToll !== values[index].dynamicToll).length;
+    return { locationId, locationName: item.name, baselineToll: values[0].baseToll, averageVolume: average(volumes), minVolume: Math.min(...volumes), maxVolume: Math.max(...volumes), averageCongestion: average(congestions), minCongestion: Math.min(...congestions), maxCongestion: Math.max(...congestions), peakCategory, peakTimestamp: peak.timestamp, averageSpeed: average(speeds), minSpeed: Math.min(...speeds), maxSpeed: Math.max(...speeds), averageToll: average(tolls), minToll: Math.min(...tolls), maxToll: Math.max(...tolls), priceChanges, highestTollTimestamp: highToll.timestamp };
+  });
+  const mostCongestedLocation = locations.reduce<LocationSimulationSummary | null>((best, value) => !best || value.maxCongestion > best.maxCongestion ? value : best, null);
+  const highestTrafficLocation = locations.reduce<LocationSimulationSummary | null>((best, value) => !best || value.maxVolume > best.maxVolume ? value : best, null);
+  const highestTollLocation = locations.reduce<LocationSimulationSummary | null>((best, value) => !best || value.maxToll > best.maxToll ? value : best, null);
+  return { locations, networkAverageCongestion: locations.length ? average(locations.map(location => location.averageCongestion)) : 0, mostCongestedLocation, highestCongestion: mostCongestedLocation?.maxCongestion ?? 0, highestTrafficLocation, highestTollLocation };
 }

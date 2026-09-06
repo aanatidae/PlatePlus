@@ -88,6 +88,7 @@ dl { display: flex; flex-wrap: wrap; gap: 1rem 2rem; } dt { color: var(--muted);
 .simulator-controls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .8rem; align-items: end; }.simulator-controls .toggle-row { min-height: 44px; align-content: center; }.simulator-scenarios { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }.simulator-scenarios .scenario-card { min-height: 102px; }.simulator-scenarios .scenario-card span { line-height: 1.35; }
 @media (max-width: 900px) { .simulator-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .simulator-controls { grid-template-columns: 1fr; }.simulator-controls .toggle-row { min-height: 0; } }
+.simulation-summary { margin: 1rem 0; padding: 1.2rem; border: 1px solid #57d9c2; border-radius: 10px; background: linear-gradient(145deg, #0d282b, #081518); }.simulation-summary .section-title > div > p:last-child { margin: .35rem 0 0; color: var(--muted); font-size: .8rem; }.summary-chart { margin-top: 1rem; padding: 1rem; border: 1px solid #285159; border-radius: 8px; background: #091a1d; }.summary-chart h3 { margin: 0 0 .8rem; font-size: .9rem; color: #d5fff6; }
 
 /* PlatePlus multi-location monitoring; retains the existing command-centre palette. */
 .location-select { min-width: 150px; font-size: .65rem; }
