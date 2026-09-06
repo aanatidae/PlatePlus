@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advancePlayback, createSimulationFrames, createTimeline, scenarioDetails, summarizeSimulation, type SimulatorFrame } from "./simulator";
+import { advancePlayback, createSimulationFrames, createTimeline, malaysiaDailyTrafficProfile, scenarioDetails, summarizeSimulation, timeBasedTrafficCategory, type SimulatorFrame } from "./simulator";
 
 const ldp = { id: "ldp", code: "LDP", display_name: "Simulated LDP Toll Plaza", base_toll: 2, road_capacity: 1000, simulation_profile: { baseline_demand: .48, peak_hours: [8, 18], speed_free_flow_kmh: 72, speed_floor_kmh: 20, variation: .05 } };
 const duke = { id: "duke", code: "DUKE", display_name: "Simulated DUKE Toll Plaza", base_toll: 2.4, road_capacity: 1200, simulation_profile: { baseline_demand: .56, peak_hours: [7, 17], speed_free_flow_kmh: 68, speed_floor_kmh: 18, variation: .08 } };
@@ -77,5 +77,31 @@ describe("time-dependent simulator frames", () => {
   it("stops at the final frame without looping back to the first frame", () => {
     expect(advancePlayback(47, 49)).toEqual({ frameIndex: 48, status: "completed" });
     expect(advancePlayback(48, 49)).toEqual({ frameIndex: 48, status: "completed" });
+  });
+
+  it("maps representative Malaysia times to the prototype daily traffic bands", () => {
+    const at = (hour: number, minute = 30) => `2026-09-07T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00+08:00`;
+    expect(malaysiaDailyTrafficProfile).toHaveLength(24);
+    expect(timeBasedTrafficCategory(at(2))).toBe("normal");
+    expect(timeBasedTrafficCategory(at(5))).toBe("moderate");
+    expect(timeBasedTrafficCategory(at(6))).toBe("peak_hour");
+    expect(timeBasedTrafficCategory(at(7))).toBe("severe");
+    expect(timeBasedTrafficCategory(at(9))).toBe("peak_hour");
+    expect(timeBasedTrafficCategory(at(12))).toBe("moderate");
+    expect(timeBasedTrafficCategory(at(16))).toBe("peak_hour");
+    expect(timeBasedTrafficCategory(at(17))).toBe("severe");
+    expect(timeBasedTrafficCategory(at(19))).toBe("peak_hour");
+    expect(timeBasedTrafficCategory(at(22))).toBe("normal");
+  });
+
+  it("smoothly progresses across hourly bands, remains deterministic, and handles midnight", () => {
+    const frames = createSimulationFrames([ldp, duke], "time_based", parameters, "2026-09-07T05:30", 270);
+    const ldpFrames = frames.map(frame => frame.outputs[0]);
+    expect(ldpFrames.find(frame => frame.category === "severe")).toBeDefined();
+    expect(new Set(ldpFrames.map(frame => frame.dynamicToll)).size).toBeGreaterThan(1);
+    expect(createSimulationFrames([ldp], "time_based", parameters, "2026-09-07T21:00", 240)).toEqual(createSimulationFrames([ldp], "time_based", parameters, "2026-09-07T21:00", 240));
+    const midnight = createSimulationFrames([ldp], "time_based", parameters, "2026-09-07T21:00", 240);
+    expect(midnight.at(-1)!.outputs[0].category).toBe("normal");
+    expect(frames[0].outputs[0].congestion).not.toBe(frames[0].outputs[1].congestion);
   });
 });

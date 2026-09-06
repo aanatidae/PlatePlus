@@ -198,6 +198,8 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Add accident/incident preset.
 - [x] Add roadworks preset.
 - [x] Add low-traffic preset.
+- [x] Add Time-based traffic preset using a prototype Malaysia daily traffic profile.
+- [x] Derive Time-based traffic frames from simulated `Asia/Kuala_Lumpur` time with deterministic location variation and smooth hourly-band transitions.
 - [x] Add simulation start time.
 - [x] Add simulation duration/time range.
 - [x] Add playback-speed control.

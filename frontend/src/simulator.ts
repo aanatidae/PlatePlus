@@ -1,4 +1,4 @@
-export type SimulatorScenario = "normal" | "moderate" | "peak_hour" | "severe" | "weekday_morning_peak" | "weekday_evening_peak" | "weekend" | "event_surge" | "incident" | "roadworks" | "low_traffic" | "custom";
+export type SimulatorScenario = "normal" | "moderate" | "peak_hour" | "severe" | "weekday_morning_peak" | "weekday_evening_peak" | "weekend" | "event_surge" | "incident" | "roadworks" | "low_traffic" | "time_based" | "custom";
 export type SimulatorLocation = { id: string; code: string; display_name: string; base_toll: number; road_capacity: number; simulation_profile?: Record<string, unknown> };
 export type SimulatorParameters = { congestion: number; lanes: number; baseToll: number };
 export type SimulatorOutput = { locationId: string; locationName: string; scenario: SimulatorScenario; volume: number; capacity: number; congestion: number; category: "normal" | "moderate" | "peak_hour" | "severe"; speed: number; baseToll: number; dynamicToll: number; multiplier: number };
@@ -8,8 +8,12 @@ export type SimulationSummary = { locations: LocationSimulationSummary[]; networ
 export type PlaybackStatus = "idle" | "running" | "completed";
 
 export const scenarioDetails: Record<Exclude<SimulatorScenario, "custom">, { title: string; description: string }> = {
-  normal: { title: "Normal traffic", description: "Free-flowing toll approach" }, moderate: { title: "Moderate traffic", description: "Steady weekday demand" }, peak_hour: { title: "Peak hour", description: "Rush-hour demand" }, severe: { title: "Severe congestion", description: "Near-capacity road demand" }, weekday_morning_peak: { title: "Weekday morning peak", description: "Inbound commuter demand" }, weekday_evening_peak: { title: "Weekday evening peak", description: "Outbound commuter demand" }, weekend: { title: "Weekend traffic", description: "Later, flatter leisure demand" }, event_surge: { title: "Event surge", description: "Temporary venue or event demand" }, incident: { title: "Accident / incident", description: "Temporary constrained road flow" }, roadworks: { title: "Roadworks", description: "Reduced capacity across the window" }, low_traffic: { title: "Low traffic", description: "Off-peak light demand" },
+  normal: { title: "Normal traffic", description: "Free-flowing toll approach" }, moderate: { title: "Moderate traffic", description: "Steady weekday demand" }, peak_hour: { title: "Peak hour", description: "Rush-hour demand" }, severe: { title: "Severe congestion", description: "Near-capacity road demand" }, weekday_morning_peak: { title: "Weekday morning peak", description: "Inbound commuter demand" }, weekday_evening_peak: { title: "Weekday evening peak", description: "Outbound commuter demand" }, weekend: { title: "Weekend traffic", description: "Later, flatter leisure demand" }, event_surge: { title: "Event surge", description: "Temporary venue or event demand" }, incident: { title: "Accident / incident", description: "Temporary constrained road flow" }, roadworks: { title: "Roadworks", description: "Reduced capacity across the window" }, low_traffic: { title: "Low traffic", description: "Off-peak light demand" }, time_based: { title: "Time-based traffic", description: "Estimated Malaysia daily profile from simulated time" },
 };
+
+/** Simulated prototype estimate, not a live or official Malaysian traffic feed. */
+export const malaysiaDailyTrafficProfile: SimulatorOutput["category"][] = ["normal", "normal", "normal", "normal", "normal", "moderate", "peak_hour", "severe", "severe", "peak_hour", "moderate", "moderate", "moderate", "moderate", "moderate", "moderate", "peak_hour", "severe", "severe", "peak_hour", "moderate", "moderate", "normal", "normal"];
+const categoryTargets = { normal: 20, moderate: 46, peak_hour: 70, severe: 88 } as const;
 
 const clamp = (value: number, low = 0, high = 100) => Math.min(high, Math.max(low, value));
 const gaussian = (value: number, center: number, width: number) => Math.exp(-((value - center) ** 2) / (2 * width ** 2));
@@ -39,6 +43,8 @@ function locationProfile(location: SimulatorLocation) {
 function malaysiaHour(timestamp: string) { const pieces = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(timestamp)); const read = (type: string) => Number(pieces.find(piece => piece.type === type)?.value ?? 0); return read("hour") + read("minute") / 60; }
 function categoryFor(congestion: number): SimulatorOutput["category"] { return congestion > 80 ? "severe" : congestion > 60 ? "peak_hour" : congestion > 30 ? "moderate" : "normal"; }
 function multiplierFor(category: SimulatorOutput["category"]) { return category === "severe" ? 2.5 : category === "peak_hour" ? 2 : category === "moderate" ? 1.5 : 1; }
+export function timeBasedTrafficTarget(timestamp: string) { const hour = malaysiaHour(timestamp); const start = Math.floor(hour); const progress = hour - start; const transition = clamp((progress - .66) / .34, 0, 1); const eased = transition * transition * (3 - 2 * transition); const current = malaysiaDailyTrafficProfile[start]; const next = malaysiaDailyTrafficProfile[(start + 1) % 24]; return categoryTargets[current] + (categoryTargets[next] - categoryTargets[current]) * eased; }
+export function timeBasedTrafficCategory(timestamp: string) { return categoryFor(timeBasedTrafficTarget(timestamp)); }
 
 function congestionForFrame(location: SimulatorLocation, scenario: SimulatorScenario, parameters: SimulatorParameters, timestamp: string, progress: number) {
   const profile = locationProfile(location); const hour = malaysiaHour(timestamp); const profilePeak = profile.peaks.reduce((total, peak) => total + gaussian(hour, peak, 1.15), 0); const dayDemand = profile.baseline * 100 + profilePeak * 24; const variation = Math.sin((new Date(timestamp).getTime() / 300_000 + hash(location.code) % 29) * .81) * profile.variation * 100; const morning = gaussian(hour, 8.2, 1.2); const evening = gaussian(hour, 17.8, 1.35); const midday = gaussian(hour, 13, 3.5); const surge = gaussian(progress, .5, .16); let congestion: number; let capacityFactor = 1;
@@ -54,6 +60,7 @@ function congestionForFrame(location: SimulatorLocation, scenario: SimulatorScen
     case "incident": congestion = 37 + dayDemand * .25 + surge * 58 + variation; capacityFactor = .68; break;
     case "roadworks": congestion = 42 + dayDemand * .31 + midday * 12 + variation; capacityFactor = .7; break;
     case "low_traffic": congestion = 8 + dayDemand * .16 + variation * .35; break;
+    case "time_based": congestion = timeBasedTrafficTarget(timestamp) + (profile.baseline - .48) * 18 + variation; break;
     case "custom": congestion = parameters.congestion / Math.max(1, location.road_capacity * Math.min(4, Math.max(1, parameters.lanes)) / 4) * 100 + (profilePeak * 10 + variation) * .45; capacityFactor = Math.min(4, Math.max(1, parameters.lanes)) / 4; break;
   }
   return { congestion: Number(clamp(congestion).toFixed(1)), capacityFactor, profile };
