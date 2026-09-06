@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 export const LOCATION_KEY = "plateplus.location.v1";
-export type TollLocation = { id: string; code: string; display_name: string; highway_or_route: string; latitude: number; longitude: number; status: string; base_toll: number; road_capacity: number };
+export type TollLocation = { id: string; code: string; display_name: string; highway_or_route: string; latitude: number; longitude: number; status: string; base_toll: number; road_capacity: number; simulation_profile?: Record<string, unknown> };
 export function locationPath(path: string, locationId: string) {
   return `${path}${path.includes("?") ? "&" : "?"}${locationId === "all" ? "scope=all_locations" : `location_id=${encodeURIComponent(locationId)}`}`;
 }

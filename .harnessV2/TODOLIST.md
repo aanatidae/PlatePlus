@@ -201,6 +201,10 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Add simulation start time.
 - [x] Add simulation duration/time range.
 - [x] Add playback-speed control.
+- [x] Generate a complete deterministic location state for every simulated time frame.
+- [x] Recalculate traffic volume, congestion, speed, congestion band, and dynamic toll when the active frame changes.
+- [x] Keep playback speed independent from simulated timestamps and frame data.
+- [x] Use a fixed five-minute frame interval for time-range runs.
 - [x] Show baseline toll.
 - [x] Show dynamic toll.
 - [x] Show before/after pricing comparison.
@@ -209,6 +213,7 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Confirm Simulator never writes live Overview traffic.
 - [x] Confirm Simulator never writes live Overview toll price.
 - [x] Confirm Simulator never creates live payment transactions.
+- [x] Unit-test deterministic per-frame progression, pricing-band changes, location independence, and scenario-specific time patterns.
 
 ## Dynamic Pricing Refinement
 
