@@ -3,6 +3,7 @@ import { Activity, BrainCircuit, Camera, CircleDollarSign, Gauge, MapPin, Menu, 
 import HistoryFilters, { historyPath, type HistoryValues } from "./HistoryFilters";
 import NetworkOverview, { categoryLabel } from "./NetworkOverview";
 import { LocationProvider, LocationSelect, useLocations, locationPath, useFeed } from "./locations";
+import { createSimulatorOutput, createTimeline, scenarioDetails, scenarioTitle, type SimulatorOutput, type SimulatorScenario } from "./simulator";
 
 type BoundingBox = { left: number; top: number; right: number; bottom: number };
 type FrameResult = { status: string; message: string; plate_text?: string; detection_confidence?: number; ocr_confidence?: number; bounding_box?: BoundingBox; charge_eligible: boolean; payment_status?: string; payment_amount?: number; payment_balance_after?: number; payment_duplicate: boolean };
@@ -213,10 +214,77 @@ function IntelligencePage() {
   return <main className="dashboard-page"><section className="page-heading"><div><p className="eyebrow">EXPLAINABLE AI</p><h1>AI intelligence</h1><p>Operational transparency for the simulated recognition, traffic analysis, and toll-pricing pipeline.</p></div><span className="refresh-note"><span className="live-dot" /> {error ? "Telemetry reconnecting" : "Decision trace online"}</span></section>{error && <p className="traffic-notice">{error} Showing the local decision policy while the live feed reconnects.</p>}<section className="metric-grid page-metrics"><Metric tone="teal" label="OCR confidence" value={confidence == null ? "No reads yet" : `${(Number(confidence) * 100).toFixed(1)}%`} detail={confidence == null ? "PaddleOCR gate requires 70% confidence" : "Average recognition evidence this hour"} /><Metric label="Traffic model" value={trafficModel} detail={settings ? (settings.is_enabled ? `Scheduled every ${settings.interval_minutes} min` : "Manual simulation enabled") : "Simulated traffic predictor"} /><Metric tone="teal" label="Pricing rules" value={settings ? `v${settings.pricing_rule_version} · 4 bands` : "4 congestion bands"} detail="Normal, moderate, peak hour, and severe" /><Metric label="Simulation clock" value={settings?.time_mode === "simulated" ? "Simulated time" : "Malaysia time"} detail={clockDetail} /></section><section className="pipeline-card"><div className="section-title"><div><p className="eyebrow">LIVE PIPELINE</p><h2>How the system reaches a toll decision</h2></div></div><ol className="pipeline"><li><span>01</span><strong>Local input</strong><small>Still images and browser-camera frames remain on the operator device.</small></li><li><span>02</span><strong>Plate detection</strong><small>YOLO isolates the car-plate region at a 50% confidence gate.</small></li><li><span>03</span><strong>OCR confidence gate</strong><small>PaddleOCR reads the plate; reads below 70% are never charge eligible.</small></li><li><span>04</span><strong>Traffic analysis</strong><small>{trafficModel} classifies simulated road congestion.</small></li><li><span>05</span><strong>Dynamic toll decision</strong><small>Four configurable congestion bands select the simulated toll.</small></li></ol></section><section className="detail-card"><div className="section-title"><div><p className="eyebrow">CURRENT EVIDENCE</p><h2>Decision inputs</h2></div></div><dl className="evidence-grid"><div><dt>Current congestion</dt><dd>{overview?.live.traffic ? `${Number(overview.live.traffic.congestion_percentage).toFixed(1)}% · ${categoryLabel(overview.live.traffic.congestion_category)}` : "Live telemetry reconnecting"}</dd></div><div><dt>Recognitions recorded</dt><dd>{overview?.metrics.detections ?? 0} events this hour</dd></div><div><dt>Successful transactions</dt><dd>{overview?.metrics.successful_transactions ?? 0} this hour</dd></div><div><dt>{selected === "all" ? "Network average toll" : "Current toll"}</dt><dd>{overview?.live.price ? `RM${Number(overview.live.price.amount).toFixed(2)}` : "Dynamic pricing ready"}</dd></div></dl></section></main>;
 }
 
+type SimulatorBatch = { timestamp: string; scenario: SimulatorScenario; start: string; duration: number; playbackSpeed: number; outputs: SimulatorOutput[]; timeline: string[] };
+
+function SimulatorPage() {
+  const { locations } = useLocations();
+  const [simLocation, setSimLocation] = useState("");
+  const [runNetwork, setRunNetwork] = useState(false);
+  const [scenario, setScenario] = useState<SimulatorScenario>("moderate");
+  const [start, setStart] = useState(() => new Date().toISOString().slice(0, 16));
+  const [duration, setDuration] = useState(60);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [custom, setCustom] = useState({ congestion: 0, lanes: 3, baseToll: 0 });
+  const [batch, setBatch] = useState<SimulatorBatch | null>(null);
+  const [history, setHistory] = useState<SimulatorBatch[]>([]);
+  const [playhead, setPlayhead] = useState(0);
+
+  useEffect(() => {
+    if (!simLocation && locations[0]) setSimLocation(locations[0].id);
+  }, [locations, simLocation]);
+
+  useEffect(() => {
+    const location = locations.find(item => item.id === simLocation);
+    if (!location) return;
+    setCustom({ congestion: Math.round(Number(location.road_capacity) * .55), lanes: 3, baseToll: Number(location.base_toll) });
+  }, [simLocation, locations]);
+
+  useEffect(() => {
+    if (!batch || batch.timeline.length < 2) return;
+    const timer = window.setInterval(() => setPlayhead(previous => previous >= batch.timeline.length - 1 ? 0 : previous + 1), Math.max(350, 1100 / playbackSpeed));
+    return () => window.clearInterval(timer);
+  }, [batch, playbackSpeed]);
+
+  const selectedLocation = locations.find(item => item.id === simLocation);
+  const generatedLocations = locations.filter(item => item.code !== "SIMULATOR");
+  const targets = runNetwork ? generatedLocations : selectedLocation ? [selectedLocation] : [];
+  const isWebcamLocation = selectedLocation?.code === "SIMULATOR";
+  const selectedOutput = batch?.outputs.find(item => item.locationId === simLocation) ?? batch?.outputs[0];
+  const namedScenarios = Object.keys(scenarioDetails) as Exclude<SimulatorScenario, "custom">[];
+
+  function run() {
+    if (!targets.length) return;
+    const timeline = createTimeline(start, duration, playbackSpeed);
+    const next: SimulatorBatch = { timestamp: new Date().toISOString(), scenario, start, duration, playbackSpeed, timeline, outputs: targets.map(location => createSimulatorOutput(location, scenario, custom)) };
+    setBatch(next);
+    setHistory(items => [next, ...items].slice(0, 6));
+    setPlayhead(0);
+  }
+
+  function reset() {
+    setScenario("moderate");
+    setRunNetwork(false);
+    setBatch(null);
+    setPlayhead(0);
+  }
+
+  return <main className="dashboard-page">
+    <section className="page-heading"><div><p className="eyebrow">SANDBOX ENVIRONMENT</p><h1>Traffic & toll simulator</h1><p>Model location-specific hypothetical traffic without altering live telemetry, toll prices, records, or transactions.</p></div><span className="refresh-note">Local-only simulation state</span></section>
+    <section className="detail-card simulator-controls"><LocationSelect all={false} label="Simulator toll location" value={simLocation} onChange={setSimLocation} /><label className="toggle-row"><input type="checkbox" checked={runNetwork} onChange={event => setRunNetwork(event.target.checked)} disabled={isWebcamLocation} /> Run all generated toll locations</label><label>Simulation start time<input type="datetime-local" value={start} onChange={event => setStart(event.target.value)} /></label><label>Duration<select value={duration} onChange={event => setDuration(Number(event.target.value))}><option value={30}>30 minutes</option><option value={60}>1 hour</option><option value={120}>2 hours</option><option value={240}>4 hours</option></select></label><label>Playback speed<select value={playbackSpeed} onChange={event => setPlaybackSpeed(Number(event.target.value))}><option value={.5}>0.5×</option><option value={1}>1×</option><option value={2}>2×</option><option value={4}>4×</option></select></label></section>
+    {isWebcamLocation && <p className="traffic-notice">Simulator Toll Plaza is webcam-derived in live monitoring. This is a local projection only and never creates webcam or live telemetry.</p>}
+    <section className="sim-steps"><article><span>STEP 1</span><h2>Simulation scope</h2><strong>{runNetwork ? `${targets.length} locations` : selectedLocation?.display_name ?? "Loading"}</strong><small>{runNetwork ? "LDP, DUKE, KESAS and NPE · webcam plaza excluded" : `${selectedLocation?.road_capacity ?? 0} vehicles/hour capacity`}</small></article><article><span>STEP 2</span><h2>Scenario window</h2><strong>{scenarioTitle(scenario)}</strong><small>{duration} minutes from {start ? new Date(start).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" }) : "select a start"} · {playbackSpeed}× playback</small></article><article className="impact"><span>STEP 3</span><h2>Projected outcome</h2><strong>{selectedOutput ? `RM${selectedOutput.dynamicToll.toFixed(2)}` : "Run simulation"}</strong><small>{selectedOutput ? `${selectedOutput.congestion}% congestion · RM${selectedOutput.baseToll.toFixed(2)} baseline` : "Rule-based estimate pending"}</small></article></section>
+    <section className="scenario-strip simulator-scenarios">{namedScenarios.map(key => <button key={key} className={scenario === key ? "scenario-card active" : "scenario-card"} onClick={() => setScenario(key)}><strong>{scenarioDetails[key].title}</strong><span>{scenarioDetails[key].description}</span></button>)}<button className={scenario === "custom" ? "scenario-card active" : "scenario-card"} onClick={() => setScenario("custom")}><strong>Custom scenario</strong><span>Configure traffic, lanes and baseline toll</span></button></section>
+    {scenario === "custom" && <section className="detail-card custom-inputs"><div className="section-title"><div><p className="eyebrow">CUSTOM PARAMETERS</p><h2>Configure hypothetical conditions</h2></div></div><label>Vehicles per hour<input type="number" min={0} max={selectedLocation?.road_capacity ?? 5000} value={custom.congestion} onChange={event => setCustom({ ...custom, congestion: Number(event.target.value) })} /></label><label>Active lanes<input type="number" min={1} max={4} value={custom.lanes} onChange={event => setCustom({ ...custom, lanes: Number(event.target.value) })} /></label><label>Base toll (RM)<input type="number" min={0} max={20} step=".01" value={custom.baseToll} onChange={event => setCustom({ ...custom, baseToll: Number(event.target.value) })} /></label></section>}
+    <section className="sim-actions"><button onClick={run} disabled={!targets.length}>Run simulation</button><button className="secondary-button" onClick={reset}>Reset simulation</button></section>
+    {batch && <section className="simulation-outcomes"><div className="section-title"><div><p className="eyebrow">SIMULATION OUTCOMES</p><h2>{runNetwork ? "Network comparison" : "Location comparison"}</h2></div><span className="refresh-note">Frame {playhead + 1} / {batch.timeline.length} · {new Date(batch.timeline[playhead]).toLocaleTimeString("en-MY")}</span></div><section className="metric-grid page-metrics"><Metric label="Locations modeled" value={`${batch.outputs.length}`} detail="Sandbox-only outputs" /><Metric label="Scenario" value={scenarioTitle(batch.scenario)} detail={`${batch.duration}-minute window`} /><Metric tone="teal" label="Baseline toll" value={`RM${(selectedOutput?.baseToll ?? 0).toFixed(2)}`} detail="Selected location before scenario" /><Metric label="Dynamic toll" value={`RM${(selectedOutput?.dynamicToll ?? 0).toFixed(2)}`} detail={selectedOutput ? `${selectedOutput.multiplier.toFixed(1)}× rule-based multiplier` : "Awaiting scenario"} /></section><div className="data-table-wrap"><table><thead><tr><th>Location</th><th>Traffic volume</th><th>Congestion</th><th>Speed</th><th>Baseline toll</th><th>Dynamic toll</th><th>Change</th></tr></thead><tbody>{batch.outputs.map(output => <tr key={output.locationId}><td>{output.locationName}</td><td>{output.volume.toLocaleString()} / {output.capacity.toLocaleString()}</td><td>{output.congestion}%</td><td>{output.speed} km/h</td><td>RM{output.baseToll.toFixed(2)}</td><td>RM{output.dynamicToll.toFixed(2)}</td><td>+RM{(output.dynamicToll - output.baseToll).toFixed(2)}</td></tr>)}</tbody></table></div><section className="rationale"><div><p className="eyebrow">PRICING RATIONALE</p><h2>Baseline toll × congestion band multiplier</h2><p>Each location retains its own capacity and base toll. The displayed dynamic toll is a sandbox recommendation only; no history, payment, price, or Overview record is written.</p></div><div className="severity-scale"><span style={{ width: `${selectedOutput?.congestion ?? 0}%` }} /><small>Normal → Moderate → Peak Hour → Severe</small></div></section></section>}
+    <section className="detail-card"><div className="section-title"><div><p className="eyebrow">SIMULATION HISTORY</p><h2>Local sandbox runs</h2></div></div><div className="data-table-wrap"><table><thead><tr><th>Timestamp</th><th>Scope</th><th>Scenario</th><th>Time range</th><th>Playback</th><th>Outputs</th></tr></thead><tbody>{history.length ? history.map(item => <tr key={item.timestamp}><td>{new Date(item.timestamp).toLocaleTimeString("en-MY")}</td><td>{item.outputs.length} location{item.outputs.length === 1 ? "" : "s"}</td><td>{scenarioTitle(item.scenario)}</td><td>{item.duration} min</td><td>{item.playbackSpeed}×</td><td>{item.outputs.map(output => `${output.locationName}: RM${output.dynamicToll.toFixed(2)}`).join(" · ")}</td></tr>) : <tr><td colSpan={6}>Run a sandbox scenario to record it locally. Live data remains unchanged.</td></tr>}</tbody></table></div></section>
+  </main>;
+}
+
 type SandboxScenario = "normal" | "moderate" | "peak_hour" | "severe" | "custom";
 type SandboxRun = { timestamp: string; scenario: SandboxScenario; volume: number; congestion: number; toll: number };
 
-function SimulatorPage() {
+function LegacySimulatorPage() {
   const { locations } = useLocations();
   const [simLocation, setSimLocation] = useState(locations[0]?.id ?? "");
   const location = locations.find(item => item.id === simLocation);

@@ -190,21 +190,21 @@ The checklist below tracks **improvements**, not the original development phase.
 
 - [x] Add toll-location selector to Simulator.
 - [x] Allow custom scenario for one selected location.
-- [ ] Support multiple locations in one simulation run.
-- [ ] Add weekday morning peak preset.
-- [ ] Add weekday evening peak preset.
-- [ ] Add weekend traffic preset.
-- [ ] Add event surge preset.
-- [ ] Add accident/incident preset.
-- [ ] Add roadworks preset.
-- [ ] Add low-traffic preset.
-- [ ] Add simulation start time.
-- [ ] Add simulation duration/time range.
-- [ ] Add playback-speed control.
-- [ ] Show baseline toll.
-- [ ] Show dynamic toll.
-- [ ] Show before/after pricing comparison.
-- [ ] Show per-location output.
+- [x] Support multiple locations in one simulation run.
+- [x] Add weekday morning peak preset.
+- [x] Add weekday evening peak preset.
+- [x] Add weekend traffic preset.
+- [x] Add event surge preset.
+- [x] Add accident/incident preset.
+- [x] Add roadworks preset.
+- [x] Add low-traffic preset.
+- [x] Add simulation start time.
+- [x] Add simulation duration/time range.
+- [x] Add playback-speed control.
+- [x] Show baseline toll.
+- [x] Show dynamic toll.
+- [x] Show before/after pricing comparison.
+- [x] Show per-location output.
 - [x] Keep Simulator state local/sandboxed.
 - [x] Confirm Simulator never writes live Overview traffic.
 - [x] Confirm Simulator never writes live Overview toll price.
@@ -462,5 +462,6 @@ The checklist below tracks **improvements**, not the original development phase.
 - [x] Pass 52 backend tests including PostgreSQL integration and 8 frontend tests; production build passes.
 - [x] Browser-verify desktop/mobile, keyboard selection, refresh persistence, page context, functional plate filtering, Simulator isolation, and outage/stale-state behavior using disposable synthetic fixtures.
 - [x] Complete Multi-Location Traffic Profiles with independent scheduled traffic for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains webcam-only.
+- [x] Complete Multi-Location Simulator with local-only network runs, scenario presets, time-window/playback controls, and per-location baseline/dynamic toll comparison; generated network runs exclude Simulator Toll Plaza.
 
 Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.

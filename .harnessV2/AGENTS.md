@@ -456,3 +456,10 @@ Existing core tests should remain passing.
 - Verified: 52 backend tests including PostgreSQL integration, 8 frontend tests, production build, and desktop/mobile browser checks with disposable synthetic fixtures. Physical webcam/model inference was not run.
 - Docker Desktop and PostgreSQL development/test containers are available and healthy. Development schema is at `20260904_0004`. Test fixtures recreate only `capstone_alpr_test` on port 5433.
 - No dependencies installed, no real data or payment integration, and no commits, pushes, or deployments performed.
+
+## Verified Simulator Milestone — 2026-09-06
+
+- The Traffic & toll simulator is a browser-local sandbox. It supports individual locations and a generated-network run across LDP, DUKE, KESAS, and NPE; it never calls a write API or persists simulated output.
+- Network runs exclude Simulator Toll Plaza. The plaza can be selected for an individual hypothetical projection, but its live telemetry remains exclusively local-webcam-derived.
+- Available sandbox presets are normal, moderate, peak hour, severe, weekday morning/evening peak, weekend, event surge, accident/incident, roadworks, low traffic, and custom conditions. The interface exposes simulation start time, duration, playback speed, and each location’s capacity, traffic, congestion, speed, baseline toll, dynamic toll, and price change.
+- Frontend verification passed: 15 tests and a production build. Automated browser verification was unavailable because the local `agent-browser` executable is not installed.

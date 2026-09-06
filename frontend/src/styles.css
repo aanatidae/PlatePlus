@@ -85,6 +85,9 @@ dl { display: flex; flex-wrap: wrap; gap: 1rem 2rem; } dt { color: var(--muted);
 @media (max-width: 900px) { .sim-steps, .scenario-strip { grid-template-columns: 1fr 1fr; }.custom-inputs { grid-template-columns: 1fr 1fr; }.rationale { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .sim-steps, .scenario-strip, .custom-inputs { grid-template-columns: 1fr; } }
 .custom-inputs label:first-of-type { font-size: 0; }.custom-inputs label:first-of-type::before { content: "Vehicles per hour"; color: #c3d2d4; font-size: .8rem; }.custom-inputs label:first-of-type input { font-size: 1rem; }
+.simulator-controls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .8rem; align-items: end; }.simulator-controls .toggle-row { min-height: 44px; align-content: center; }.simulator-scenarios { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }.simulator-scenarios .scenario-card { min-height: 102px; }.simulator-scenarios .scenario-card span { line-height: 1.35; }
+@media (max-width: 900px) { .simulator-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .simulator-controls { grid-template-columns: 1fr; }.simulator-controls .toggle-row { min-height: 0; } }
 
 /* PlatePlus multi-location monitoring; retains the existing command-centre palette. */
 .location-select { min-width: 150px; font-size: .65rem; }
