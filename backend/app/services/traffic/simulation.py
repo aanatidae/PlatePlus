@@ -21,6 +21,7 @@ from app.models import (
 )
 from app.services.locations import default_toll_location_id
 from app.services.traffic.webcam_crossings import is_webcam_toll
+from app.services.traffic.pricing import decide_price
 
 MALAYSIA_TIMEZONE = ZoneInfo("Asia/Kuala_Lumpur")
 SCENARIO_CATEGORIES = {
@@ -193,12 +194,13 @@ def run_simulation(
     )
     database.add(traffic)
     database.flush()
+    decision = decide_price(database, settings, location, percentage)
     price = TollPrice(
         traffic_record_id=traffic.id,
         location_id=location.id,
         effective_at=datetime.now(UTC),
-        amount=rule.amount,
-        congestion_category=rule.congestion_category,
+        amount=decision.amount,
+        congestion_category=decision.rule.congestion_category,
         rule_version=f"v{settings.pricing_rule_version}",
     )
     database.add(price)

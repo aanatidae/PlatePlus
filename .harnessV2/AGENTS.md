@@ -257,6 +257,8 @@ Future simulation improvements should include:
 
 ## Dynamic Pricing Improvements
 
+Implemented policy: retain four editable congestion bands as location-relative multipliers. A price decision uses the selected location's `base_toll`, configured minimum toll and maximum multiplier, prior price context, a minimum change interval, and hysteresis around thresholds. Persisted prices remain the authoritative charge amount. The administrator preview/audit UI must describe this as simulated rule-based pricing, not a prediction or real toll policy.
+
 Keep the current configurable four-band policy as the baseline.
 
 Potential improvements:

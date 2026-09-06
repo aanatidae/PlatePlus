@@ -51,8 +51,7 @@ def _profiled_fallback(location: TollLocation, rules: dict[str, DynamicPricingRu
     congestion = profile_congestion_percentage(
         rule, location, seed=int(measured_at.strftime("%Y%m%d%H%M"))
     )
-    normal_amount = rules["normal"].amount
-    multiplier = rule.amount / normal_amount if normal_amount else Decimal("1.00")
+    multiplier = getattr(rule, "multiplier", None) or (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00"))
     return {
         "measured_at": measured_at,
         "congestion_percentage": congestion,

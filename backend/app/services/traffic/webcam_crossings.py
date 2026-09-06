@@ -8,7 +8,8 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import DetectionRecord, DynamicPricingRule, TollLocation, TollPrice, TrafficRecord
+from app.models import DetectionRecord, DynamicPricingRule, TollLocation, TollPrice, TrafficRecord, TrafficSimulationSettings
+from app.services.traffic.pricing import decide_price
 
 SIMULATOR_TOLL_CODE = "SIMULATOR"
 COUNTED_WEBCAM_STATUSES = ("accepted", "unknown_vehicle")
@@ -44,9 +45,10 @@ def webcam_crossing_state(
     )
     crossings = int(crossings)
     congestion = min(Decimal("100.00"), (Decimal(crossings) * Decimal(100) / location.road_capacity))
+    settings = database.scalar(select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default"))
     rule = _rule_for_congestion(rules, congestion)
-    normal_amount = rules["normal"].amount
-    multiplier = (rule.amount / normal_amount).quantize(Decimal("0.01")) if normal_amount else Decimal("1.00")
+    decision = decide_price(database, settings, location, congestion, now) if settings else None
+    multiplier = decision.rule.multiplier if decision else (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00"))
     latest_crossing = database.scalar(
         select(DetectionRecord.detected_at)
         .where(
@@ -65,7 +67,7 @@ def webcam_crossing_state(
         "congestion_category": rule.congestion_category,
         "base_toll_price": location.base_toll,
         "congestion_multiplier": multiplier,
-        "current_toll_price": (location.base_toll * multiplier).quantize(Decimal("0.01")),
+        "current_toll_price": decision.amount if decision else (location.base_toll * multiplier).quantize(Decimal("0.01")),
         "average_speed_kmh": None,
         "plaza_status": location.status,
         "camera_status": "online" if location.status == "operational" else "offline",
@@ -83,8 +85,8 @@ def prepare_webcam_crossing_price(database: Session, location: TollLocation, now
     congestion = min(Decimal("100.00"), Decimal(next_count) * Decimal(100) / location.road_capacity)
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
     rule = _rule_for_congestion(rules, congestion)
-    normal_amount = rules["normal"].amount
-    multiplier = (rule.amount / normal_amount).quantize(Decimal("0.01")) if normal_amount else Decimal("1.00")
+    settings = database.scalar(select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default"))
+    decision = decide_price(database, settings, location, congestion, now) if settings else None
     traffic = TrafficRecord(
         location_id=location.id, measured_at=now, simulation_time=now, vehicle_count=next_count,
         road_capacity=location.road_capacity, congestion_percentage=congestion,
@@ -95,7 +97,7 @@ def prepare_webcam_crossing_price(database: Session, location: TollLocation, now
     database.flush()
     database.add(TollPrice(
         traffic_record_id=traffic.id, location_id=location.id, effective_at=now,
-        amount=(location.base_toll * multiplier).quantize(Decimal("0.01")),
-        congestion_category=rule.congestion_category, rule_version="webcam-v1",
+        amount=decision.amount if decision else (location.base_toll * (rule.multiplier or (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00")))).quantize(Decimal("0.01")),
+        congestion_category=(decision.rule if decision else rule).congestion_category, rule_version="webcam-v2",
     ))
     database.flush()

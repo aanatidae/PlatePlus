@@ -386,4 +386,6 @@ The Simulator supports local-only single-location and generated-network scenario
 
 Validation passed: 52 backend tests (including PostgreSQL), 8 frontend tests, and production build. Browser checks covered desktop/mobile layout, marker and keyboard selection, refresh persistence, relevant-page context, Simulator isolation, and stale/offline states. No physical webcam inference was performed.
 
+Dynamic Pricing Refinement is complete: four configurable congestion multipliers apply to each location's base toll with a configurable floor, ceiling, cooldown, and hysteresis. Price previews and audit history expose congestion, band, multiplier, previous toll, new toll, and the decision reason. It remains a simulated rule-based policy, not prediction or real toll pricing.
+
 The next milestone is a user choice among the remaining personal improvements; do not automatically start all later roadmap phases.

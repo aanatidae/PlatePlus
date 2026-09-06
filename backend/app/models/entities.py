@@ -246,6 +246,10 @@ class TrafficSimulationSettings(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     simulated_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     simulated_time_anchor: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     pricing_rule_version: Mapped[int] = mapped_column(nullable=False, default=1)
+    minimum_toll: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, default=Decimal("0.50"))
+    maximum_toll_multiplier: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("3.00"))
+    minimum_price_change_minutes: Mapped[int] = mapped_column(nullable=False, default=5)
+    pricing_hysteresis_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("2.00"))
 
 
 class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -257,6 +261,7 @@ class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("maximum_percentage <= 100", name="ck_pricing_rule_maximum"),
         CheckConstraint("minimum_percentage <= maximum_percentage", name="ck_pricing_rule_order"),
         CheckConstraint("amount >= 0", name="ck_pricing_rule_amount"),
+        CheckConstraint("multiplier > 0", name="ck_pricing_rule_multiplier"),
     )
 
     scenario: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
@@ -264,6 +269,7 @@ class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     minimum_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     maximum_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("1.00"))
 
 
 class AdminAuditLog(UUIDPrimaryKeyMixin, Base):

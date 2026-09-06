@@ -26,6 +26,10 @@ class SimulationSettingsUpdate(BaseModel):
     fixed_scenario: Scenario
     time_mode: TimeMode
     simulated_time: datetime | None = None
+    minimum_toll: Decimal = Field(default=Decimal("0.50"), ge=0, max_digits=8, decimal_places=2)
+    maximum_toll_multiplier: Decimal = Field(default=Decimal("3.00"), gt=0, max_digits=5, decimal_places=2)
+    minimum_price_change_minutes: int = Field(default=5, ge=0, le=120)
+    pricing_hysteresis_percentage: Decimal = Field(default=Decimal("2.00"), ge=0, le=20, max_digits=5, decimal_places=2)
 
     @model_validator(mode="after")
     def require_simulated_time(self) -> SimulationSettingsUpdate:
@@ -44,6 +48,10 @@ class SimulationSettingsRead(ORMModel):
     simulated_time: datetime | None
     simulated_time_anchor: datetime | None
     pricing_rule_version: int
+    minimum_toll: Decimal
+    maximum_toll_multiplier: Decimal
+    minimum_price_change_minutes: int
+    pricing_hysteresis_percentage: Decimal
     created_at: datetime
     updated_at: datetime
     current_simulation_time: datetime
@@ -53,7 +61,7 @@ class PricingRuleUpdate(BaseModel):
     scenario: Scenario
     minimum_percentage: Decimal = Field(ge=0, le=100, max_digits=5, decimal_places=2)
     maximum_percentage: Decimal = Field(ge=0, le=100, max_digits=5, decimal_places=2)
-    amount: Decimal = Field(ge=0, max_digits=8, decimal_places=2)
+    multiplier: Decimal = Field(gt=0, le=10, max_digits=5, decimal_places=2)
 
     @model_validator(mode="after")
     def valid_range(self) -> PricingRuleUpdate:
@@ -86,7 +94,7 @@ class PricingRuleRead(ORMModel):
     congestion_category: str
     minimum_percentage: Decimal
     maximum_percentage: Decimal
-    amount: Decimal
+    multiplier: Decimal
     created_at: datetime
     updated_at: datetime
 

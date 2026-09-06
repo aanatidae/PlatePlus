@@ -224,26 +224,28 @@ The checklist below tracks **improvements**, not the original development phase.
 
 ## Dynamic Pricing Refinement
 
-- [ ] Preserve current configurable four-band policy.
-- [ ] Add location-specific base toll.
-- [ ] Add configurable minimum toll.
-- [ ] Add configurable maximum toll.
-- [ ] Add minimum time between toll changes.
-- [ ] Add price-change smoothing or hysteresis.
-- [ ] Prevent rapid threshold oscillation.
-- [ ] Add previous toll price to decision context.
-- [ ] Add pricing explanation.
-- [ ] Show congestion percentage used in decision.
-- [ ] Show congestion category used in decision.
-- [ ] Show base toll.
-- [ ] Show multiplier/band.
-- [ ] Show previous toll.
-- [ ] Show new toll.
-- [ ] Add pricing rule preview.
-- [ ] Add pricing-rule audit history.
-- [ ] Add manual override history if overrides are introduced.
-- [ ] Keep rule-based pricing clearly identified as rule-based.
-- [ ] Leave prediction model as optional future extension.
+Status: `[x]` Complete — location-relative multiplier pricing, persisted safeguards, preview/explanation, audit visibility, migration verification, and targeted tests are implemented.
+
+- [x] Preserve current configurable four-band policy.
+- [x] Add location-specific base toll.
+- [x] Add configurable minimum toll.
+- [x] Add configurable maximum toll.
+- [x] Add minimum time between toll changes.
+- [x] Add price-change smoothing or hysteresis.
+- [x] Prevent rapid threshold oscillation.
+- [x] Add previous toll price to decision context.
+- [x] Add pricing explanation.
+- [x] Show congestion percentage used in decision.
+- [x] Show congestion category used in decision.
+- [x] Show base toll.
+- [x] Show multiplier/band.
+- [x] Show previous toll.
+- [x] Show new toll.
+- [x] Add pricing rule preview.
+- [x] Add pricing-rule audit history.
+- [x] Add manual override history if overrides are introduced. (No manual override was introduced.)
+- [x] Keep rule-based pricing clearly identified as rule-based.
+- [x] Leave prediction model as optional future extension.
 
 ## AI Intelligence and Explainability
 

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,6 +21,7 @@ from app.models import (
     TollPrice,
     TrafficRecord,
     TrafficSimulationSettings,
+    TollLocation,
 )
 from app.schemas.traffic import (
     AuditLogRead,
@@ -30,6 +33,7 @@ from app.schemas.traffic import (
     SimulationSettingsUpdate,
 )
 from app.services.traffic.simulation import current_simulation_time, run_simulation
+from app.services.traffic.pricing import decide_price
 
 router = APIRouter(prefix="/api/traffic", tags=["traffic"], dependencies=[Depends(require_admin)])
 DatabaseSession = Annotated[Session, Depends(get_db)]
@@ -89,6 +93,10 @@ def update_settings(
     settings.time_mode = payload.time_mode
     settings.simulated_time = payload.simulated_time if payload.time_mode == "simulated" else None
     settings.simulated_time_anchor = datetime.now(UTC) if payload.time_mode == "simulated" else None
+    settings.minimum_toll = payload.minimum_toll
+    settings.maximum_toll_multiplier = payload.maximum_toll_multiplier
+    settings.minimum_price_change_minutes = payload.minimum_price_change_minutes
+    settings.pricing_hysteresis_percentage = payload.pricing_hysteresis_percentage
     _audit(
         database,
         admin,
@@ -117,6 +125,20 @@ def list_pricing_rules(database: DatabaseSession):
     )
 
 
+@router.get("/pricing-preview")
+def pricing_preview(
+    location_id: UUID, database: DatabaseSession, congestion_percentage: Decimal = Query(ge=0, le=100)
+):
+    location = database.get(TollLocation, location_id)
+    if location is None:
+        raise HTTPException(status_code=404, detail="Toll location was not found.")
+    decision = decide_price(database, _settings(database), location, congestion_percentage)
+    return {"location_id": location_id, "congestion_percentage": congestion_percentage,
+            "congestion_category": decision.rule.congestion_category, "base_toll": location.base_toll,
+            "multiplier": decision.rule.multiplier, "previous_toll": decision.previous_amount,
+            "new_toll": decision.amount, "reason": decision.reason}
+
+
 @router.put("/pricing-rules", response_model=list[PricingRuleRead])
 def update_pricing_rules(
     payload: PricingRulesUpdate, database: DatabaseSession, admin: CurrentAdmin
@@ -130,27 +152,22 @@ def update_pricing_rules(
         rule = rules[item.scenario]
         rule.minimum_percentage = item.minimum_percentage
         rule.maximum_percentage = item.maximum_percentage
-        rule.amount = item.amount
+        rule.multiplier = item.multiplier
     settings = _settings(database)
     settings.pricing_rule_version += 1
     latest_traffic = database.scalar(
         select(TrafficRecord).order_by(TrafficRecord.measured_at.desc())
     )
     if latest_traffic is not None:
-        matching = next(
-            item
-            for item in payload.rules
-            if item.minimum_percentage
-            <= latest_traffic.congestion_percentage
-            <= item.maximum_percentage
-        )
+        location = latest_traffic.location
+        decision = decide_price(database, settings, location, latest_traffic.congestion_percentage)
         database.add(
             TollPrice(
                 traffic_record_id=latest_traffic.id,
                 location_id=latest_traffic.location_id,
                 effective_at=datetime.now(UTC),
-                amount=matching.amount,
-                congestion_category=rules[matching.scenario].congestion_category,
+                amount=decision.amount,
+                congestion_category=decision.rule.congestion_category,
                 rule_version=f"v{settings.pricing_rule_version}",
             )
         )
