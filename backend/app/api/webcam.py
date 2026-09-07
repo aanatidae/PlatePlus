@@ -84,7 +84,7 @@ async def process_frame(
         payment = process_toll_event(
             database,
             idempotency_key=idempotency_key or f"webcam:{session_id}:{uuid4()}",
-            raw_plate_text=result.plate_text,
+            raw_plate_text=result.raw_plate_text,
             normalized_plate=result.plate_text,
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,
@@ -137,7 +137,7 @@ async def process_image(
         payment = process_toll_event(
             database,
             idempotency_key=idempotency_key or f"upload:{uuid4()}",
-            raw_plate_text=result.plate_text,
+            raw_plate_text=result.raw_plate_text,
             normalized_plate=result.plate_text,
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,

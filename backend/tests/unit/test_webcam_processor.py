@@ -3,8 +3,8 @@ from __future__ import annotations
 import cv2
 import numpy as np
 import pytest
-
 from alpr.types import BoundingBox, OcrResult, PlateDetection
+
 from app.services.detection.webcam_processor import FrameProcessorError, WebcamFrameProcessor
 
 
@@ -49,6 +49,18 @@ def test_processor_requires_both_confidence_thresholds() -> None:
     result = processor.process(_frame_bytes())
 
     assert result.status == "ocr_confidence_below_threshold"
+    assert not result.charge_eligible
+
+
+def test_processor_rejects_an_implausible_plate_after_confidence_gates() -> None:
+    detection = PlateDetection(BoundingBox(20, 20, 100, 45), confidence=0.9)
+    processor = WebcamFrameProcessor(
+        _Detector([detection]), _Recognizer(OcrResult("ABCDEF", "ABCDEF", 0.95)), 0.5, 0.7
+    )
+
+    result = processor.process(_frame_bytes())
+
+    assert result.status == "implausible_plate_format"
     assert not result.charge_eligible
 
 

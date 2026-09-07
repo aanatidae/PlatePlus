@@ -9,6 +9,8 @@ from pathlib import Path
 
 from alpr.plate.normalization import normalize_plate_text
 
+CONDITION_ALIASES = {"glare_or_exposure": "glare_or_overexposure"}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -25,9 +27,14 @@ def read_rows(path: Path) -> list[dict[str, str]]:
 
 def main() -> None:
     args = parse_args()
-    ground_truth = {row["image_path"]: row["ground_truth_plate"] for row in read_rows(args.ground_truth)}
-    if not ground_truth or any(not value.strip() for value in ground_truth.values()):
-        raise ValueError("ground truth must contain a verified plate value for every row")
+    ground_truth_rows = read_rows(args.ground_truth)
+    ground_truth = {
+        row["image_path"]: row.get("verified_ground_truth_plate", row.get("ground_truth_plate", ""))
+        for row in ground_truth_rows
+        if row.get("verified_ground_truth_plate", row.get("ground_truth_plate", "")).strip()
+    }
+    if not ground_truth:
+        raise ValueError("at least one human-verified ground-truth plate is required")
 
     evaluated_rows: list[dict[str, str]] = []
     for candidate in read_rows(args.candidates):
@@ -55,6 +62,28 @@ def main() -> None:
         "exact_match_accuracy": correct / len(evaluated_rows),
         "failure_count": len(evaluated_rows) - correct,
     }
+    if any(
+        row.get("condition_labels", row.get("condition", "")).strip()
+        for row in ground_truth_rows
+    ):
+        condition_metrics: dict[str, dict[str, int | float]] = {}
+        conditions = {
+            row["image_path"]: row.get("condition_labels", row.get("condition", "unclassified")).strip()
+            or "unclassified"
+            for row in ground_truth_rows
+        }
+        for row in evaluated_rows:
+            for condition in {
+                CONDITION_ALIASES.get(item.strip(), item.strip())
+                for item in conditions[row["image_path"]].split(";")
+                if item.strip()
+            }:
+                bucket = condition_metrics.setdefault(condition, {"count": 0, "exact_matches": 0})
+                bucket["count"] += 1
+                bucket["exact_matches"] += int(row["exact_match"] == "true")
+        for bucket in condition_metrics.values():
+            bucket["exact_match_accuracy"] = bucket["exact_matches"] / bucket["count"]
+        metrics["condition_breakdown"] = condition_metrics
     args.output_dir.mkdir(parents=True, exist_ok=True)
     with (args.output_dir / "ocr_evaluation_results.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(evaluated_rows[0]))

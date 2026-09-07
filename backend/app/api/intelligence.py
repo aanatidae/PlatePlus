@@ -6,7 +6,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_admin
@@ -40,6 +40,12 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
     else:
         location = None
     detection = database.scalar(detection_query.limit(1))
+    outcome_query = select(DetectionRecord.status, func.count(DetectionRecord.id)).group_by(
+        DetectionRecord.status
+    )
+    if location_id is not None:
+        outcome_query = outcome_query.where(DetectionRecord.location_id == location_id)
+    outcome_counts = {status: count for status, count in database.execute(outcome_query)}
     transaction = (
         database.scalar(
             select(TollTransaction)
@@ -147,6 +153,15 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
             },
         },
         "charge_eligibility": "A plate is charge eligible only after detection and OCR meet their active thresholds, normalization retains a plate value, and a registered vehicle is matched. Payment remains simulated and may still fail for account or duplicate-protection reasons.",
+        "outcome_analysis": {
+            "accepted": outcome_counts.get("accepted", 0),
+            "low_confidence": outcome_counts.get("low_confidence", 0),
+            "unknown_vehicle": outcome_counts.get("unknown_vehicle", 0),
+            "errors": outcome_counts.get("error", 0),
+            "false_positives": None,
+            "false_negatives": None,
+            "note": "False-positive and false-negative rates require manually labelled ground truth and are not inferred from operational records.",
+        },
         "alpr_trace": alpr_trace,
         "pricing_trace": pricing_trace,
         "known_failure_conditions": [

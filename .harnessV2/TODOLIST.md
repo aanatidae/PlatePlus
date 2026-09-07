@@ -276,27 +276,27 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 
 ## ALPR Robustness and Error Analysis
 
-- [ ] Add Malaysian plate-format validation improvements.
-- [ ] Define accepted Malaysian plate patterns.
-- [ ] Reject implausible normalized plate strings safely.
-- [ ] Identify common OCR character confusions.
-- [ ] Add controlled correction rules only when output remains plausible.
-- [ ] Create labelled OCR development set separate from held-out test set.
-- [ ] Preserve current held-out test set unchanged.
-- [ ] Evaluate clear-image recognition accuracy.
-- [ ] Evaluate angled-plate recognition accuracy.
-- [ ] Evaluate low-light recognition accuracy.
-- [ ] Evaluate motion-blur recognition accuracy.
-- [ ] Evaluate partial-obstruction recognition accuracy.
+- [x] Add Malaysian plate-format validation improvements.
+- [x] Define accepted Malaysian plate patterns.
+- [x] Reject implausible normalized plate strings safely.
+- [x] Identify common OCR character confusions.
+- [x] Add controlled correction rules only when output remains plausible.
+- [ ] Create labelled OCR development set separate from held-out test set. (A 150-image non-held-out review manifest is ready; every label still requires human verification.)
+- [x] Preserve current held-out test set unchanged.
+- [x] Evaluate clear-image recognition accuracy. (93/111 exact matches, 83.8% on the development set.)
+- [x] Evaluate angled-plate recognition accuracy. (30/31 exact matches, 96.8%.)
+- [x] Evaluate low-light recognition accuracy. (14/16 exact matches, 87.5%.)
+- [ ] Evaluate motion-blur recognition accuracy. (The one reviewed sample has no verified plate text and is excluded from OCR scoring.)
+- [x] Evaluate partial-obstruction recognition accuracy. (1/1 exact match; add more samples before drawing conclusions.)
 - [ ] Evaluate unusual-format recognition accuracy.
-- [ ] Track false positives.
-- [ ] Track false negatives.
-- [ ] Track low-confidence recognitions.
-- [ ] Track rejected recognitions.
-- [ ] Track unknown-vehicle outcomes.
-- [ ] Add rejected-recognition/error-analysis view.
-- [ ] Keep webcam frames ephemeral by default.
-- [ ] Keep webcam inference local.
+- [ ] Track false positives. (No human-labelled negative examples are in the current set, so false-positive rate remains unmeasured.)
+- [x] Track false negatives. (0/150 among the reviewed plate-present development images.)
+- [x] Track low-confidence recognitions.
+- [x] Track rejected recognitions.
+- [x] Track unknown-vehicle outcomes.
+- [x] Add rejected-recognition/error-analysis view.
+- [x] Keep webcam frames ephemeral by default.
+- [x] Keep webcam inference local.
 
 ## Synthetic Payment Improvements
 
@@ -479,5 +479,8 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Complete Multi-Location Simulator with local-only network runs, scenario presets, time-window/playback controls, and per-location baseline/dynamic toll comparison; generated network runs exclude Simulator Toll Plaza.
 - [x] Refactor generated fallback and scheduled time-patterned traffic to calculate deterministic location-specific congestion percentages before deriving category and dynamic-pricing band; retain persisted-traffic priority and Simulator Toll Plaza webcam-only telemetry.
 - [x] Complete AI Intelligence and Explainability with read-only evidence endpoints, active confidence thresholds, held-out evaluation evidence, latest ALPR and per-location pricing traces, charge-eligibility rules, and known limitations.
+- [x] Implement ALPR format gating, controlled OCR-confusion correction, raw-versus-normalized audit evidence, and an error-analysis/evaluation workflow without modifying the preserved held-out set.
+- [x] Run the human-reviewed development-set OCR and positive-image detector evaluation; preserve the 44-crop held-out test set untouched.
+- [ ] Add human-labelled negative images plus further motion-blur, partial-obstruction, glare, and unusual-format samples before claiming full condition coverage or a false-positive rate.
 
 Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.

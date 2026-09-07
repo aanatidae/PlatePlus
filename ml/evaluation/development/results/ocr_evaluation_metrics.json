@@ -1,0 +1,38 @@
+{
+  "evaluation_count": 146,
+  "exact_match_count": 125,
+  "exact_match_accuracy": 0.8561643835616438,
+  "failure_count": 21,
+  "condition_breakdown": {
+    "clear": {
+      "count": 111,
+      "exact_matches": 93,
+      "exact_match_accuracy": 0.8378378378378378
+    },
+    "glare_or_overexposure": {
+      "count": 7,
+      "exact_matches": 4,
+      "exact_match_accuracy": 0.5714285714285714
+    },
+    "low_light": {
+      "count": 16,
+      "exact_matches": 14,
+      "exact_match_accuracy": 0.875
+    },
+    "angled": {
+      "count": 31,
+      "exact_matches": 30,
+      "exact_match_accuracy": 0.967741935483871
+    },
+    "small_or_distant": {
+      "count": 15,
+      "exact_matches": 12,
+      "exact_match_accuracy": 0.8
+    },
+    "partial_obstruction": {
+      "count": 1,
+      "exact_matches": 1,
+      "exact_match_accuracy": 1.0
+    }
+  }
+}

@@ -17,19 +17,25 @@ models, so prepare them only with approval.
 4. Send the crop to EasyOCR.
 5. Remove whitespace, punctuation, and casing differences from the OCR output.
 6. Preserve raw OCR text, normalized text, detection confidence, and OCR confidence.
-7. Permit downstream simulated charging only when both values meet configured thresholds.
+7. Permit downstream simulated charging only when both values meet configured thresholds and the normalized text matches an accepted Malaysian plate layout.
 
 The detector threshold defaults to `0.50`; the OCR threshold defaults to `0.70`.
 These are configuration defaults to tune with a curated OCR test set, not claims
 of production-quality recognition.
 
-## Normalization Policy
+## Malaysian Plate Validation and Correction Policy
 
-Normalization is intentionally conservative: it uppercases text and retains only
-ASCII letters and digits. It does not auto-substitute ambiguous pairs such as
-`O`/`0`, `I`/`1`, or `S`/`5`, since an incorrect substitution could match the
-wrong synthetic vehicle. A later lookup stage can use candidate-aware correction
-only when it is auditable and still satisfies the confidence gate.
+Normalization uppercases text and retains only ASCII letters and digits. A
+charge-eligible result must then match the common Malaysian layout of one to
+three leading letters, one to four digits, and up to three optional trailing
+letters. Plausibility is a safety gate; it does not claim to cover every special
+registration format.
+
+The recognizer may apply a narrowly constrained correction for common OCR pairs
+(`0/O`, `1/I/L`, `2/Z`, `5/S`, `8/B`) only when exactly one valid layout results.
+It retains the raw OCR text alongside the corrected normalized text. If two or
+more layouts are possible, it makes no substitution and rejects the read safely.
+Neither correction nor a confidence gate proves that a plate is correct.
 
 ## OCR Evaluation Ground Truth
 
@@ -44,6 +50,29 @@ samples/plate_001.jpg,BKV1234
 Split this curated data into development and final held-out sets. Compare
 normalized OCR output against normalized ground truth, report exact-match
 accuracy, and retain failure samples for the capstone report.
+
+The checked-in development-set protocol is in `ml/evaluation/development/`.
+Its 150-candidate review manifest is sampled from non-held-out training and
+validation images and deliberately leaves all human-verification fields blank.
+It excludes the preserved 44-crop test manifest exactly. Add one or more
+semicolon-separated condition labels—`clear`, `angled`, `low_light`,
+`motion_blur`, `partial_obstruction`, `small_or_distant`,
+`glare_or_overexposure`, and `unusual_plate_format`—after visual review.
+`evaluate_ocr_accuracy.py` then emits a condition-by-condition exact-match
+breakdown.
+
+After a human completes the development manifest, evaluate detection separately
+with a model-output CSV (`sample_id,plate_detected,detector_confidence,notes`):
+
+```powershell
+backend/.venv/Scripts/python.exe scripts/evaluate_plate_detection.py `
+  --manifest ml/evaluation/development/labels.csv `
+  --predictions ml/evaluation/development/detection_predictions.csv `
+  --output ml/evaluation/results/development_detection
+```
+
+This creates per-sample true-positive, false-positive, true-negative, and
+false-negative results only from the human-verified presence labels.
 
 ## Local Evaluation Commands
 

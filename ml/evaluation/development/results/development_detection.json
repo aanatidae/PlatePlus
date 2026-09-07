@@ -1,0 +1,11 @@
+{
+  "true_positive": 150,
+  "false_negative": 0,
+  "false_positive": 0,
+  "true_negative": 0,
+  "negative_examples": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "false_positive_rate": null
+}

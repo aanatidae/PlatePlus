@@ -53,10 +53,13 @@ def recognition_decision(
     ocr_confidence: float,
     detection_threshold: float,
     ocr_threshold: float,
+    plate_is_plausible: bool = True,
 ) -> RecognitionDecision:
     """Return the decision that downstream simulated charging must honour."""
     if detection_confidence < detection_threshold:
         return RecognitionDecision(False, "detection_confidence_below_threshold")
     if ocr_confidence < ocr_threshold:
         return RecognitionDecision(False, "ocr_confidence_below_threshold")
+    if not plate_is_plausible:
+        return RecognitionDecision(False, "implausible_plate_format")
     return RecognitionDecision(True, None)
