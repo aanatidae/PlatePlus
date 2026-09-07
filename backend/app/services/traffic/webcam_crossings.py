@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import DetectionRecord, DynamicPricingRule, TollLocation, TollPrice, TrafficRecord, TrafficSimulationSettings
 from app.services.traffic.pricing import decide_price
+from app.services.traffic.simulation import rule_for_congestion
 
 SIMULATOR_TOLL_CODE = "SIMULATOR"
 COUNTED_WEBCAM_STATUSES = ("accepted", "unknown_vehicle")
@@ -17,13 +18,6 @@ COUNTED_WEBCAM_STATUSES = ("accepted", "unknown_vehicle")
 
 def is_webcam_toll(location: TollLocation) -> bool:
     return location.code == SIMULATOR_TOLL_CODE
-
-
-def _rule_for_congestion(rules: dict[str, DynamicPricingRule], congestion: Decimal) -> DynamicPricingRule:
-    return next(
-        rule for rule in rules.values()
-        if rule.minimum_percentage <= congestion <= rule.maximum_percentage
-    )
 
 
 def webcam_crossing_state(
@@ -46,7 +40,7 @@ def webcam_crossing_state(
     crossings = int(crossings)
     congestion = min(Decimal("100.00"), (Decimal(crossings) * Decimal(100) / location.road_capacity))
     settings = database.scalar(select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default"))
-    rule = _rule_for_congestion(rules, congestion)
+    rule = rule_for_congestion(rules, congestion)
     decision = decide_price(database, settings, location, congestion, now) if settings else None
     multiplier = decision.rule.multiplier if decision else (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00"))
     latest_crossing = database.scalar(
@@ -84,7 +78,7 @@ def prepare_webcam_crossing_price(database: Session, location: TollLocation, now
     next_count = state["vehicle_count"] + 1
     congestion = min(Decimal("100.00"), Decimal(next_count) * Decimal(100) / location.road_capacity)
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
-    rule = _rule_for_congestion(rules, congestion)
+    rule = rule_for_congestion(rules, congestion)
     settings = database.scalar(select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default"))
     decision = decide_price(database, settings, location, congestion, now) if settings else None
     traffic = TrafficRecord(

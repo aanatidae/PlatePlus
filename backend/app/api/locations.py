@@ -40,17 +40,14 @@ def _profiled_fallback(location: TollLocation, rules: dict[str, DynamicPricingRu
     """Return the canonical minute-bucketed fallback for one generated toll location."""
     from app.services.traffic.simulation import (
         average_speed_for_profile,
-        location_scenario_for_time,
-        profile_congestion_percentage,
+        profile_congestion_for_time,
+        rule_for_congestion,
         vehicle_count_for_congestion,
     )
 
     measured_at = now.replace(second=0, microsecond=0)
-    scenario = location_scenario_for_time(location, measured_at)
-    rule = rules[scenario]
-    congestion = profile_congestion_percentage(
-        rule, location, seed=int(measured_at.strftime("%Y%m%d%H%M"))
-    )
+    congestion = profile_congestion_for_time(location, measured_at)
+    rule = rule_for_congestion(rules, congestion)
     multiplier = getattr(rule, "multiplier", None) or (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00"))
     return {
         "measured_at": measured_at,

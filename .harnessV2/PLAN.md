@@ -114,6 +114,7 @@ High-level work:
   - Peak hours.
   - Speed profile.
   - Traffic variance.
+- Calculate congestion percentage from those profile inputs and Malaysia time before deriving its category and pricing band; do not treat baseline demand as a category selector.
 - Allow the Simulator to choose a toll location.
 - Support multiple simultaneous simulated locations.
 - Add scenario presets:
@@ -386,6 +387,6 @@ The Simulator supports local-only single-location and generated-network scenario
 
 Validation passed: 52 backend tests (including PostgreSQL), 8 frontend tests, and production build. Browser checks covered desktop/mobile layout, marker and keyboard selection, refresh persistence, relevant-page context, Simulator isolation, and stale/offline states. No physical webcam inference was performed.
 
-Dynamic Pricing Refinement is complete: four configurable congestion multipliers apply to each location's base toll with a configurable floor, ceiling, cooldown, and hysteresis. Price previews and audit history expose congestion, band, multiplier, previous toll, new toll, and the decision reason. It remains a simulated rule-based policy, not prediction or real toll pricing.
+Dynamic Pricing Refinement is complete: four configurable congestion multipliers apply to each location's base toll with a configurable floor, ceiling, cooldown, and hysteresis. Profile-driven telemetry calculates a bounded, deterministic congestion percentage from location demand, Malaysia time, peak factors, and variation before selecting the applicable band. Price previews and audit history expose congestion, band, multiplier, previous toll, new toll, and the decision reason. It remains a simulated rule-based policy, not prediction or real toll pricing.
 
 The next milestone is a user choice among the remaining personal improvements; do not automatically start all later roadmap phases.

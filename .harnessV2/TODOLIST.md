@@ -477,5 +477,6 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Browser-verify desktop/mobile, keyboard selection, refresh persistence, page context, functional plate filtering, Simulator isolation, and outage/stale-state behavior using disposable synthetic fixtures.
 - [x] Complete Multi-Location Traffic Profiles with independent scheduled traffic for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains webcam-only.
 - [x] Complete Multi-Location Simulator with local-only network runs, scenario presets, time-window/playback controls, and per-location baseline/dynamic toll comparison; generated network runs exclude Simulator Toll Plaza.
+- [x] Refactor generated fallback and scheduled time-patterned traffic to calculate deterministic location-specific congestion percentages before deriving category and dynamic-pricing band; retain persisted-traffic priority and Simulator Toll Plaza webcam-only telemetry.
 
 Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.
