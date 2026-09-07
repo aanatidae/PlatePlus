@@ -64,6 +64,9 @@ def main() -> None:
                 "verification_notes",
                 "verified_by",
                 "verified_at",
+                "review_status",
+                "ocr_scorable",
+                "detection_evaluation_role",
             ),
         )
         writer.writeheader()
@@ -81,6 +84,9 @@ def main() -> None:
                     "verification_notes": "",
                     "verified_by": "",
                     "verified_at": "",
+                    "review_status": "",
+                    "ocr_scorable": "",
+                    "detection_evaluation_role": "",
                 }
             )
     print(f"Wrote {args.limit} unverified, non-held-out candidates to {args.output}")

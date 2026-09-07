@@ -281,16 +281,16 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Reject implausible normalized plate strings safely.
 - [x] Identify common OCR character confusions.
 - [x] Add controlled correction rules only when output remains plausible.
-- [ ] Create labelled OCR development set separate from held-out test set. (A 150-image non-held-out review manifest is ready; every label still requires human verification.)
+- [x] Create labelled OCR development set separate from held-out test set. (150 human-reviewed non-held-out scenes; 146 have a verified single-target OCR ground truth and 4 are explicitly non-scorable challenging scenes.)
 - [x] Preserve current held-out test set unchanged.
 - [x] Evaluate clear-image recognition accuracy. (93/111 exact matches, 83.8% on the development set.)
 - [x] Evaluate angled-plate recognition accuracy. (30/31 exact matches, 96.8%.)
 - [x] Evaluate low-light recognition accuracy. (14/16 exact matches, 87.5%.)
 - [ ] Evaluate motion-blur recognition accuracy. (The one reviewed sample has no verified plate text and is excluded from OCR scoring.)
-- [x] Evaluate partial-obstruction recognition accuracy. (1/1 exact match; add more samples before drawing conclusions.)
-- [ ] Evaluate unusual-format recognition accuracy.
+- [ ] Evaluate partial-obstruction recognition accuracy. (Only 1 scorable sample, 1/1 exact match; insufficient for a robustness conclusion.)
+- [ ] Evaluate unusual-format recognition accuracy. (No scorable human-verified unusual-format scene with a single unambiguous target plate is available.)
 - [ ] Track false positives. (No human-labelled negative examples are in the current set, so false-positive rate remains unmeasured.)
-- [x] Track false negatives. (0/150 among the reviewed plate-present development images.)
+- [x] Track false negatives. (0/146 in the reviewed positive detector set; four non-scorable challenging scenes are excluded.)
 - [x] Track low-confidence recognitions.
 - [x] Track rejected recognitions.
 - [x] Track unknown-vehicle outcomes.
@@ -481,6 +481,7 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Complete AI Intelligence and Explainability with read-only evidence endpoints, active confidence thresholds, held-out evaluation evidence, latest ALPR and per-location pricing traces, charge-eligibility rules, and known limitations.
 - [x] Implement ALPR format gating, controlled OCR-confusion correction, raw-versus-normalized audit evidence, and an error-analysis/evaluation workflow without modifying the preserved held-out set.
 - [x] Run the human-reviewed development-set OCR and positive-image detector evaluation; preserve the 44-crop held-out test set untouched.
+- [x] Distinguish reviewed, valid-plate-present, OCR-scorable, verified-ground-truth, and detector-evaluation-role fields so challenging scenes do not distort OCR or detector metrics.
 - [ ] Add human-labelled negative images plus further motion-blur, partial-obstruction, glare, and unusual-format samples before claiming full condition coverage or a false-positive rate.
 
 Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.

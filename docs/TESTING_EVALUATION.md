@@ -37,9 +37,12 @@ Latest local verification: backend unit tests **24 passed**, ML tests **17 passe
 ## Development-set robustness evaluation
 
 The separate development protocol processed 150 manually reviewed, non-held-out
-images (138 training and 12 validation images). Four plate-present images lacked
-human-verifiable text and were excluded from OCR exact-match scoring, leaving
-146 scored crops. The preserved 44-crop held-out set was not read or modified.
+images (138 training and 12 validation images). Of those, 146 are reviewed
+single-target, OCR-scorable positives with human-verifiable text; four are
+explicitly non-scorable challenging scenes (one damaged/partially obstructed
+plate and two multi-plate wall-rack scenes). They are excluded from OCR and
+detector positive/negative rates. The preserved 44-crop held-out set was not
+read or modified.
 
 | Development OCR measure | Result | Interpretation |
 | --- | ---: | --- |
@@ -51,8 +54,8 @@ human-verifiable text and were excluded from OCR exact-match scoring, leaving
 | Glare/overexposure | 4/7 (57.1%) | Small sample; priority area for further review. |
 | Partial obstruction | 1/1 (100.0%) | Insufficient sample size for a conclusion. |
 
-Detector output found a plate in all 150 plate-present development images
-(150 true positives, 0 false negatives). There were no human-labelled negative
+Detector output found a plate in all 146 positive detector-evaluation images
+(146 true positives, 0 false negatives). There were no human-labelled negative
 images, so the measured false-positive rate is unavailable; the displayed
 precision/recall/F1 values of 1.0 are positive-only development results, not a
 general detector-performance claim.

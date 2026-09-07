@@ -34,9 +34,18 @@ def main() -> None:
             raise ValueError(f"{sample['sample_id']} needs a human-verified valid_plate_present value")
         prediction = predictions.get(sample["sample_id"])
         detected = prediction and prediction.get("plate_detected", "").strip().lower() == "true"
+        role = sample.get(
+            "detection_evaluation_role", "positive" if present == "true" else "negative"
+        ).strip().lower()
+        if role not in {"positive", "negative", "excluded"}:
+            raise ValueError(f"{sample['sample_id']} has an invalid detection_evaluation_role")
+        if role == "excluded":
+            counts["excluded"] += 1
+            results.append({**sample, "plate_detected": str(bool(detected)).lower(), "detection_outcome": "excluded"})
+            continue
         outcome = (
-            "true_positive" if present == "true" and detected else
-            "false_negative" if present == "true" else
+            "true_positive" if role == "positive" and detected else
+            "false_negative" if role == "positive" else
             "false_positive" if detected else "true_negative"
         )
         counts[outcome] += 1
@@ -59,6 +68,7 @@ def main() -> None:
         "false_positive": counts["false_positive"],
         "true_negative": counts["true_negative"],
         "negative_examples": negative_examples,
+        "excluded_examples": counts["excluded"],
         "precision": precision,
         "recall": recall,
         "f1": f1,
