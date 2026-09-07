@@ -14,6 +14,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.auth import require_admin
 from app.api.database import router as data_router
+from app.api.intelligence import router as intelligence_router
 from app.api.live import router as live_router
 from app.api.locations import router as location_router
 from app.db.base import Base
@@ -25,6 +26,7 @@ from app.models import (
     TollPrice,
     TollTransaction,
     TrafficRecord,
+    TrafficSimulationSettings,
 )
 
 
@@ -40,6 +42,7 @@ def network():
     )
     Base.metadata.create_all(engine)
     with Session(engine) as db:
+        db.add(TrafficSimulationSettings(singleton_key="default"))
         locations = [
             TollLocation(
                 code=f"TEST_{i}",
@@ -115,7 +118,7 @@ def network():
         )
         db.commit()
         app = FastAPI()
-        for router in [live_router, location_router, data_router]:
+        for router in [live_router, location_router, data_router, intelligence_router]:
             app.include_router(router)
         app.dependency_overrides[get_db] = lambda: db
         app.dependency_overrides[require_admin] = lambda: None
@@ -154,6 +157,18 @@ def test_selected_overview_returns_only_its_recent_records_and_never_writes(netw
     assert {item["location_id"] for item in data["transactions"]["items"]} == {str(locations[0].id)}
     assert len(data["locations"]) == 1
     assert writes == []
+
+
+def test_intelligence_summary_exposes_thresholds_and_location_trace(network):
+    client, _, locations = network
+    response = client.get(f"/api/intelligence/summary?location_id={locations[0].id}")
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["thresholds"] == {"detection": 0.5, "ocr": 0.7}
+    assert data["evaluation"]["ocr"]["exact_match_accuracy_percent"] == 84.1
+    assert data["alpr_trace"]["stages"][0]["name"] == "Detector result"
+    assert data["pricing_trace"]["location_name"] == "Test toll 0"
+    assert data["pricing_trace"]["policy"]["rule_version"] == 1
 
 
 def test_history_filters_apply_before_limit_and_are_location_scoped(network):

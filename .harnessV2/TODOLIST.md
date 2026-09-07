@@ -249,30 +249,30 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 
 ## AI Intelligence and Explainability
 
-- [ ] Show current detection confidence threshold.
-- [ ] Show current OCR confidence threshold.
-- [ ] Explain charge eligibility.
-- [ ] Show YOLO detection metrics.
-- [ ] Show detection precision.
-- [ ] Show detection recall.
-- [ ] Show detection F1 score.
-- [ ] Show OCR exact-match accuracy.
-- [ ] Keep detection and OCR metrics separate.
-- [ ] Add ALPR decision trace.
-- [ ] Show detector result.
-- [ ] Show OCR raw result.
-- [ ] Show normalized plate.
-- [ ] Show confidence-gate result.
-- [ ] Show vehicle-match result.
-- [ ] Show payment outcome.
-- [ ] Add traffic/pricing decision trace.
-- [ ] Show simulated traffic inputs.
-- [ ] Show calculated congestion.
-- [ ] Show pricing policy decision.
-- [ ] Show resulting toll price.
-- [ ] Add known ALPR failure conditions.
-- [ ] Add common OCR confusion patterns.
-- [ ] Clearly distinguish current rule-based pricing from future ML prediction.
+- [x] Show current detection confidence threshold.
+- [x] Show current OCR confidence threshold.
+- [x] Explain charge eligibility.
+- [x] Show YOLO detection metrics.
+- [x] Show detection precision. (Explicitly displayed as not recorded; it must not be inferred from reported accuracy.)
+- [x] Show detection recall. (Explicitly displayed as not recorded; it must not be inferred from reported accuracy.)
+- [x] Show detection F1 score. (Explicitly displayed as not recorded; it must not be inferred from reported accuracy.)
+- [x] Show OCR exact-match accuracy.
+- [x] Keep detection and OCR metrics separate.
+- [x] Add ALPR decision trace.
+- [x] Show detector result.
+- [x] Show OCR raw result.
+- [x] Show normalized plate.
+- [x] Show confidence-gate result.
+- [x] Show vehicle-match result.
+- [x] Show payment outcome.
+- [x] Add traffic/pricing decision trace.
+- [x] Show simulated traffic inputs.
+- [x] Show calculated congestion.
+- [x] Show pricing policy decision.
+- [x] Show resulting toll price.
+- [x] Add known ALPR failure conditions.
+- [x] Add common OCR confusion patterns.
+- [x] Clearly distinguish current rule-based pricing from future ML prediction.
 
 ## ALPR Robustness and Error Analysis
 
@@ -478,5 +478,6 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Complete Multi-Location Traffic Profiles with independent scheduled traffic for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains webcam-only.
 - [x] Complete Multi-Location Simulator with local-only network runs, scenario presets, time-window/playback controls, and per-location baseline/dynamic toll comparison; generated network runs exclude Simulator Toll Plaza.
 - [x] Refactor generated fallback and scheduled time-patterned traffic to calculate deterministic location-specific congestion percentages before deriving category and dynamic-pricing band; retain persisted-traffic priority and Simulator Toll Plaza webcam-only telemetry.
+- [x] Complete AI Intelligence and Explainability with read-only evidence endpoints, active confidence thresholds, held-out evaluation evidence, latest ALPR and per-location pricing traces, charge-eligibility rules, and known limitations.
 
 Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.
