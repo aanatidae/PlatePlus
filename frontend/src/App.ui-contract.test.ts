@@ -7,11 +7,17 @@ const appSource = readFileSync(resolve(import.meta.dirname, "App.tsx"), "utf8");
 const styles = readFileSync(resolve(import.meta.dirname, "styles.css"), "utf8");
 
 describe("administrator dashboard UI contract", () => {
-  it("keeps every protected operational destination in navigation", () => {
-    for (const route of ["/dashboard", "/recognition", "/pricing", "/intelligence", "/simulator"]) {
+  it("keeps every supported operational destination in navigation", () => {
+    for (const route of ["/dashboard", "/recognition", "/pricing", "/simulator"]) {
       expect(appSource).toContain(`to=\"${route}\"`);
     }
+    expect(appSource).not.toContain('to="/intelligence"');
     expect(appSource).toContain('LOCAL_WEBCAM_ENABLED && <NavLink to="/webcam"');
+  });
+
+  it("redirects the retired intelligence route to the dashboard fallback", () => {
+    expect(appSource).not.toContain('route === "/intelligence"');
+    expect(appSource).toContain('!["/dashboard", "/recognition", "/pricing", "/simulator", "/webcam"].includes(route)) navigate("/dashboard", true)');
   });
 
   it("communicates loading, errors, simulation scope, and the local-only inference boundary", () => {

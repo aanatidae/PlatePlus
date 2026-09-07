@@ -28,7 +28,6 @@ Existing working baseline includes:
 - [x] Real-time Overview telemetry.
 - [x] Plate Recognition page.
 - [x] Dynamic Pricing page.
-- [x] AI Intelligence page.
 - [x] Simulator sandbox.
 - [x] Vercel frontend deployment.
 - [x] Remote backend/database deployment.
@@ -247,7 +246,10 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Keep rule-based pricing clearly identified as rule-based.
 - [x] Leave prediction model as optional future extension.
 
-## AI Intelligence and Explainability
+## AI Explainability and Evaluation
+
+- [x] Remove the dedicated AI Intelligence dashboard page, navigation entry, route, frontend API calls, and page-only styles; `/intelligence` safely redirects to `/dashboard`.
+- [x] Retain AI evaluation evidence, ALPR decision traces, and pricing decision traces in backend/evaluation outputs for future placement in existing pages or documentation.
 
 - [x] Show current detection confidence threshold.
 - [x] Show current OCR confidence threshold.
@@ -478,7 +480,7 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Complete Multi-Location Traffic Profiles with independent scheduled traffic for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains webcam-only.
 - [x] Complete Multi-Location Simulator with local-only network runs, scenario presets, time-window/playback controls, and per-location baseline/dynamic toll comparison; generated network runs exclude Simulator Toll Plaza.
 - [x] Refactor generated fallback and scheduled time-patterned traffic to calculate deterministic location-specific congestion percentages before deriving category and dynamic-pricing band; retain persisted-traffic priority and Simulator Toll Plaza webcam-only telemetry.
-- [x] Complete AI Intelligence and Explainability with read-only evidence endpoints, active confidence thresholds, held-out evaluation evidence, latest ALPR and per-location pricing traces, charge-eligibility rules, and known limitations.
+- [x] Complete AI explainability and evaluation capability with read-only evidence endpoints, active confidence thresholds, held-out evaluation evidence, latest ALPR and per-location pricing traces, charge-eligibility rules, and known limitations; remove the dedicated frontend AI Intelligence page while retaining backend/evaluation capability.
 - [x] Implement ALPR format gating, controlled OCR-confusion correction, raw-versus-normalized audit evidence, and an error-analysis/evaluation workflow without modifying the preserved held-out set.
 - [x] Run the human-reviewed development-set OCR and positive-image detector evaluation; preserve the 44-crop held-out test set untouched.
 - [x] Distinguish reviewed, valid-plate-present, OCR-scorable, verified-ground-truth, and detector-evaluation-role fields so challenging scenes do not distort OCR or detector metrics.

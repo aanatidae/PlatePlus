@@ -15,7 +15,7 @@ PlatePlus is no longer in its initial development phase. The repository already 
 - Dynamic toll pricing.
 - Protected React/TypeScript administrator dashboard.
 - Real-time Malaysia-time Overview telemetry.
-- Plate Recognition, Dynamic Pricing, AI Intelligence, Simulator, and local-webcam routes.
+- Plate Recognition, Dynamic Pricing, Simulator, and local-webcam routes.
 - Automated testing for core backend, ML, payment, traffic, integration, and frontend behavior.
 - Vercel frontend deployment and remote backend/database deployment.
 
@@ -155,9 +155,9 @@ Success condition:
 
 - PlatePlus can explain why a toll price changed and avoids unrealistic rapid price switching.
 
-## Phase 6: AI Intelligence and Explainability
+## Phase 6: AI Explainability and Evaluation
 
-Goal: strengthen the academic and demonstration value of the AI components.
+Goal: strengthen the academic and demonstration value of the AI components without a dedicated AI Intelligence dashboard page.
 
 High-level work:
 
@@ -166,14 +166,14 @@ High-level work:
 - Show OCR exact-match accuracy.
 - Show active confidence thresholds.
 - Explain charge eligibility.
-- Add ALPR decision traces:
+- Keep ALPR decision traces in evaluation outputs, documentation, and appropriate existing operational surfaces:
   - Detection.
   - OCR.
   - Normalization.
   - Confidence gate.
   - Vehicle match.
   - Payment result.
-- Add traffic/pricing decision traces.
+- Keep traffic/pricing decision traces in Dynamic Pricing, evaluation outputs, or documentation.
 - Clearly identify the current pricing logic as rule-based.
 - Add failure-condition summaries.
 - Add common OCR confusion/error analysis.
@@ -263,7 +263,7 @@ High-level work:
 
 - Add location filters to Dynamic Pricing history.
 - Add congestion-versus-price charts.
-- Add recognition trends to Plate Recognition or AI Intelligence.
+- Add recognition trends to Plate Recognition.
 - Add payment success-rate and simulated revenue trends.
 - Add scenario comparison.
 - Optionally add CSV export if useful for the final capstone demo.
@@ -389,7 +389,7 @@ Validation passed: 52 backend tests (including PostgreSQL), 8 frontend tests, an
 
 Dynamic Pricing Refinement is complete: four configurable congestion multipliers apply to each location's base toll with a configurable floor, ceiling, cooldown, and hysteresis. Profile-driven telemetry calculates a bounded, deterministic congestion percentage from location demand, Malaysia time, peak factors, and variation before selecting the applicable band. Price previews and audit history expose congestion, band, multiplier, previous toll, new toll, and the decision reason. It remains a simulated rule-based policy, not prediction or real toll pricing.
 
-AI Intelligence and Explainability is complete for the available evidence: the dashboard exposes active YOLO/PaddleOCR confidence gates, reported YOLO held-out accuracy (93.1%), PaddleOCR exact-match evidence (37/44, 84.1%), and separately marks detector precision, recall, and F1 as not recorded rather than fabricating them. It provides a read-only latest-record ALPR trace (detection, raw OCR, normalization, gates, vehicle match, payment) and a selected-location traffic/pricing trace (traffic inputs, congestion band, rule safeguards, and toll result), with failure conditions and an explicit simulated rule-based-policy boundary.
+AI explainability and evaluation capability is complete for the available evidence: the read-only evidence endpoint and evaluation outputs preserve active YOLO/PaddleOCR confidence gates, reported YOLO held-out accuracy (93.1%), PaddleOCR exact-match evidence (37/44, 84.1%), and separately mark detector precision, recall, and F1 as not recorded rather than fabricating them. They preserve a latest-record ALPR trace (detection, raw OCR, normalization, gates, vehicle match, payment) and a selected-location traffic/pricing trace (traffic inputs, congestion band, rule safeguards, and toll result), with failure conditions and an explicit simulated rule-based-policy boundary. The dedicated AI Intelligence dashboard page has been removed; relevant future presentation belongs in existing operational pages, documentation, or evaluation outputs.
 
 ALPR robustness implementation is in place: common Malaysian plate layouts are a charge-safety gate, controlled OCR confusion correction requires one unambiguous valid result, and raw OCR remains auditable alongside normalized text. A 150-image development review manifest is sampled from non-held-out training/validation images with zero overlap against the preserved 44-crop held-out manifest. Its human verification, condition labels, model outputs, and resulting condition-specific/false-positive/false-negative metrics remain pending; do not tune against or modify the held-out set.
 

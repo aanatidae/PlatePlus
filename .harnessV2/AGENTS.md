@@ -36,7 +36,7 @@
 - Core implementation, integration, and testing are substantially complete.
 - The current project phase is **post-development improvement and capstone hardening**.
 - The roadmap phases are optional personal improvements, not mandatory capstone requirements. Resolve milestone requirements with the user before proceeding into implementation.
-- The multi-location database foundation and location-aware APIs are complete. The interactive multi-location Overview, shared persisted location selection, All Locations metrics, historical-filter relocation, PlatePlus branding, traffic/pricing refinement, and AI Intelligence/Explainability milestone are implemented. Select the next optional improvement milestone with the user.
+- The multi-location database foundation and location-aware APIs are complete. The interactive multi-location Overview, shared persisted location selection, All Locations metrics, historical-filter relocation, PlatePlus branding, traffic/pricing refinement, and AI explainability/evaluation capability are implemented. The dedicated AI Intelligence dashboard page has been removed; retain its evidence through backend/evaluation outputs and relevant operational pages. Select the next optional improvement milestone with the user.
 
 ## Git Attribution
 
@@ -126,7 +126,6 @@ Protected routes include:
 - Overview.
 - Plate Recognition.
 - Dynamic Pricing.
-- AI Intelligence.
 - Simulator.
 - Local Webcam when enabled.
 
@@ -140,7 +139,7 @@ Current dashboard behavior includes:
 - Responsive command-centre styling.
 - Vercel deployment.
 - Remote API deployment that excludes local webcam inference.
-- A shared toll-location selector defaults to All Locations, persists across refreshes, and scopes Overview, Plate Recognition, Dynamic Pricing, and AI Intelligence. Simulator selection remains independent; local webcam retains its explicitly labelled default toll.
+- A shared toll-location selector defaults to All Locations, persists across refreshes, and scopes Overview, Plate Recognition, and Dynamic Pricing. Simulator selection remains independent; local webcam retains its explicitly labelled default toll.
 - PlatePlus branding and a consistent Simulated Prototype indicator across the dashboard and login.
 
 ## Primary Improvement Direction
@@ -276,9 +275,9 @@ Potential improvements:
 
 Do not silently replace the current rule-based pricing approach with machine learning. If an ML predictor is introduced later, clearly distinguish prediction from pricing policy.
 
-## AI Intelligence Improvements
+## AI Explainability and Evaluation
 
-The AI Intelligence page should explain how PlatePlus makes decisions.
+Keep explainability and evaluation evidence available through Plate Recognition, Dynamic Pricing, documentation, and read-only backend/evaluation outputs. Do not restore a dedicated AI Intelligence dashboard page unless the user explicitly requests it.
 
 Improvements should include:
 
@@ -368,7 +367,7 @@ Do not reintroduce a standalone Traffic Analytics page unless the user explicitl
 Instead:
 
 - Keep traffic/pricing history inside Dynamic Pricing.
-- Keep recognition trends inside Plate Recognition or AI Intelligence.
+- Keep recognition trends inside Plate Recognition.
 - Keep payment/revenue history inside operations or transaction views.
 - Add toll-location filters to historical views.
 - Add congestion-versus-price comparison.
@@ -467,9 +466,9 @@ Existing core tests should remain passing.
 - Available sandbox presets are normal, moderate, peak hour, severe, weekday morning/evening peak, weekend, event surge, accident/incident, roadworks, low traffic, and custom conditions. The interface exposes simulation start time, duration, playback speed, and each location’s capacity, traffic, congestion, speed, baseline toll, dynamic toll, and price change.
 - Frontend verification passed: 19 tests and a production build. Automated browser verification was unavailable because the local `agent-browser` executable is not installed.
 
-## Verified AI Intelligence and Explainability Milestone — 2026-09-07
+## Verified AI Explainability and Evaluation Capability — 2026-09-07
 
-- AI Intelligence uses a read-only authenticated evidence endpoint. It exposes active detection/OCR thresholds, documented held-out evaluation evidence, charge-eligibility rules, a latest persisted ALPR trace, a selected-location traffic/pricing trace, and known failure conditions without rerunning models or writing data.
+- A read-only authenticated evidence endpoint exposes active detection/OCR thresholds, documented held-out evaluation evidence, charge-eligibility rules, a latest persisted ALPR trace, a selected-location traffic/pricing trace, and known failure conditions without rerunning models or writing data. The dedicated AI Intelligence dashboard page was later removed; retain this capability for evaluation and appropriate future operational/documentation surfaces.
 - The detector’s reported 93.1% held-out accuracy and PaddleOCR’s 37/44 (84.1%) exact-match result are shown separately. Detector precision, recall, and F1 are visibly marked as not recorded because the original training artifacts did not export them; they must not be fabricated from accuracy.
 - The ALPR trace covers detector result, raw OCR result, normalization, confidence/charge gate, vehicle match, and simulated payment outcome. The pricing trace covers simulated traffic input, calculated congestion, selected policy/band plus safeguards, and resulting toll. Dynamic pricing remains explicitly presented as a simulated rule-based policy, not a prediction model or real toll policy.
 
