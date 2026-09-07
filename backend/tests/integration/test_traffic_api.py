@@ -6,12 +6,20 @@ from sqlalchemy import select
 
 from app.models import (
     AdminAuditLog,
+    DynamicPricingRule,
     TollLocation,
     TollPrice,
     TrafficRecord,
     TrafficSimulationSettings,
 )
-from app.services.traffic.simulation import run_network_simulation, run_simulation
+from app.services.traffic.simulation import (
+    MALAYSIA_TIMEZONE,
+    average_speed_for_profile,
+    profile_congestion_for_time,
+    rule_for_congestion,
+    run_network_simulation,
+    run_simulation,
+)
 
 
 def test_traffic_routes_require_administrator_authentication(database_app) -> None:
@@ -73,10 +81,10 @@ def test_pricing_rule_change_creates_a_new_current_price_and_audit_entry(
         "/api/traffic/pricing-rules",
         json={
             "rules": [
-                {"scenario": "normal", "minimum_percentage": "0", "maximum_percentage": "30", "amount": "2.50"},
-                {"scenario": "moderate", "minimum_percentage": "30.01", "maximum_percentage": "60", "amount": "3.50"},
-                {"scenario": "peak_hour", "minimum_percentage": "60.01", "maximum_percentage": "80", "amount": "4.50"},
-                {"scenario": "severe", "minimum_percentage": "80.01", "maximum_percentage": "100", "amount": "5.50"},
+                {"scenario": "normal", "minimum_percentage": "0", "maximum_percentage": "30", "multiplier": "1.25"},
+                {"scenario": "moderate", "minimum_percentage": "30.01", "maximum_percentage": "60", "multiplier": "1.75"},
+                {"scenario": "peak_hour", "minimum_percentage": "60.01", "maximum_percentage": "80", "multiplier": "2.25"},
+                {"scenario": "severe", "minimum_percentage": "80.01", "maximum_percentage": "100", "multiplier": "2.75"},
             ]
         },
         headers=admin_auth_headers,
@@ -107,4 +115,70 @@ def test_network_simulation_persists_independent_profiles_and_excludes_webcam_to
     assert {result.toll_price.location_id for result in results} == {
         result.traffic_record.location_id for result in results
     }
+    assert {
+        result.toll_price.congestion_category for result in results
+    } == {
+        result.traffic_record.congestion_category for result in results
+    }
     assert database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR")) is not None
+
+
+def test_tuned_location_profiles_follow_distinct_daily_patterns_and_preserve_webcam_toll(database) -> None:
+    rules = {
+        rule.scenario: rule
+        for rule in database.scalars(select(DynamicPricingRule))
+    }
+    locations = {
+        location.code: location
+        for location in database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR"))
+    }
+    representative_hours = (2, 7, 8, 10, 13, 17, 18, 21, 23)
+    matrix = {
+        code: {
+            hour: profile_congestion_for_time(
+                location, datetime(2026, 9, 2, hour, tzinfo=MALAYSIA_TIMEZONE)
+            )
+            for hour in representative_hours
+        }
+        for code, location in locations.items()
+    }
+
+    print("\nTuned location traffic matrix (MYT):")
+    for hour in representative_hours:
+        print(
+            f"{hour:02}:00 "
+            + " | ".join(
+                f"{code} {matrix[code][hour]}%/{rule_for_congestion(rules, matrix[code][hour]).scenario}"
+                for code in ("PENCHALA", "DUKE", "NPE", "KESAS")
+            )
+        )
+
+    categories = {
+        code: {hour: rule_for_congestion(rules, percentage).scenario for hour, percentage in samples.items()}
+        for code, samples in matrix.items()
+    }
+    assert categories["PENCHALA"][2] == "normal"
+    assert categories["PENCHALA"][7] in {"moderate", "peak_hour"}
+    assert categories["PENCHALA"][18] in {"moderate", "peak_hour"}
+    assert categories["PENCHALA"][21] == "normal"
+    assert categories["DUKE"][2] == "normal"
+    assert categories["DUKE"][10] == "moderate"
+    assert categories["DUKE"][7] in {"peak_hour", "severe"}
+    assert categories["DUKE"][18] in {"peak_hour", "severe"}
+    assert categories["DUKE"][21] == "normal"
+    assert {categories["NPE"][hour] for hour in representative_hours} >= {"normal", "moderate", "peak_hour"}
+    assert categories["NPE"][21] == "normal"
+    assert {categories["KESAS"][hour] for hour in representative_hours} >= {"normal", "moderate", "peak_hour"}
+    assert categories["KESAS"][21] == "normal"
+    assert len({matrix[code][13] for code in matrix}) == len(matrix)
+    assert matrix["DUKE"][2] == profile_congestion_for_time(
+        locations["DUKE"], datetime(2026, 9, 2, 2, 0, 45, tzinfo=MALAYSIA_TIMEZONE)
+    )
+    for code, location in locations.items():
+        assert average_speed_for_profile(location, matrix[code][2]) > average_speed_for_profile(
+            location, matrix[code][18]
+        )
+    simulator = database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR"))
+    assert simulator is not None
+    assert simulator.road_capacity == 10
+    assert simulator.simulation_profile["telemetry_source"] == "webcam_alpr"
