@@ -1,12 +1,13 @@
 """Protected operational-alert monitoring and demo controls."""
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 from app.api.auth import require_admin
 from app.db.session import get_db
-from app.models import Admin, OperationalAlert, OperationalEvent, TollLocation
+from app.models import Account, Admin, DetectionRecord, OperationalAlert, OperationalEvent, PaymentNotification, TollLocation, TollPrice, TollTransaction, User, Vehicle, WalletLedgerEntry
 from app.services.operations import emit, evaluate, record_event
 
 router = APIRouter(prefix="/api/operations", tags=["operations"], dependencies=[Depends(require_admin)])
@@ -66,3 +67,67 @@ def reset_demo(database: DatabaseSession):
     record_event(database, event_type="administrator_action", source="admin", message="Demo alerts reset.", details={"action": "reset_demo_alerts"})
     database.commit()
     return {"status": "reset"}
+
+
+def _reset_demo_wallets_and_records(database: Session) -> dict[str, int]:
+    """Restore only the explicitly synthetic demo accounts and records; never delete admin access."""
+    users = list(database.scalars(select(User).where(User.email.like("%@example.test"))))
+    user_ids = [item.id for item in users]
+    accounts = list(database.scalars(select(Account).where(Account.user_id.in_(user_ids)))) if user_ids else []
+    account_ids = [item.id for item in accounts]
+    for account in accounts:
+        account.balance = account.opening_balance
+    if account_ids:
+        database.execute(delete(WalletLedgerEntry).where(
+            WalletLedgerEntry.account_id.in_(account_ids),
+            WalletLedgerEntry.entry_type.in_(("top_up", "reversal")),
+        ))
+    if user_ids:
+        database.execute(delete(PaymentNotification).where(PaymentNotification.user_id.in_(user_ids)))
+    demo_transactions = list(database.scalars(select(TollTransaction.id).where(TollTransaction.idempotency_key.like("demo-mode:%"))))
+    if demo_transactions:
+        database.execute(delete(TollTransaction).where(TollTransaction.id.in_(demo_transactions)))
+    database.execute(delete(DetectionRecord).where(DetectionRecord.raw_plate_text == "PLATEPLUS DEMO MODE"))
+    return {"accounts_restored": len(accounts), "demo_transactions_removed": len(demo_transactions)}
+
+
+@router.get("/demo")
+def demo_status(database: DatabaseSession):
+    return {
+        "mode": "simulated",
+        "guide": [
+            "Select a toll location on Overview and explain its live simulated telemetry.",
+            "Use Simulator to compare local-only traffic scenarios and dynamic toll outcomes.",
+            "Open Plate Recognition to inspect seeded results or use local-only still-image ALPR when available.",
+            "Use Dynamic Pricing history to relate simulated congestion, price, and payment outcomes.",
+        ],
+        "fallback_alpr": "If local ALPR or a webcam is unavailable, use the seeded recognition records and decision evidence; no image upload is needed.",
+        "boundaries": ["Traffic, tolls, accounts, and payments are simulated.", "Raw images and webcam frames remain local and ephemeral.", "The deployed dashboard does not run local model inference."],
+    }
+
+
+@router.post("/demo/reset")
+def reset_full_demo(database: DatabaseSession):
+    """Idempotently restore a presentation-safe synthetic demo baseline."""
+    summary = _reset_demo_wallets_and_records(database)
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR").order_by(TollLocation.code)))
+    vehicles = list(database.scalars(select(Vehicle).where(Vehicle.plate_number.in_(("VAA1234", "WXY5678", "JTU9090"))).order_by(Vehicle.plate_number)))
+    now = datetime.now(UTC)
+    seeded = 0
+    for index, (plate, status, confidence) in enumerate((("VAA1234", "accepted", Decimal("0.9700")), ("WXY5678", "low_confidence", Decimal("0.6200")), ("UNKNOWN9", "unknown_vehicle", Decimal("0.9200")))):
+        location = locations[index % len(locations)] if locations else None
+        if location is None:
+            break
+        vehicle = next((item for item in vehicles if item.plate_number == plate), None)
+        detection = DetectionRecord(location_id=location.id, detected_at=now - timedelta(minutes=(index + 1) * 5), raw_plate_text="PLATEPLUS DEMO MODE", normalized_plate=plate, detection_confidence=confidence, ocr_confidence=confidence, status=status, source="test", vehicle_id=vehicle.id if vehicle and status == "accepted" else None)
+        database.add(detection)
+        database.flush()
+        if status == "accepted":
+            price = TollPrice(location_id=location.id, effective_at=detection.detected_at, amount=location.base_toll, congestion_category="low", rule_version="demo")
+            database.add(price)
+            database.flush()
+            database.add(TollTransaction(location_id=location.id, detection_id=detection.id, vehicle_id=vehicle.id if vehicle else None, toll_price_id=price.id, idempotency_key=f"demo-mode:{plate}", processed_at=detection.detected_at, amount=location.base_toll, status="successful", balance_after=None))
+        seeded += 1
+    record_event(database, event_type="administrator_action", source="demo", message="Demo Mode baseline restored.", details={"action": "demo_mode_reset", **summary})
+    database.commit()
+    return {"status": "ready", "seeded_recognitions": seeded, **summary}

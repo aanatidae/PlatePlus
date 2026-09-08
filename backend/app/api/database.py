@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import csv
+from collections import defaultdict
 from datetime import UTC, datetime
 from decimal import Decimal
+from io import StringIO
 from typing import Annotated, TypeVar
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -131,6 +135,86 @@ def filtered_history(database, model, timestamp, location_id, options, offset, l
         if options["minimum_amount"] is not None:
             statement = statement.where(model.amount >= options["minimum_amount"])
     return list(database.scalars(statement.order_by(timestamp.desc(), model.id).offset(offset).limit(limit)))
+
+
+def _history_rows(database: Session, model, timestamp, location_id: UUID | None, options: dict):
+    """Return the bounded operational history used by dashboard analysis and CSV export."""
+    return filtered_history(database, model, timestamp, location_id, options, 0, 1000)
+
+
+def _malaysia_day(value: datetime) -> str:
+    return value.astimezone(ZoneInfo("Asia/Kuala_Lumpur")).date().isoformat()
+
+
+def _history_analytics(database: Session, location_id: UUID | None, options: dict) -> dict:
+    prices = _history_rows(database, TollPrice, TollPrice.effective_at, location_id, options)
+    detections = _history_rows(database, DetectionRecord, DetectionRecord.detected_at, location_id, options)
+    transactions = _history_rows(database, TollTransaction, TollTransaction.processed_at, location_id, options)
+    traffic = _history_rows(database, TrafficRecord, TrafficRecord.measured_at, location_id, options)
+    if options["congestion_category"]:
+        aliases = {"low": {"low", "normal"}, "high": {"high", "peak_hour"}}
+        expected = aliases.get(options["congestion_category"], {options["congestion_category"]})
+        traffic = [item for item in traffic if item.congestion_category in expected]
+
+    names = {item.id: item.display_name for item in database.scalars(select(TollLocation))}
+    pricing_by_day: dict[str, list[Decimal]] = defaultdict(list)
+    congestion_by_day: dict[str, list[Decimal]] = defaultdict(list)
+    revenue_by_day: dict[str, Decimal] = defaultdict(lambda: Decimal("0.00"))
+    successes_by_day: dict[str, int] = defaultdict(int)
+    totals_by_day: dict[str, int] = defaultdict(int)
+    low_confidence_by_day: dict[str, int] = defaultdict(int)
+    detections_by_day: dict[str, int] = defaultdict(int)
+    per_location: dict[UUID, dict[str, object]] = {}
+    scenarios: dict[str, list[TrafficRecord]] = defaultdict(list)
+
+    for item in prices:
+        pricing_by_day[_malaysia_day(item.effective_at)].append(item.amount)
+        row = per_location.setdefault(item.location_id, {"prices": [], "traffic": []})
+        row["prices"].append(item.amount)
+    for item in traffic:
+        congestion_by_day[_malaysia_day(item.measured_at)].append(item.congestion_percentage)
+        scenarios[item.scenario].append(item)
+        row = per_location.setdefault(item.location_id, {"prices": [], "traffic": []})
+        row["traffic"].append(item.congestion_percentage)
+    for item in detections:
+        day = _malaysia_day(item.detected_at)
+        detections_by_day[day] += 1
+        if item.status == "low_confidence":
+            low_confidence_by_day[day] += 1
+    for item in transactions:
+        day = _malaysia_day(item.processed_at)
+        totals_by_day[day] += 1
+        if item.status == "successful":
+            successes_by_day[day] += 1
+            if item.reversed_at is None:
+                revenue_by_day[day] += item.amount
+
+    days = sorted(set(pricing_by_day) | set(congestion_by_day) | set(detections_by_day) | set(totals_by_day))
+    series = [{
+        "date": day,
+        "average_toll": sum(pricing_by_day[day], Decimal("0")) / len(pricing_by_day[day]) if pricing_by_day[day] else None,
+        "average_congestion": sum(congestion_by_day[day], Decimal("0")) / len(congestion_by_day[day]) if congestion_by_day[day] else None,
+        "detections": detections_by_day[day],
+        "low_confidence": low_confidence_by_day[day],
+        "transactions": totals_by_day[day],
+        "payment_success_rate": (successes_by_day[day] / totals_by_day[day] * 100) if totals_by_day[day] else None,
+        "simulated_revenue": revenue_by_day[day],
+    } for day in days]
+    locations = [{
+        "location_id": str(identifier), "display_name": names.get(identifier, "Unknown location"),
+        "average_toll": sum(values["prices"], Decimal("0")) / len(values["prices"]) if values["prices"] else None,
+        "average_congestion": sum(values["traffic"], Decimal("0")) / len(values["traffic"]) if values["traffic"] else None,
+        "price_records": len(values["prices"]), "traffic_records": len(values["traffic"]),
+    } for identifier, values in per_location.items()]
+    scenario_comparison = [{
+        "scenario": scenario,
+        "records": len(records),
+        "average_congestion": sum((item.congestion_percentage for item in records), Decimal("0")) / len(records),
+        "average_speed_kmh": None,
+    } for scenario, records in sorted(scenarios.items())]
+    return {"scope": "location" if location_id else "all_locations", "series": series,
+            "locations": locations, "scenario_comparison": scenario_comparison,
+            "totals": {"price_records": len(prices), "traffic_records": len(traffic), "detections": len(detections), "transactions": len(transactions)}}
 
 
 @router.get("/admins", response_model=list[AdminRead])
@@ -398,3 +482,29 @@ def payment_notifications(database: DatabaseSession, limit: int = Query(20, ge=1
     return list(database.scalars(
         select(PaymentNotification).order_by(PaymentNotification.created_at.desc()).limit(limit)
     ))
+
+
+@router.get("/history/analytics")
+def history_analytics(
+    database: DatabaseSession, options: Annotated[dict, Depends(history_options)],
+    location_id: UUID | None = None,
+):
+    """Location-aware historical aggregates for existing operational pages."""
+    _location(database, location_id)
+    return _history_analytics(database, location_id, options)
+
+
+@router.get("/history/export.csv")
+def history_export_csv(
+    database: DatabaseSession, options: Annotated[dict, Depends(history_options)],
+    location_id: UUID | None = None,
+):
+    """Export the currently scoped simulated operational history without a new analytics page."""
+    _location(database, location_id)
+    analytics = _history_analytics(database, location_id, options)
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["date", "average_toll_myr", "average_congestion_percentage", "detections", "low_confidence", "transactions", "payment_success_rate_percentage", "simulated_revenue_myr"])
+    for item in analytics["series"]:
+        writer.writerow([item["date"], item["average_toll"], item["average_congestion"], item["detections"], item["low_confidence"], item["transactions"], item["payment_success_rate"], item["simulated_revenue"]])
+    return Response(output.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=plateplus-simulated-history.csv"})

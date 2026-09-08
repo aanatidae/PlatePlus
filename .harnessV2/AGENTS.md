@@ -484,3 +484,9 @@ Existing core tests should remain passing.
 - Successful tolls create a linked debit entry and simulated notification atomically. Top-ups and reversals credit the same wallet with idempotency protection; only successful unreversed tolls with an available simulated account can be reversed.
 - The protected data API exposes ledger history, top-up, reversal, pending-review resolution, notifications, and per-location/network payment summaries. The Plate Recognition page provides wallet top-up, selected-scope revenue/count visibility, recent notices, and reversal controls.
 - Demo seed data now contains six synthetic drivers, varied balances, and car, pickup, EV, and motorcycle examples. Do not substitute real payment accounts, real customer records, or a payment provider.
+
+## Historical Analysis and Demo Mode — 2026-09-08
+
+- Historical analytics are location-aware and remain within existing operational context; the protected endpoint also provides a CSV export of the current simulated scope.
+- Demo Mode is authenticated and simulated-only. Its restore action must preserve administrator access, toll-location configuration, and non-Demo Mode operational history while restoring the synthetic demo-wallet baseline and replacing explicitly Demo Mode-created records.
+- Do not represent Demo Mode records, scenario output, fallback ALPR evidence, or exported data as real-world toll, payment, traffic, or vehicle data.

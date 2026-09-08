@@ -345,41 +345,29 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 
 - [x] Add location filter to Dynamic Pricing history.
 - [x] Add date filter to Dynamic Pricing history.
-- [ ] Add congestion-versus-price chart.
-- [ ] Add per-location congestion history.
-- [ ] Add per-location toll-price history.
-- [ ] Add recognition accuracy trend.
-- [ ] Add low-confidence trend.
-- [ ] Add transaction success-rate trend.
-- [ ] Add per-location simulated revenue trend.
-- [ ] Add normal/moderate/peak/severe scenario comparison.
+- [x] Add congestion-versus-price chart.
+- [x] Add per-location congestion history.
+- [x] Add per-location toll-price history.
+- [x] Add recognition and low-confidence trends.
+- [x] Add transaction success-rate and per-location simulated-revenue trends.
+- [x] Add normal/moderate/peak/severe scenario comparison.
 - [x] Keep historical analysis inside relevant existing pages.
 - [x] Do not restore standalone Traffic Analytics page unless explicitly requested.
-- [ ] Decide whether CSV export is useful for capstone presentation.
+- [x] Add scoped CSV export for capstone presentation.
 
 ## Demo Mode
 
-- [ ] Add one-click Demo Mode.
-- [ ] Seed demo toll locations.
-- [ ] Seed demo users.
-- [ ] Seed demo vehicles.
-- [ ] Seed demo balances.
-- [ ] Seed demo traffic scenarios.
-- [ ] Seed demo transaction history.
-- [ ] Seed demo recognition history.
-- [ ] Add reset-to-demo-data action.
-- [ ] Make reset action idempotent/safe.
-- [ ] Add guided demo sequence.
-- [ ] Add fallback ALPR example when webcam is unavailable.
-- [ ] Add system-information panel.
-- [ ] Explain which components are local.
-- [ ] Explain which components are remote/deployed.
-- [ ] Explain which values are simulated.
-- [ ] Add presentation-friendly empty states.
-- [ ] Add presentation-friendly loading states.
-- [ ] Add presentation-friendly offline states.
-- [ ] Add presentation-friendly error states.
-- [ ] Prepare final demo walkthrough.
+- [x] Add one-click Demo Mode.
+- [x] Seed demo toll locations, users, vehicles, and balances.
+- [x] Retain seeded demo traffic scenarios through the local Simulator.
+- [x] Seed demo transaction and recognition history.
+- [x] Add reset-to-demo-data action.
+- [x] Make reset action idempotent/safe.
+- [x] Add guided demo sequence.
+- [x] Add fallback ALPR example when webcam is unavailable.
+- [x] Add system-information panel for local, remote, and simulated components.
+- [x] Retain presentation-friendly empty, loading, offline, and error states.
+- [x] Prepare final demo walkthrough.
 - [ ] Capture final screenshots after UI is stable.
 
 ## Testing for Improvements

@@ -64,7 +64,8 @@ function App() {
         const refreshed = { ...session, admin };
         window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(refreshed));
         setSession(refreshed);
-        if (!["/dashboard", "/recognition", "/pricing", "/simulator", "/webcam"].includes(route)) navigate("/dashboard", true);
+        if (route === "/demo") { /* Demo Mode is an authenticated operational surface. */ }
+        else if (!["/dashboard", "/recognition", "/pricing", "/simulator", "/webcam"].includes(route)) navigate("/dashboard", true);
       })
       .catch(() => {
         if (cancelled) return;
@@ -130,7 +131,7 @@ function AdminShell({ admin, route, onLogout }: { admin: Admin; route: string; o
   const { locations, selected, select, error: locationError, ready } = useLocations();
   const activeLocation = locations.find(item => item.id === selected);
   const independent = route === "/simulator" || route === "/webcam";
-  const page = route === "/webcam" ? <WebcamPage /> : route === "/simulator" ? <SimulatorPage /> : route === "/recognition" ? <RecognitionPage key={selected} /> : route === "/pricing" ? <TrafficPage /> : <NetworkOverview />;
+  const page = route === "/webcam" ? <WebcamPage /> : route === "/simulator" ? <SimulatorPage /> : route === "/recognition" ? <RecognitionPage key={selected} /> : route === "/pricing" ? <TrafficPage /> : route === "/demo" ? <DemoPage /> : <NetworkOverview />;
   const overview = route === "/dashboard";
   return <div className="command-shell">
     <aside className={menuOpen ? "command-sidebar open" : "command-sidebar"}>
@@ -141,6 +142,7 @@ function AdminShell({ admin, route, onLogout }: { admin: Admin; route: string; o
         <NavLink to="/recognition" active={route === "/recognition"} icon={<Radar size={17} />}>Plate recognition</NavLink>
         <NavLink to="/pricing" active={route === "/pricing"} icon={<CircleDollarSign size={17} />}>Dynamic pricing</NavLink>
         <NavLink to="/simulator" active={route === "/simulator"} icon={<SlidersHorizontal size={17} />}>Simulator</NavLink>
+        <NavLink to="/demo" active={route === "/demo"} icon={<Activity size={17} />}>Demo Mode</NavLink>
         {LOCAL_WEBCAM_ENABLED && <NavLink to="/webcam" active={route === "/webcam"} icon={<Camera size={17} />}>Local webcam</NavLink>}
       </nav>
       <div className="sidebar-foot"><span className="live-dot" /> <span>Simulated Prototype</span></div>
@@ -148,7 +150,7 @@ function AdminShell({ admin, route, onLogout }: { admin: Admin; route: string; o
     <section className="command-stage">
       <header className="top-control-bar"><button className="menu-toggle" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button><div className="location-control"><MapPin size={15} />{independent ? <span>{route === "/simulator" ? "Independent simulator" : `Local webcam · ${locations.find(item => item.code === "PENCHALA")?.display_name ?? "Default toll"}`}</span> : <><LocationSelect value={selected} onChange={select} /><small>{activeLocation?.highway_or_route ?? "Simulated toll network"}</small></>}</div><div className="top-spacer" /><button className="sync-control" aria-label="Sync data" onClick={() => window.dispatchEvent(new Event("dashboard-refresh"))}><RefreshCw size={15} /> Sync data</button><div className="system-health">Simulated Prototype</div><div className="admin-menu"><span>{admin.display_name}</span><button className="secondary-button" onClick={onLogout}>Sign out</button></div></header>
       {locationError && <p className="form-error" role="alert">{locationError}</p>}
-      {ready ? page : <PageLoading label="Loading PlatePlus toll locations…" />}
+       {ready ? <>{page}{["/recognition", "/pricing"].includes(route) && <main className="dashboard-page"><HistoryInsights filters={{}} /></main>}</> : <PageLoading label="Loading PlatePlus toll locations…" />}
     </section>
   </div>;
 }
@@ -168,6 +170,20 @@ function RecordTable({ title, rows, kind, more, onMore }: { title: string; rows:
 type TollPrice = { id: string; location_id: string; effective_at: string; amount: number; congestion_category: string; rule_version?: string };
 function PageLoading({ label = "Loading PlatePlus telemetry…" }: { label?: string }) { return <main className="dashboard-page"><section className="empty-admin">{label}</section></main>; }
 function PageError({ message }: { message: string }) { return <main className="dashboard-page"><section className="empty-admin"><p className="form-error">{message}</p></section></main>; }
+
+type DemoGuide = { mode: string; guide: string[]; fallback_alpr: string; boundaries: string[] };
+function DemoPage() {
+  const guide = useFeed<DemoGuide>("/api/operations/demo"); const [notice, setNotice] = useState(""); const [resetting, setResetting] = useState(false);
+  async function restore() { if (!window.confirm("Restore the safe synthetic Demo Mode baseline? Demo wallet changes and prior Demo Mode records will be reset.")) return; setResetting(true); try { const response = await fetch(`${API_BASE_URL}/api/operations/demo/reset`, { method: "POST", headers: apiHeaders() }); const body = await response.json().catch(() => null) as { seeded_recognitions?: number; detail?: string } | null; if (!response.ok) throw new Error(body?.detail ?? "Demo Mode could not be restored."); setNotice(`Demo Mode is ready with ${body?.seeded_recognitions ?? 0} seeded recognition examples.`); window.dispatchEvent(new Event("dashboard-refresh")); } catch (error) { setNotice(error instanceof Error ? error.message : "Demo Mode could not be restored."); } finally { setResetting(false); } }
+  return <main className="dashboard-page"><section className="page-heading"><div><p className="eyebrow">PRESENTATION READY</p><h1>Demo Mode</h1><p>Restore a safe simulated baseline, then follow the guided capstone walkthrough.</p></div><span className="refresh-note">SIMULATED ONLY</span></section>{notice && <p className="traffic-notice">{notice}</p>}{guide.error && <p className="form-error">{guide.error}</p>}<section className="detail-card"><div className="section-title"><div><p className="eyebrow">RESET-TO-DEMO-DATA</p><h2>Prepare the walkthrough</h2></div><button onClick={() => void restore()} disabled={resetting}>{resetting ? "Restoring…" : "Restore Demo Mode"}</button></div><p className="field-note">This is idempotent: it restores balances for the synthetic `@example.test` accounts and replaces only records explicitly created by Demo Mode. Administrator access, toll-location configuration, and normal operational history are preserved.</p></section><section className="traffic-grid"><article className="admin-card"><h2>Guided flow</h2><ol className="demo-steps">{guide.data?.guide.map(item => <li key={item}>{item}</li>) ?? <li>Loading the presentation guide…</li>}</ol></article><article className="admin-card"><h2>Fallback ALPR</h2><p>{guide.data?.fallback_alpr ?? "Loading fallback instructions…"}</p><a href="/recognition" onClick={(event) => { event.preventDefault(); navigate("/recognition"); }}>Open Plate Recognition</a></article></section><section className="detail-card"><div className="section-title"><div><p className="eyebrow">SYSTEM INFORMATION</p><h2>Presentation boundaries</h2></div></div><ul className="demo-boundaries">{guide.data?.boundaries.map(item => <li key={item}>{item}</li>) ?? <li>Loading system information…</li>}</ul><p className="field-note">Overview reads live simulated telemetry; Simulator remains browser-local and never mutates it.</p></section></main>;
+}
+
+type HistoryAnalytics = { series: { date: string; average_toll: number | null; average_congestion: number | null; detections: number; low_confidence: number; transactions: number; payment_success_rate: number | null; simulated_revenue: number }[]; locations: { location_id: string; display_name: string; average_toll: number | null; average_congestion: number | null; price_records: number; traffic_records: number }[]; scenario_comparison: { scenario: string; records: number; average_congestion: number }[] };
+function HistoryInsights({ filters }: { filters: HistoryValues }) {
+  const { selected } = useLocations(); const path = locationPath(historyPath("/api/data/history/analytics", filters), selected); const analytics = useFeed<HistoryAnalytics>(path); const series = analytics.data?.series ?? [];
+  async function exportCsv() { const response = await fetch(`${API_BASE_URL}${locationPath(historyPath("/api/data/history/export.csv", filters), selected)}`, { headers: apiHeaders() }); if (!response.ok) return; const url = URL.createObjectURL(await response.blob()); const link = document.createElement("a"); link.href = url; link.download = "plateplus-simulated-history.csv"; link.click(); URL.revokeObjectURL(url); }
+  return <section className="detail-card history-insights"><div className="section-title"><div><p className="eyebrow">LOCATION-AWARE HISTORY</p><h2>Congestion, toll, recognition, and payment trends</h2></div><button className="secondary-button" onClick={() => void exportCsv()}>Export CSV</button></div>{analytics.error && <p className="form-error">{analytics.error}</p>}{!analytics.data ? <p>Loading historical analysis…</p> : <><div className="history-chart">{series.length ? <ResponsiveContainer width="100%" height={260}><LineChart data={series}><CartesianGrid strokeDasharray="3 3" stroke="#24444a" /><XAxis dataKey="date" stroke="#8baaa6" /><YAxis yAxisId="left" stroke="#8baaa6" /><YAxis yAxisId="right" orientation="right" stroke="#8baaa6" /><Tooltip /><Legend /><Line yAxisId="left" type="monotone" dataKey="average_congestion" name="Avg. congestion %" stroke="#e5b04d" connectNulls /><Line yAxisId="right" type="monotone" dataKey="average_toll" name="Avg. toll (RM)" stroke="#62dec4" connectNulls /></LineChart></ResponsiveContainer> : <p>No simulated history matches these filters yet.</p>}</div><div className="data-table-wrap"><table><thead><tr><th>Location</th><th>Average congestion</th><th>Average toll</th><th>Traffic records</th></tr></thead><tbody>{analytics.data.locations.length ? analytics.data.locations.map(row => <tr key={row.location_id}><td>{row.display_name}</td><td>{row.average_congestion == null ? "—" : `${Number(row.average_congestion).toFixed(1)}%`}</td><td>{row.average_toll == null ? "—" : `RM${Number(row.average_toll).toFixed(2)}`}</td><td>{row.traffic_records}</td></tr>) : <tr><td colSpan={4}>No location history matches these filters.</td></tr>}</tbody></table></div><div className="scenario-summary">{analytics.data.scenario_comparison.map(row => <span key={row.scenario}>{row.scenario.replace(/_/g, " ")} · {Number(row.average_congestion).toFixed(1)}% average congestion ({row.records})</span>)}</div></>}</section>;
+}
 
 function RecognitionPage() {
   const { selected, locations } = useLocations();
