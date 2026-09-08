@@ -34,6 +34,7 @@ from app.schemas.traffic import (
 )
 from app.services.traffic.simulation import current_simulation_time, run_simulation
 from app.services.traffic.pricing import decide_price
+from app.services.operations import record_event
 
 router = APIRouter(prefix="/api/traffic", tags=["traffic"], dependencies=[Depends(require_admin)])
 DatabaseSession = Annotated[Session, Depends(get_db)]
@@ -113,6 +114,7 @@ def update_settings(
             "traffic_record",
             {"source": "scheduled", "traffic_record_id": result.traffic_record.id},
         )
+        record_event(database, event_type="simulation_run", severity="information", source="simulated", location_id=result.traffic_record.location_id, message="Scheduled simulated traffic run completed.", details={"scenario": result.traffic_record.scenario, "congestion": result.traffic_record.congestion_percentage, "toll": result.toll_price.amount, "admin_id": admin.id})
     database.commit()
     database.refresh(settings)
     return _read_settings(settings)
@@ -161,6 +163,8 @@ def update_pricing_rules(
     if latest_traffic is not None:
         location = latest_traffic.location
         decision = decide_price(database, settings, location, latest_traffic.congestion_percentage)
+        if decision.previous_amount != decision.amount:
+            record_event(database, event_type="pricing_change", severity="information", source="simulated", location_id=latest_traffic.location_id, message="Dynamic simulated toll price changed.", details={"previous": decision.previous_amount, "new": decision.amount, "congestion": latest_traffic.congestion_percentage, "category": decision.rule.congestion_category, "rule_version": settings.pricing_rule_version, "admin_id": admin.id})
         database.add(
             TollPrice(
                 traffic_record_id=latest_traffic.id,
@@ -178,6 +182,7 @@ def update_pricing_rules(
         "dynamic_pricing_rules",
         payload.model_dump(mode="json"),
     )
+    record_event(database, event_type="administrator_action", source="admin", message="Administrator updated pricing rules.", details={"action": "pricing_rules_updated", "admin_id": admin.id})
     database.commit()
     return list(
         database.scalars(select(DynamicPricingRule).order_by(DynamicPricingRule.minimum_percentage))
@@ -202,6 +207,7 @@ def manual_simulation(
             "traffic_record_id": result.traffic_record.id,
         },
     )
+    record_event(database, event_type="simulation_run", severity="information", source="simulated", location_id=result.traffic_record.location_id, message="Manual simulated traffic run completed.", details={"scenario": result.traffic_record.scenario, "congestion": result.traffic_record.congestion_percentage, "toll": result.toll_price.amount, "admin_id": admin.id})
     database.commit()
     return SimulationRunRead(
         traffic_record_id=result.traffic_record.id,

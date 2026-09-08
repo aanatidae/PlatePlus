@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from app.models import (
     AdminAuditLog,
+    OperationalEvent,
     DynamicPricingRule,
     TollLocation,
     TollPrice,
@@ -60,6 +61,9 @@ def test_admin_can_run_a_fixed_scenario_and_persist_its_matching_price(
     assert database.scalar(select(TrafficRecord)) is not None
     assert database.scalar(select(TollPrice)) is not None
     assert database.scalar(select(AdminAuditLog).where(AdminAuditLog.action == "traffic_simulation_run"))
+    event = database.scalar(select(OperationalEvent).where(OperationalEvent.event_type == "simulation_run"))
+    assert event is not None
+    assert event.location_id == database.scalar(select(TrafficRecord)).location_id
 
 
 def test_pricing_rule_change_creates_a_new_current_price_and_audit_entry(
@@ -96,6 +100,19 @@ def test_pricing_rule_change_creates_a_new_current_price_and_audit_entry(
     assert latest_price.amount == Decimal("2.50")
     assert latest_price.rule_version == "v2"
     assert database.scalar(select(AdminAuditLog).where(AdminAuditLog.action == "pricing_rules_updated"))
+    event = database.scalar(select(OperationalEvent).where(OperationalEvent.event_type == "pricing_change"))
+    assert event is not None
+    assert "previous" in event.details_json and "new" in event.details_json
+    assert client.put(
+        "/api/traffic/pricing-rules",
+        json={"rules": [
+            {"scenario": "normal", "minimum_percentage": "0", "maximum_percentage": "30", "multiplier": "1.25"},
+            {"scenario": "moderate", "minimum_percentage": "30.01", "maximum_percentage": "60", "multiplier": "1.75"},
+            {"scenario": "peak_hour", "minimum_percentage": "60.01", "maximum_percentage": "80", "multiplier": "2.25"},
+            {"scenario": "severe", "minimum_percentage": "80.01", "maximum_percentage": "100", "multiplier": "2.75"},
+        ]}, headers=admin_auth_headers,
+    ).status_code == 200
+    assert len(list(database.scalars(select(OperationalEvent).where(OperationalEvent.event_type == "pricing_change")))) == 1
 
 
 def test_network_simulation_persists_independent_profiles_and_excludes_webcam_toll(database) -> None:

@@ -433,3 +433,38 @@ class PaymentNotification(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     notification_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     message: Mapped[str] = mapped_column(String(255), nullable=False)
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class OperationalAlert(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Deduplicated simulated-prototype operational incident."""
+
+    __tablename__ = "operational_alerts"
+
+    location_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("toll_locations.id", ondelete="SET NULL"), index=True)
+    alert_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="active", index=True)
+    title: Mapped[str] = mapped_column(String(160), nullable=False)
+    message: Mapped[str] = mapped_column(String(500), nullable=False)
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default="detected")
+    incident_key: Mapped[str] = mapped_column(String(180), nullable=False, unique=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    acknowledged_by_admin_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("admins.id", ondelete="SET NULL"))
+    metadata_json: Mapped[str | None] = mapped_column(Text)
+
+
+class OperationalEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Append-only record of simulated operational state and administrator actions."""
+
+    __tablename__ = "operational_events"
+
+    location_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("toll_locations.id", ondelete="SET NULL"), index=True)
+    alert_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("operational_alerts.id", ondelete="SET NULL"), index=True)
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(16), nullable=False, default="information", index=True)
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default="detected")
+    message: Mapped[str] = mapped_column(String(500), nullable=False)
+    details_json: Mapped[str | None] = mapped_column(Text)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)

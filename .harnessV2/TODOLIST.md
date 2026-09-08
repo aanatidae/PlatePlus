@@ -322,24 +322,24 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 
 ## Alerts and Operational Events
 
-- [ ] Add severe-congestion alert.
-- [ ] Add camera-offline alert.
-- [ ] Add repeated low-confidence ALPR alert.
-- [ ] Add repeated failed-payment alert.
-- [ ] Add backend/API error alert.
-- [ ] Add database error alert.
-- [ ] Add information severity.
-- [ ] Add warning severity.
-- [ ] Add critical severity.
-- [ ] Filter alerts by toll location.
-- [ ] Show alert start time.
-- [ ] Add acknowledgement state.
-- [ ] Add alert history.
-- [ ] Add simulation-run event logs.
-- [ ] Add pricing-change event logs.
-- [ ] Add camera-state event logs.
-- [ ] Add administrator action event logs where appropriate.
-- [ ] Keep all alert behavior within simulated prototype scope.
+- [x] Add severe-congestion alert.
+- [x] Add camera-offline alert.
+- [x] Add repeated low-confidence ALPR alert.
+- [x] Add repeated failed-payment alert.
+- [x] Add backend/API error alert.
+- [x] Add database error alert.
+- [x] Add information severity.
+- [x] Add warning severity.
+- [x] Add critical severity.
+- [x] Filter alerts by toll location.
+- [x] Show alert start time.
+- [x] Add acknowledgement state.
+- [x] Add alert history.
+- [x] Add simulation-run event logs.
+- [x] Add pricing-change event logs.
+- [x] Add camera-state event logs.
+- [x] Add administrator action event logs where appropriate.
+- [x] Keep all alert behavior within simulated prototype scope.
 
 ## Location-Aware Historical Analysis
 
