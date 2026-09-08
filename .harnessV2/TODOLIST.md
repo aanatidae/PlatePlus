@@ -302,23 +302,23 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 
 ## Synthetic Payment Improvements
 
-- [ ] Add additional synthetic users.
-- [ ] Add additional synthetic vehicles.
-- [ ] Add more varied synthetic balances.
-- [ ] Add more vehicle types.
-- [ ] Add simulated account top-up.
-- [ ] Add simulated refund/reversal.
-- [ ] Add wallet ledger.
-- [ ] Show opening balance.
-- [ ] Show toll deductions.
-- [ ] Show top-ups.
-- [ ] Show refunds.
-- [ ] Show ending balance.
-- [ ] Add per-location revenue statistics.
-- [ ] Add per-location transaction counts.
-- [ ] Add simulated payment notifications.
-- [ ] Add manual-review status for uncertain recognition.
-- [ ] Ensure no real payment provider is integrated.
+- [x] Add additional synthetic users.
+- [x] Add additional synthetic vehicles.
+- [x] Add more varied synthetic balances.
+- [x] Add more vehicle types.
+- [x] Add simulated account top-up.
+- [x] Add simulated refund/reversal.
+- [x] Add wallet ledger.
+- [x] Show opening balance.
+- [x] Show toll deductions.
+- [x] Show top-ups.
+- [x] Show refunds.
+- [x] Show ending balance.
+- [x] Add per-location revenue statistics.
+- [x] Add per-location transaction counts.
+- [x] Add simulated payment notifications.
+- [x] Add manual-review status for uncertain recognition.
+- [x] Ensure no real payment provider is integrated.
 
 ## Alerts and Operational Events
 
@@ -486,5 +486,6 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 - [x] Run the human-reviewed development-set OCR and positive-image detector evaluation; preserve the 44-crop held-out test set untouched.
 - [x] Distinguish reviewed, valid-plate-present, OCR-scorable, verified-ground-truth, and detector-evaluation-role fields so challenging scenes do not distort OCR or detector metrics.
 - [ ] Add human-labelled negative images plus further motion-blur, partial-obstruction, glare, and unusual-format samples before claiming full condition coverage or a false-positive rate.
+- [x] Complete Synthetic Payment Improvements with an auditable simulated-wallet ledger, top-ups, reversals, per-location revenue/count summaries, payment notifications, additional synthetic account scenarios, and pending/resolved review status for uncertain recognitions. Migration `20260908_0010` is required before use.
 
 Browser checks above are manual verification, not a new automated browser test suite. Comprehensive accessibility, larger-history performance, model evaluation, two-location comparison, independent traffic profiles, pricing smoothing, and later roadmap features remain pending. The physical webcam check was not requested or run.

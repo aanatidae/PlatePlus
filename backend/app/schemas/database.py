@@ -42,6 +42,7 @@ class AccountRead(ORMModel):
     id: UUID
     user_id: UUID
     balance: Decimal
+    opening_balance: Decimal
     currency: str
     is_active: bool
     is_primary: bool
@@ -159,6 +160,9 @@ class DetectionRecordRead(ORMModel):
     source: str
     image_path: str | None
     crop_path: str | None
+    review_status: str
+    review_note: str | None
+    reviewed_at: datetime | None
     created_at: datetime
 
 
@@ -198,4 +202,45 @@ class TollTransactionRead(ORMModel):
     failure_reason: str | None
     balance_after: Decimal | None
     is_simulated: bool
+    created_at: datetime
+    reversed_at: datetime | None
+    reversal_reason: str | None
+
+
+class WalletTopUpCreate(BaseModel):
+    amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
+    idempotency_key: str = Field(min_length=8, max_length=128)
+    note: str | None = Field(default=None, max_length=160)
+
+
+class WalletLedgerEntryRead(ORMModel):
+    id: UUID
+    account_id: UUID
+    transaction_id: UUID | None
+    entry_type: str
+    amount: Decimal
+    direction: str
+    balance_after: Decimal
+    currency: str
+    description: str
+    created_at: datetime
+
+
+class TransactionReversalCreate(BaseModel):
+    reason: str = Field(min_length=3, max_length=255)
+    idempotency_key: str = Field(min_length=8, max_length=128)
+
+
+class DetectionReviewUpdate(BaseModel):
+    review_status: Literal["resolved", "dismissed"]
+    review_note: str | None = Field(default=None, max_length=255)
+
+
+class PaymentNotificationRead(ORMModel):
+    id: UUID
+    user_id: UUID
+    transaction_id: UUID | None
+    notification_type: str
+    message: str
+    read_at: datetime | None
     created_at: datetime

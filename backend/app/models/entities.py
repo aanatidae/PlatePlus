@@ -81,6 +81,9 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0.00")
     )
+    opening_balance: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0.00")
+    )
     currency: Mapped[str] = mapped_column(
         String(3), nullable=False, default="MYR", server_default="MYR"
     )
@@ -93,6 +96,7 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     user: Mapped[User] = relationship(back_populates="accounts")
     transactions: Mapped[list[TollTransaction]] = relationship(back_populates="account")
+    ledger_entries: Mapped[list[WalletLedgerEntry]] = relationship(back_populates="account")
 
 
 class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -324,6 +328,11 @@ class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     image_path: Mapped[str | None] = mapped_column(Text)
     crop_path: Mapped[str | None] = mapped_column(Text)
     metadata_json: Mapped[str | None] = mapped_column(Text)
+    review_status: Mapped[str] = mapped_column(
+        String(24), nullable=False, default="not_required", server_default="not_required", index=True
+    )
+    review_note: Mapped[str | None] = mapped_column(String(255))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     location: Mapped[TollLocation] = relationship(back_populates="detections")
     vehicle: Mapped[Vehicle | None] = relationship(back_populates="detections")
@@ -374,9 +383,53 @@ class TollTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_simulated: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
+    reversed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reversal_reason: Mapped[str | None] = mapped_column(String(255))
 
     location: Mapped[TollLocation] = relationship(back_populates="transactions")
     account: Mapped[Account | None] = relationship(back_populates="transactions")
     vehicle: Mapped[Vehicle | None] = relationship(back_populates="transactions")
     toll_price: Mapped[TollPrice | None] = relationship(back_populates="transactions")
     detection: Mapped[DetectionRecord | None] = relationship(back_populates="transaction")
+
+
+class WalletLedgerEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Immutable simulated-wallet movements, including opening balances and reversals."""
+
+    __tablename__ = "wallet_ledger_entries"
+    __table_args__ = (
+        CheckConstraint("amount >= 0", name="ck_wallet_ledger_amount_nonnegative"),
+        CheckConstraint("currency = 'MYR'", name="ck_wallet_ledger_currency_myr"),
+    )
+
+    account_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    transaction_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("toll_transactions.id", ondelete="SET NULL"), index=True
+    )
+    entry_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    direction: Mapped[str] = mapped_column(String(8), nullable=False)
+    balance_after: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MYR", server_default="MYR")
+    description: Mapped[str] = mapped_column(String(255), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+
+    account: Mapped[Account] = relationship(back_populates="ledger_entries")
+
+
+class PaymentNotification(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Synthetic user-facing payment notices retained for dashboard demonstration."""
+
+    __tablename__ = "payment_notifications"
+
+    user_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    transaction_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("toll_transactions.id", ondelete="SET NULL"), index=True
+    )
+    notification_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    message: Mapped[str] = mapped_column(String(255), nullable=False)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

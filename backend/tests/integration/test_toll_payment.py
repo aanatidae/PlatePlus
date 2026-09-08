@@ -3,7 +3,16 @@ from decimal import Decimal
 
 from sqlalchemy import select
 
-from app.models import Account, DetectionRecord, TollPrice, TollTransaction, User, Vehicle
+from app.models import (
+    Account,
+    DetectionRecord,
+    PaymentNotification,
+    TollPrice,
+    TollTransaction,
+    User,
+    Vehicle,
+    WalletLedgerEntry,
+)
 from app.services.transactions.toll_payment import process_toll_event
 
 
@@ -63,6 +72,11 @@ def test_successful_payment_debits_the_primary_account(database) -> None:
     assert detection is not None
     assert detection.status == "accepted"
     assert detection.vehicle_id == vehicle.id
+    ledger = database.scalar(select(WalletLedgerEntry))
+    assert ledger is not None
+    assert ledger.entry_type == "toll_deduction"
+    assert ledger.balance_after == Decimal("18.00")
+    assert database.scalar(select(PaymentNotification)) is not None
 
 
 def test_insufficient_balance_does_not_debit_the_primary_account(database) -> None:
@@ -113,6 +127,7 @@ def test_low_confidence_recognition_is_recorded_without_a_price_or_deduction(dat
     assert account.balance == Decimal("20.00")
     assert detection is not None
     assert detection.status == "low_confidence"
+    assert detection.review_status == "pending"
     assert transaction is not None
     assert transaction.amount == Decimal("0.00")
 

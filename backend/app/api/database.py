@@ -18,12 +18,14 @@ from app.models import (
     Account,
     Admin,
     DetectionRecord,
+    PaymentNotification,
     TollLocation,
     TollPrice,
     TollTransaction,
     TrafficRecord,
     User,
     Vehicle,
+    WalletLedgerEntry,
 )
 from app.schemas.database import (
     AccountCreate,
@@ -31,16 +33,21 @@ from app.schemas.database import (
     AdminRead,
     DetectionRecordCreate,
     DetectionRecordRead,
+    DetectionReviewUpdate,
+    PaymentNotificationRead,
     TollPriceCreate,
     TollPriceRead,
     TollTransactionCreate,
     TollTransactionRead,
     TrafficRecordCreate,
     TrafficRecordRead,
+    TransactionReversalCreate,
     UserCreate,
     UserRead,
     VehicleCreate,
     VehicleRead,
+    WalletLedgerEntryRead,
+    WalletTopUpCreate,
 )
 
 router = APIRouter(
@@ -91,9 +98,11 @@ def history_options(
     end = end_at.replace(tzinfo=UTC) if end_at and end_at.tzinfo is None else end_at
     if start and end and start > end:
         raise HTTPException(status_code=422, detail="Start date must be before end date.")
-    return dict(start=start, end=end, congestion_category=congestion_category, plate=plate,
-                detection_status=detection_status, registration=registration,
-                transaction_status=transaction_status, minimum_amount=minimum_amount)
+    return {
+        "start": start, "end": end, "congestion_category": congestion_category, "plate": plate,
+        "detection_status": detection_status, "registration": registration,
+        "transaction_status": transaction_status, "minimum_amount": minimum_amount,
+    }
 
 
 def filtered_history(database, model, timestamp, location_id, options, offset, limit):
@@ -146,7 +155,21 @@ def list_users(
 @router.post("/accounts", response_model=AccountRead, status_code=status.HTTP_201_CREATED)
 def create_account(payload: AccountCreate, database: DatabaseSession):
     _require(database, User, payload.user_id, "User")
-    return _save(database, Account(**payload.model_dump()), "The account could not be created.")
+    account = Account(**payload.model_dump(), opening_balance=payload.balance)
+    try:
+        database.add(account)
+        database.flush()
+        database.add(WalletLedgerEntry(
+            account_id=account.id, entry_type="opening_balance", amount=payload.balance,
+            direction="credit", balance_after=payload.balance,
+            description="Opening simulated wallet balance.", idempotency_key=f"opening:{account.id}",
+        ))
+        database.commit()
+        database.refresh(account)
+        return account
+    except IntegrityError as error:
+        database.rollback()
+        raise HTTPException(status_code=409, detail="The account could not be created.") from error
 
 
 @router.get("/accounts", response_model=list[AccountRead])
@@ -154,6 +177,43 @@ def list_accounts(
     database: DatabaseSession, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)
 ):
     return _list(database, Account, offset, limit)
+
+
+@router.get("/accounts/{account_id}/ledger", response_model=list[WalletLedgerEntryRead])
+def account_ledger(
+    account_id: UUID, database: DatabaseSession,
+    limit: int = Query(50, ge=1, le=200),
+):
+    _require(database, Account, account_id, "Account")
+    return list(database.scalars(
+        select(WalletLedgerEntry).where(WalletLedgerEntry.account_id == account_id)
+        .order_by(WalletLedgerEntry.created_at.desc()).limit(limit)
+    ))
+
+
+@router.post("/accounts/{account_id}/top-ups", response_model=AccountRead)
+def top_up_account(account_id: UUID, payload: WalletTopUpCreate, database: DatabaseSession):
+    account = _require(database, Account, account_id, "Account")
+    existing = database.scalar(select(WalletLedgerEntry).where(
+        WalletLedgerEntry.idempotency_key == payload.idempotency_key
+    ))
+    if existing is not None:
+        if existing.account_id != account.id:
+            raise HTTPException(status_code=409, detail="The top-up idempotency key was already used.")
+        return account
+    account.balance += payload.amount
+    database.add(WalletLedgerEntry(
+        account_id=account.id, entry_type="top_up", amount=payload.amount, direction="credit",
+        balance_after=account.balance, description=payload.note or "Simulated wallet top-up.",
+        idempotency_key=payload.idempotency_key,
+    ))
+    database.add(PaymentNotification(
+        user_id=account.user_id, notification_type="top_up",
+        message=f"Simulated wallet top-up of RM{payload.amount:.2f} was added.",
+    ))
+    database.commit()
+    database.refresh(account)
+    return account
 
 
 @router.post("/vehicles", response_model=VehicleRead, status_code=status.HTTP_201_CREATED)
@@ -230,6 +290,19 @@ def list_detections(
     return filtered_history(database, DetectionRecord, DetectionRecord.detected_at, location_id, options, offset, limit)
 
 
+@router.patch("/detections/{detection_id}/review", response_model=DetectionRecordRead)
+def review_detection(detection_id: UUID, payload: DetectionReviewUpdate, database: DatabaseSession):
+    detection = _require(database, DetectionRecord, detection_id, "Detection record")
+    if detection.review_status != "pending":
+        raise HTTPException(status_code=409, detail="This recognition does not require manual review.")
+    detection.review_status = payload.review_status
+    detection.review_note = payload.review_note
+    detection.reviewed_at = datetime.now(UTC)
+    database.commit()
+    database.refresh(detection)
+    return detection
+
+
 @router.post(
     "/transactions", response_model=TollTransactionRead, status_code=status.HTTP_201_CREATED
 )
@@ -256,3 +329,72 @@ def list_transactions(
     offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200),
 ):
     return filtered_history(database, TollTransaction, TollTransaction.processed_at, location_id, options, offset, limit)
+
+
+@router.post("/transactions/{transaction_id}/reversal", response_model=TollTransactionRead)
+def reverse_transaction(
+    transaction_id: UUID, payload: TransactionReversalCreate, database: DatabaseSession,
+):
+    transaction = _require(database, TollTransaction, transaction_id, "Toll transaction")
+    if transaction.status != "successful" or transaction.account_id is None:
+        raise HTTPException(status_code=422, detail="Only successful simulated payments can be reversed.")
+    if transaction.reversed_at is not None:
+        return transaction
+    existing = database.scalar(select(WalletLedgerEntry).where(
+        WalletLedgerEntry.idempotency_key == payload.idempotency_key
+    ))
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="The reversal idempotency key was already used.")
+    account = database.scalar(select(Account).where(Account.id == transaction.account_id).with_for_update())
+    if account is None:
+        raise HTTPException(status_code=409, detail="The simulated account is no longer available.")
+    account.balance += transaction.amount
+    now = datetime.now(UTC)
+    transaction.reversed_at = now
+    transaction.reversal_reason = payload.reason
+    database.add(WalletLedgerEntry(
+        account_id=account.id, transaction_id=transaction.id, entry_type="reversal", amount=transaction.amount,
+        direction="credit", balance_after=account.balance, description=f"Simulated reversal: {payload.reason}",
+        idempotency_key=payload.idempotency_key,
+    ))
+    database.add(PaymentNotification(
+        user_id=account.user_id, transaction_id=transaction.id, notification_type="reversal",
+        message=f"Simulated reversal of RM{transaction.amount:.2f} was issued.",
+    ))
+    database.commit()
+    database.refresh(transaction)
+    return transaction
+
+
+@router.get("/payment-summary")
+def payment_summary(database: DatabaseSession, location_id: UUID | None = None):
+    location_id = _location(database, location_id)
+    statement = select(TollTransaction)
+    if location_id:
+        statement = statement.where(TollTransaction.location_id == location_id)
+    transactions = list(database.scalars(statement))
+    successful = [item for item in transactions if item.status == "successful"]
+    reversed_amount = sum((item.amount for item in successful if item.reversed_at is not None), Decimal("0.00"))
+    return {
+        "scope": "location" if location_id else "all_locations",
+        "location_id": location_id,
+        "transaction_count": len(transactions),
+        "successful_count": len(successful),
+        "successful_revenue": sum((item.amount for item in successful), Decimal("0.00")),
+        "reversed_amount": reversed_amount,
+        "net_revenue": sum((item.amount for item in successful), Decimal("0.00")) - reversed_amount,
+        "by_location": [
+            {"location_id": item.id, "display_name": item.display_name,
+             "transactions": sum(1 for row in transactions if row.location_id == item.id),
+             "revenue": sum((row.amount for row in successful if row.location_id == item.id and row.reversed_at is None), Decimal("0.00"))}
+            for item in database.scalars(select(TollLocation).order_by(TollLocation.display_name))
+            if location_id is None or item.id == location_id
+        ],
+    }
+
+
+@router.get("/payment-notifications", response_model=list[PaymentNotificationRead])
+def payment_notifications(database: DatabaseSession, limit: int = Query(20, ge=1, le=100)):
+    return list(database.scalars(
+        select(PaymentNotification).order_by(PaymentNotification.created_at.desc()).limit(limit)
+    ))

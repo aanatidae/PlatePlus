@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.core.settings import Settings
 from app.db.session import SessionLocal
-from app.models import Account, Admin, TollPrice, TrafficRecord, User, Vehicle
+from app.models import Account, Admin, TollPrice, TrafficRecord, User, Vehicle, WalletLedgerEntry
 from app.services.auth.service import hash_password
 
 
@@ -57,6 +57,36 @@ def seed_demo_data() -> None:
                 "Silver",
                 Decimal("1.50"),
             ),
+            (
+                "Kumaravel Raj",
+                "kumaravel.raj@example.test",
+                "+60135556677",
+                "BKV2026",
+                "Toyota",
+                "Hilux",
+                "Black",
+                Decimal("85.75"),
+            ),
+            (
+                "Mei Ling Tan",
+                "mei.ling.tan@example.test",
+                "+60178889900",
+                "VDR8812",
+                "Tesla",
+                "Model 3",
+                "Red",
+                Decimal("6.20"),
+            ),
+            (
+                "Farid Iskandar",
+                "farid.iskandar@example.test",
+                "+60194443322",
+                "BQR7310",
+                "Yamaha",
+                "NVX",
+                "Grey",
+                Decimal("0.80"),
+            ),
         )
         for name, email, phone, plate, make, model, color, balance in demo_people:
             user = database.scalar(select(User).where(User.email == email))
@@ -64,8 +94,17 @@ def seed_demo_data() -> None:
                 user = User(full_name=name, email=email, phone=phone)
                 database.add(user)
                 database.flush()
-            if database.scalar(select(Account).where(Account.user_id == user.id)) is None:
-                database.add(Account(user_id=user.id, balance=balance, is_primary=True))
+            account = database.scalar(select(Account).where(Account.user_id == user.id))
+            if account is None:
+                account = Account(user_id=user.id, balance=balance, opening_balance=balance, is_primary=True)
+                database.add(account)
+                database.flush()
+            if database.scalar(select(WalletLedgerEntry).where(WalletLedgerEntry.account_id == account.id)) is None:
+                database.add(WalletLedgerEntry(
+                    account_id=account.id, entry_type="opening_balance", amount=account.opening_balance,
+                    direction="credit", balance_after=account.balance,
+                    description="Opening simulated wallet balance.", idempotency_key=f"seed-opening:{account.id}",
+                ))
             if database.scalar(select(Vehicle).where(Vehicle.plate_number == plate)) is None:
                 database.add(
                     Vehicle(

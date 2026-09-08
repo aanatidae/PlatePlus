@@ -396,3 +396,7 @@ ALPR robustness implementation is in place: common Malaysian plate layouts are a
 The reviewed development run now reports 125/146 OCR exact matches (85.6%) and positive-image detector recall of 150/150; these are development-only metrics. Clear, angled, low-light, small/distant, glare, and one partial-obstruction sample have OCR results. Motion-blur and unusual-format OCR remain unscored, and zero negative images mean false-positive rate is still unavailable. Add the specified review samples before treating condition coverage or detector precision as complete.
 
 The next milestone is a user choice among the remaining personal improvements; do not automatically start all later roadmap phases.
+
+## Synthetic Payment Milestone — 2026-09-08
+
+Phase 8 is implemented within the simulated-only product boundary. Accounts retain an opening balance and immutable wallet ledger entries for opening funds, toll deductions, top-ups, and reversals. Administrator-facing APIs and the Plate Recognition operational surface support simulated top-ups, reversible successful toll payments, recent synthetic notifications, wallet balance visibility, and network or location-scoped payment summaries. Low-confidence recognitions are marked as pending manual review until an administrator resolves or dismisses them. Demo seeding now includes six synthetic drivers with varied balances and vehicle types. No payment provider, banking integration, or real user data was added.

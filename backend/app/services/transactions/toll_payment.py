@@ -10,7 +10,15 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Account, DetectionRecord, TollPrice, TollTransaction, Vehicle
+from app.models import (
+    Account,
+    DetectionRecord,
+    PaymentNotification,
+    TollPrice,
+    TollTransaction,
+    Vehicle,
+    WalletLedgerEntry,
+)
 from app.services.locations import default_toll_location_id
 
 
@@ -80,6 +88,7 @@ def process_toll_event(
         detection_confidence=Decimal(str(detection_confidence or 0)),
         ocr_confidence=Decimal(str(ocr_confidence)) if ocr_confidence is not None else None,
         status="accepted" if recognition_accepted and normalized_plate else "low_confidence",
+        review_status="not_required" if recognition_accepted and normalized_plate else "pending",
         source=source,
     )
     database.add(detection)
@@ -176,6 +185,15 @@ def process_toll_event(
         balance_after=account.balance,
     )
     database.add(transaction)
+    database.flush()
+    _add_wallet_entry(
+        database, account, transaction, "toll_deduction", price.amount, "debit",
+        f"Simulated toll deduction at {location_id}.", f"toll:{idempotency_key}",
+    )
+    _add_notification(
+        database, vehicle.user_id, transaction, "payment_success",
+        f"Simulated toll payment of RM{price.amount:.2f} was processed.",
+    )
     database.commit()
     database.refresh(transaction)
     return PaymentOutcome(
@@ -213,8 +231,39 @@ def _record_failure(
         balance_after=account.balance if account else None,
     )
     database.add(transaction)
+    database.flush()
+    if account is not None and vehicle is not None:
+        _add_notification(
+            database, vehicle.user_id, transaction, "payment_attention",
+            f"Simulated toll payment needs attention: {message}",
+        )
     database.commit()
     database.refresh(transaction)
     return PaymentOutcome(
         status, message, transaction.amount, transaction.balance_after, str(transaction.id)
     )
+
+
+def _add_wallet_entry(
+    database: Session, account: Account, transaction: TollTransaction | None,
+    entry_type: str, amount: Decimal, direction: str, description: str, idempotency_key: str,
+) -> WalletLedgerEntry:
+    entry = WalletLedgerEntry(
+        account_id=account.id, transaction_id=transaction.id if transaction else None,
+        entry_type=entry_type, amount=amount, direction=direction,
+        balance_after=account.balance, description=description, idempotency_key=idempotency_key,
+    )
+    database.add(entry)
+    return entry
+
+
+def _add_notification(
+    database: Session, user_id, transaction: TollTransaction | None,
+    notification_type: str, message: str,
+) -> PaymentNotification:
+    notification = PaymentNotification(
+        user_id=user_id, transaction_id=transaction.id if transaction else None,
+        notification_type=notification_type, message=message,
+    )
+    database.add(notification)
+    return notification
