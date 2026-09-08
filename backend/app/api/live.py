@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from math import sin
+from typing import Literal
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
@@ -36,11 +38,15 @@ def _telemetry(now: datetime, rules: dict[str, DynamicPricingRule]) -> dict:
 
 
 @router.get("/overview")
-def live_overview(database: Session = Depends(get_db)):
+def live_overview(location_id: UUID | None = None, database: Session = Depends(get_db), scope: Literal["all_locations"] | None = None):
     """Return live time-patterned telemetry and persisted ALPR/payment activity.
 
     This endpoint does not create or update traffic, price, or transaction records.
     """
+    if location_id is not None or scope == "all_locations":
+        from app.services.overview import scoped_overview
+
+        return scoped_overview(database, location_id)
     now = datetime.now(UTC)
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
     if not {"normal", "moderate", "peak_hour", "severe"}.issubset(rules):

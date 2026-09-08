@@ -42,6 +42,7 @@ class AccountRead(ORMModel):
     id: UUID
     user_id: UUID
     balance: Decimal
+    opening_balance: Decimal
     currency: str
     is_active: bool
     is_primary: bool
@@ -97,6 +98,7 @@ class TrafficRecordCreate(BaseModel):
 
 class TrafficRecordRead(ORMModel):
     id: UUID
+    location_id: UUID
     measured_at: datetime
     vehicle_count: int
     road_capacity: int
@@ -119,6 +121,7 @@ class TollPriceCreate(BaseModel):
 class TollPriceRead(ORMModel):
     id: UUID
     traffic_record_id: UUID | None
+    location_id: UUID
     effective_at: datetime
     amount: Decimal
     currency: str
@@ -147,6 +150,7 @@ class DetectionRecordCreate(BaseModel):
 class DetectionRecordRead(ORMModel):
     id: UUID
     vehicle_id: UUID | None
+    location_id: UUID
     detected_at: datetime
     raw_plate_text: str | None
     normalized_plate: str | None
@@ -156,6 +160,9 @@ class DetectionRecordRead(ORMModel):
     source: str
     image_path: str | None
     crop_path: str | None
+    review_status: str
+    review_note: str | None
+    reviewed_at: datetime | None
     created_at: datetime
 
 
@@ -183,6 +190,7 @@ class TollTransactionCreate(BaseModel):
 class TollTransactionRead(ORMModel):
     id: UUID
     account_id: UUID | None
+    location_id: UUID
     vehicle_id: UUID | None
     toll_price_id: UUID | None
     detection_id: UUID | None
@@ -194,4 +202,45 @@ class TollTransactionRead(ORMModel):
     failure_reason: str | None
     balance_after: Decimal | None
     is_simulated: bool
+    created_at: datetime
+    reversed_at: datetime | None
+    reversal_reason: str | None
+
+
+class WalletTopUpCreate(BaseModel):
+    amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
+    idempotency_key: str = Field(min_length=8, max_length=128)
+    note: str | None = Field(default=None, max_length=160)
+
+
+class WalletLedgerEntryRead(ORMModel):
+    id: UUID
+    account_id: UUID
+    transaction_id: UUID | None
+    entry_type: str
+    amount: Decimal
+    direction: str
+    balance_after: Decimal
+    currency: str
+    description: str
+    created_at: datetime
+
+
+class TransactionReversalCreate(BaseModel):
+    reason: str = Field(min_length=3, max_length=255)
+    idempotency_key: str = Field(min_length=8, max_length=128)
+
+
+class DetectionReviewUpdate(BaseModel):
+    review_status: Literal["resolved", "dismissed"]
+    review_note: str | None = Field(default=None, max_length=255)
+
+
+class PaymentNotificationRead(ORMModel):
+    id: UUID
+    user_id: UUID
+    transaction_id: UUID | None
+    notification_type: str
+    message: str
+    read_at: datetime | None
     created_at: datetime

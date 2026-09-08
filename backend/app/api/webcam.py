@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Annotated
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_admin
 from app.core.settings import Settings
 from app.db.session import get_db
+from app.models import TollLocation
 from app.schemas.webcam import WebcamBoundingBox, WebcamFrameResult
 from app.services.detection.webcam_processor import (
     FrameProcessorError,
@@ -19,6 +22,7 @@ from app.services.detection.webcam_processor import (
     YoloPlateDetector,
 )
 from app.services.detection.webcam_service import WebcamService
+from app.services.traffic.webcam_crossings import prepare_webcam_crossing_price
 from app.services.transactions.toll_payment import process_toll_event
 
 router = APIRouter(
@@ -70,14 +74,22 @@ async def process_frame(
 
     payment = None
     if result.plate_text and not result.status.startswith("duplicate_plate"):
+        simulator_location = database.scalar(
+            select(TollLocation).where(TollLocation.code == "SIMULATOR")
+        )
+        if simulator_location is None:
+            raise HTTPException(status_code=503, detail="Simulator Toll Plaza is not initialized. Run migrations.")
+        if result.charge_eligible:
+            prepare_webcam_crossing_price(database, simulator_location, datetime.now(UTC))
         payment = process_toll_event(
             database,
             idempotency_key=idempotency_key or f"webcam:{session_id}:{uuid4()}",
-            raw_plate_text=result.plate_text,
+            raw_plate_text=result.raw_plate_text,
             normalized_plate=result.plate_text,
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
+            location_id=simulator_location.id,
         )
     box = result.bounding_box
     return WebcamFrameResult(
@@ -100,11 +112,16 @@ async def process_image(
     image: Annotated[UploadFile, File()],
     database: Annotated[Session, Depends(get_db)],
     idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+    location_id: UUID | None = None,
 ) -> WebcamFrameResult:
     """Run local ALPR once for an administrator-uploaded still image.
 
     Image bytes are used only for inference and are never written to disk.
     """
+    if location_id is not None:
+        from app.api.locations import require_location
+
+        require_location(database, location_id)
     if image.content_type not in SUPPORTED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail="Uploaded images must be JPEG, PNG, or WebP files.")
     image_bytes = await image.read(settings.webcam_max_frame_bytes + 1)
@@ -120,12 +137,13 @@ async def process_image(
         payment = process_toll_event(
             database,
             idempotency_key=idempotency_key or f"upload:{uuid4()}",
-            raw_plate_text=result.plate_text,
+            raw_plate_text=result.raw_plate_text,
             normalized_plate=result.plate_text,
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
             source="upload",
+            location_id=location_id,
         )
     box = result.bounding_box
     return WebcamFrameResult(

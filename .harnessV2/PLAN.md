@@ -15,11 +15,13 @@ PlatePlus is no longer in its initial development phase. The repository already 
 - Dynamic toll pricing.
 - Protected React/TypeScript administrator dashboard.
 - Real-time Malaysia-time Overview telemetry.
-- Plate Recognition, Dynamic Pricing, AI Intelligence, Simulator, and local-webcam routes.
+- Plate Recognition, Dynamic Pricing, Simulator, and local-webcam routes.
 - Automated testing for core backend, ML, payment, traffic, integration, and frontend behavior.
 - Vercel frontend deployment and remote backend/database deployment.
 
 The next project phase is **post-development improvement and capstone hardening**.
+
+The roadmap is a set of optional personal improvements, not a list of mandatory capstone requirements. Select implementation milestones with the user. The multi-location database foundation and location-aware APIs are complete; the interactive multi-location Overview and PlatePlus branding milestone is now implemented.
 
 The purpose of this roadmap is to improve realism, scalability, clarity, explainability, and demo quality without expanding into real banking, government traffic feeds, real enforcement, or real vehicle-owner tracking.
 
@@ -52,7 +54,7 @@ Goal: make the Overview function as a real-time network operations screen.
 
 High-level work:
 
-- Add multiple toll markers to the interactive map.
+- Add multiple toll markers to a stylized Selangor toll-road network map.
 - Make markers selectable.
 - Use marker state to show congestion condition.
 - Add compact location details on marker interaction.
@@ -63,6 +65,7 @@ High-level work:
 - Optionally allow two-location comparison.
 - Add clear data-freshness indicators.
 - Keep the Overview read-only.
+- Keep the map a lightweight custom dashboard visualization, with panning, limited zoom, and a fit-network control rather than general-purpose GIS navigation.
 
 Overview simplification:
 
@@ -101,7 +104,7 @@ Success condition:
 
 ## Phase 4: Multi-Location Traffic Simulation
 
-Goal: improve realism by giving each toll location its own simulated traffic behavior.
+Goal: improve realism by giving each generated toll location its own simulated traffic behavior. This is implemented for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains intentionally webcam-derived.
 
 High-level work:
 
@@ -111,6 +114,7 @@ High-level work:
   - Peak hours.
   - Speed profile.
   - Traffic variance.
+- Calculate congestion percentage from those profile inputs and Malaysia time before deriving its category and pricing band; do not treat baseline demand as a category selector.
 - Allow the Simulator to choose a toll location.
 - Support multiple simultaneous simulated locations.
 - Add scenario presets:
@@ -151,9 +155,9 @@ Success condition:
 
 - PlatePlus can explain why a toll price changed and avoids unrealistic rapid price switching.
 
-## Phase 6: AI Intelligence and Explainability
+## Phase 6: AI Explainability and Evaluation
 
-Goal: strengthen the academic and demonstration value of the AI components.
+Goal: strengthen the academic and demonstration value of the AI components without a dedicated AI Intelligence dashboard page.
 
 High-level work:
 
@@ -162,14 +166,14 @@ High-level work:
 - Show OCR exact-match accuracy.
 - Show active confidence thresholds.
 - Explain charge eligibility.
-- Add ALPR decision traces:
+- Keep ALPR decision traces in evaluation outputs, documentation, and appropriate existing operational surfaces:
   - Detection.
   - OCR.
   - Normalization.
   - Confidence gate.
   - Vehicle match.
   - Payment result.
-- Add traffic/pricing decision traces.
+- Keep traffic/pricing decision traces in Dynamic Pricing, evaluation outputs, or documentation.
 - Clearly identify the current pricing logic as rule-based.
 - Add failure-condition summaries.
 - Add common OCR confusion/error analysis.
@@ -203,6 +207,7 @@ High-level work:
 - Use a separate development set for further tuning.
 - Preserve the held-out test set.
 - Preserve local webcam privacy boundaries.
+- Support the special Simulator Toll Plaza as a live local-webcam ALPR crossing location: use accepted crossings for its rolling traffic/congestion/pricing state, never generated fallback traffic, and retain only existing processed-event metadata.
 
 Success condition:
 
@@ -258,7 +263,7 @@ High-level work:
 
 - Add location filters to Dynamic Pricing history.
 - Add congestion-versus-price charts.
-- Add recognition trends to Plate Recognition or AI Intelligence.
+- Add recognition trends to Plate Recognition.
 - Add payment success-rate and simulated revenue trends.
 - Add scenario comparison.
 - Optionally add CSV export if useful for the final capstone demo.
@@ -372,3 +377,30 @@ The improved PlatePlus prototype should:
 - Preserve simulated-only financial and traffic scope.
 - Preserve local-webcam privacy boundaries.
 - Remain reliable and understandable during the final capstone demonstration.
+
+
+## Milestone Status — 2026-09-05
+
+Phases 1–4 are implemented for the agreed scope: a selectable stylized Selangor network map with LDP, DUKE, KESAS and NPE routes, location-aware KPIs and activity, network aggregates, persisted shared selection, real-time Overview cleanup, PlatePlus branding, and independent profile-driven scheduled traffic. The normal locations use tuned Malaysia-time profiles with low overnight demand, distinct morning/evening commuter peaks, bounded deterministic variation, and congestion-derived pricing; Simulator Toll Plaza is an additional webcam-derived live location with a 10-vehicles/hour demonstration capacity and remains excluded from generated traffic. Two-location comparison remains optional and unimplemented.
+
+The Simulator supports local-only single-location and generated-network scenario runs, using each location’s capacity and base toll. Each five-minute Malaysia-time frame is a complete deterministic state, recalculating volume, congestion, speed, pricing band, and dynamic toll from the location profile, scenario, and timestamp; playback speed changes only the wall-clock animation rate. A `Time-based traffic` preset follows a smooth, simulated/prototype 24-hour Malaysia daily profile from each frame’s `Asia/Kuala_Lumpur` timestamp; it is not a live or official traffic feed. Runs stop at their final frame and retain the generated data for a browser-local summary of congestion, traffic, speed, tolls, and price changes; Replay uses those same frames. It includes normal/moderate/peak/severe, weekday peak, weekend, event, incident, roadworks, low-traffic, and custom presets; start time, duration, and playback controls; and per-location baseline/dynamic-toll comparisons. Generated network runs exclude Simulator Toll Plaza, preserving its webcam-only live telemetry boundary. Recognition and pricing now have functional location/date/history filters. A targeted still-image integration change preserves location ownership through payment.
+
+Validation passed: 52 backend tests (including PostgreSQL), 8 frontend tests, and production build. Browser checks covered desktop/mobile layout, marker and keyboard selection, refresh persistence, relevant-page context, Simulator isolation, and stale/offline states. No physical webcam inference was performed.
+
+Dynamic Pricing Refinement is complete: four configurable congestion multipliers apply to each location's base toll with a configurable floor, ceiling, cooldown, and hysteresis. Profile-driven telemetry calculates a bounded, deterministic congestion percentage from location demand, Malaysia time, peak factors, and variation before selecting the applicable band. Price previews and audit history expose congestion, band, multiplier, previous toll, new toll, and the decision reason. It remains a simulated rule-based policy, not prediction or real toll pricing.
+
+AI explainability and evaluation capability is complete for the available evidence: the read-only evidence endpoint and evaluation outputs preserve active YOLO/PaddleOCR confidence gates, reported YOLO held-out accuracy (93.1%), PaddleOCR exact-match evidence (37/44, 84.1%), and separately mark detector precision, recall, and F1 as not recorded rather than fabricating them. They preserve a latest-record ALPR trace (detection, raw OCR, normalization, gates, vehicle match, payment) and a selected-location traffic/pricing trace (traffic inputs, congestion band, rule safeguards, and toll result), with failure conditions and an explicit simulated rule-based-policy boundary. The dedicated AI Intelligence dashboard page has been removed; relevant future presentation belongs in existing operational pages, documentation, or evaluation outputs.
+
+ALPR robustness implementation is in place: common Malaysian plate layouts are a charge-safety gate, controlled OCR confusion correction requires one unambiguous valid result, and raw OCR remains auditable alongside normalized text. A 150-image development review manifest is sampled from non-held-out training/validation images with zero overlap against the preserved 44-crop held-out manifest. Its human verification, condition labels, model outputs, and resulting condition-specific/false-positive/false-negative metrics remain pending; do not tune against or modify the held-out set.
+
+The reviewed development run now reports 125/146 OCR exact matches (85.6%) and positive-image detector recall of 150/150; these are development-only metrics. Clear, angled, low-light, small/distant, glare, and one partial-obstruction sample have OCR results. Motion-blur and unusual-format OCR remain unscored, and zero negative images mean false-positive rate is still unavailable. Add the specified review samples before treating condition coverage or detector precision as complete.
+
+The next milestone is a user choice among the remaining personal improvements; do not automatically start all later roadmap phases.
+
+## Synthetic Payment Milestone — 2026-09-08
+
+Phase 8 is implemented within the simulated-only product boundary. Accounts retain an opening balance and immutable wallet ledger entries for opening funds, toll deductions, top-ups, and reversals. Administrator-facing APIs and the Plate Recognition operational surface support simulated top-ups, reversible successful toll payments, recent synthetic notifications, wallet balance visibility, and network or location-scoped payment summaries. Low-confidence recognitions are marked as pending manual review until an administrator resolves or dismisses them. Demo seeding now includes six synthetic drivers with varied balances and vehicle types. No payment provider, banking integration, or real user data was added.
+
+## Historical Analysis and Demo Mode Milestone — 2026-09-08
+
+Location-aware historical analysis is available through existing operational surfaces and a protected CSV export. It aggregates simulated congestion, toll prices, recognition/low-confidence outcomes, payment success, revenue, and scenario comparison for the selected location or network scope. Demo Mode provides an authenticated presentation guide, local/remote/simulated system boundaries, fallback ALPR guidance, and an idempotent restore action. Restore changes only synthetic `@example.test` wallet activity and explicitly Demo Mode-created records; it preserves administrator access, toll configuration, and ordinary operational history. Final visual screenshots remain a manual presentation artifact.

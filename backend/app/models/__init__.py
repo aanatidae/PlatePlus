@@ -6,12 +6,17 @@ from app.models.entities import (
     AdminAuditLog,
     DetectionRecord,
     DynamicPricingRule,
+    PaymentNotification,
+    OperationalAlert,
+    OperationalEvent,
+    TollLocation,
     TollPrice,
     TollTransaction,
     TrafficRecord,
     TrafficSimulationSettings,
     User,
     Vehicle,
+    WalletLedgerEntry,
 )
 
 __all__ = [
@@ -20,10 +25,15 @@ __all__ = [
     "AdminAuditLog",
     "DetectionRecord",
     "DynamicPricingRule",
+    "PaymentNotification",
+    "OperationalAlert",
+    "OperationalEvent",
+    "TollLocation",
     "TollPrice",
     "TollTransaction",
     "TrafficRecord",
     "TrafficSimulationSettings",
     "User",
     "Vehicle",
+    "WalletLedgerEntry",
 ]

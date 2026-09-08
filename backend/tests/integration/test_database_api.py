@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from uuid import uuid4
 
 
 def test_data_routes_require_administrator_authentication(database_app) -> None:
@@ -72,3 +73,27 @@ def test_invalid_currency_is_rejected_before_database(database_app, admin_auth_h
         headers=admin_auth_headers,
     )
     assert response.status_code == 422
+
+
+def test_simulated_wallet_top_up_creates_an_auditable_ledger_entry(database_app, admin_auth_headers) -> None:
+    client = TestClient(database_app)
+    user_response = client.post(
+        "/api/data/users", json={"full_name": "Wallet User", "email": f"wallet{uuid4().hex[:12]}@example.com"},
+        headers=admin_auth_headers,
+    )
+    assert user_response.status_code == 201, user_response.text
+    user = user_response.json()
+    account = client.post(
+        "/api/data/accounts", json={"user_id": user["id"], "balance": "5.00"},
+        headers=admin_auth_headers,
+    ).json()
+    response = client.post(
+        f"/api/data/accounts/{account['id']}/top-ups",
+        json={"amount": "12.50", "idempotency_key": "wallet-topup-0001"},
+        headers=admin_auth_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["balance"] == "17.50"
+    ledger = client.get(f"/api/data/accounts/{account['id']}/ledger", headers=admin_auth_headers)
+    assert ledger.status_code == 200
+    assert {entry["entry_type"] for entry in ledger.json()} == {"top_up", "opening_balance"}

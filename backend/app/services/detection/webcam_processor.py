@@ -8,9 +8,9 @@ from typing import Protocol
 
 import cv2
 import numpy as np
-
 from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 from alpr.plate.crop import extract_plate_crop, select_best_plate_detection
+from alpr.plate.normalization import is_plausible_malaysian_plate
 from alpr.types import BoundingBox, PlateDetection, recognition_decision
 
 
@@ -23,6 +23,7 @@ class ProcessedFrame:
     status: str
     message: str
     plate_text: str | None = None
+    raw_plate_text: str | None = None
     detection_confidence: float | None = None
     ocr_confidence: float | None = None
     bounding_box: BoundingBox | None = None
@@ -106,12 +107,19 @@ class WebcamFrameProcessor:
             ocr.confidence,
             self._detection_threshold,
             self._ocr_threshold,
+            is_plausible_malaysian_plate(ocr.normalized_text),
         )
         status = "accepted_for_vehicle_lookup" if decision.accepted else decision.reason or "recognition_rejected"
+        message = {
+            "detection_confidence_below_threshold": "Recognition did not meet the detection confidence gate.",
+            "ocr_confidence_below_threshold": "Recognition did not meet the OCR confidence gate.",
+            "implausible_plate_format": "OCR text did not match an accepted Malaysian plate format.",
+        }.get(status, "Recognition passed confidence and format checks.")
         return ProcessedFrame(
             status=status,
-            message="Recognition passed confidence checks." if decision.accepted else "Recognition did not pass confidence checks.",
+            message=message,
             plate_text=ocr.normalized_text or None,
+            raw_plate_text=ocr.raw_text or None,
             detection_confidence=detection.confidence,
             ocr_confidence=ocr.confidence,
             bounding_box=crop.bounding_box,

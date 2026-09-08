@@ -4,6 +4,8 @@ Capstone prototype for Malaysian automatic license plate recognition (ALPR), OCR
 
 The computer-vision baseline is complete: a one-class YOLO detector identifies Malaysian car plates and PaddleOCR recognizes plate text from detected crops. The FastAPI/PostgreSQL foundation, simulated toll workflow, configurable traffic-pricing backend, and administrator dashboard are complete.
 
+The dashboard now supports the four seeded toll locations. Overview opens in All Locations, offers selectable schematic markers and location-specific monitoring, and remembers selection across navigation and refreshes. Recognition, Dynamic Pricing, and AI Intelligence share that selection; Simulator keeps its own. History filters live on the detailed pages, while Overview shows current state and activity from the last hour. See [multi-location monitoring](docs/MULTI_LOCATION.md) for API behavior and limitations.
+
 ## Scope
 
 - Traffic data is simulated.
@@ -30,6 +32,7 @@ scripts/   Local setup, validation, seed, and utility scripts
 docs/      Architecture, setup, and demo documentation
 infra/     Docker and local infrastructure configuration
 .harness/  Agent notes, roadmap, and implementation checklist
+.harnessV2/ Current personal-improvement roadmap and milestone status
 ```
 
 ## Setup Status

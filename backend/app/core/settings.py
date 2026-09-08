@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
 
-    app_name: str = "AI-Powered ALPR Dynamic Toll Prototype"
+    app_name: str = "PlatePlus Simulated Toll Prototype"
     app_env: str = "development"
     database_url: str = (
         "postgresql+psycopg://capstone_user:capstone_password@localhost:5432/capstone_alpr"

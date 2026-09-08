@@ -1,0 +1,56 @@
+{
+  "reviewed_sample_count": 150,
+  "ocr_scorable_sample_count": 146,
+  "verified_ground_truth_available_count": 146,
+  "excluded_non_scorable_count": 4,
+  "evaluation_count": 146,
+  "exact_match_count": 125,
+  "exact_match_accuracy": 0.8561643835616438,
+  "failure_count": 21,
+  "rejected_read_count": 14,
+  "low_confidence_read_count": 2,
+  "condition_breakdown": {
+    "clear": {
+      "scorable_samples": 111,
+      "exact_matches": 93,
+      "rejected_reads": 13,
+      "low_confidence_reads": 0,
+      "exact_match_accuracy": 0.8378378378378378
+    },
+    "glare_or_overexposure": {
+      "scorable_samples": 7,
+      "exact_matches": 4,
+      "rejected_reads": 1,
+      "low_confidence_reads": 1,
+      "exact_match_accuracy": 0.5714285714285714
+    },
+    "low_light": {
+      "scorable_samples": 16,
+      "exact_matches": 14,
+      "rejected_reads": 1,
+      "low_confidence_reads": 0,
+      "exact_match_accuracy": 0.875
+    },
+    "angled": {
+      "scorable_samples": 31,
+      "exact_matches": 30,
+      "rejected_reads": 1,
+      "low_confidence_reads": 0,
+      "exact_match_accuracy": 0.967741935483871
+    },
+    "small_or_distant": {
+      "scorable_samples": 15,
+      "exact_matches": 12,
+      "rejected_reads": 1,
+      "low_confidence_reads": 1,
+      "exact_match_accuracy": 0.8
+    },
+    "partial_obstruction": {
+      "scorable_samples": 1,
+      "exact_matches": 1,
+      "rejected_reads": 0,
+      "low_confidence_reads": 0,
+      "exact_match_accuracy": 1.0
+    }
+  }
+}

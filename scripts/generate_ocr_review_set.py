@@ -21,7 +21,9 @@ class PlateRecognizer(Protocol):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--images-dir", type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--images-dir", type=Path)
+    source.add_argument("--manifest", type=Path, help="Human-reviewed development manifest CSV.")
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--confidence", type=float, default=0.50)
@@ -78,7 +80,11 @@ def create_recognizer(engine: str, model_storage: Path | None) -> PlateRecognize
 
 def main() -> None:
     args = parse_args()
-    image_paths = sorted(args.images_dir.glob("*.jpg"))
+    if args.manifest:
+        with args.manifest.open(newline="", encoding="utf-8") as handle:
+            image_paths = [Path(row["image_path"]) for row in csv.DictReader(handle)]
+    else:
+        image_paths = sorted(args.images_dir.glob("*.jpg"))
     if args.limit:
         image_paths = image_paths[: args.limit]
     if not image_paths:

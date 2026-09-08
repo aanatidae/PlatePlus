@@ -17,6 +17,7 @@ from sqlalchemy import (
     Text,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -80,6 +81,9 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0.00")
     )
+    opening_balance: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0.00")
+    )
     currency: Mapped[str] = mapped_column(
         String(3), nullable=False, default="MYR", server_default="MYR"
     )
@@ -92,6 +96,7 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     user: Mapped[User] = relationship(back_populates="accounts")
     transactions: Mapped[list[TollTransaction]] = relationship(back_populates="account")
+    ledger_entries: Mapped[list[WalletLedgerEntry]] = relationship(back_populates="account")
 
 
 class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -116,6 +121,33 @@ class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     detections: Mapped[list[DetectionRecord]] = relationship(back_populates="vehicle")
 
 
+class TollLocation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """A simulated Malaysian toll location used as the unit of operational context."""
+
+    __tablename__ = "toll_locations"
+    __table_args__ = (
+        CheckConstraint("base_toll >= 0", name="ck_toll_locations_base_toll_nonnegative"),
+        CheckConstraint("road_capacity > 0", name="ck_toll_locations_road_capacity_positive"),
+    )
+
+    code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    highway_or_route: Mapped[str] = mapped_column(String(120), nullable=False)
+    latitude: Mapped[Decimal] = mapped_column(Numeric(9, 6), nullable=False)
+    longitude: Mapped[Decimal] = mapped_column(Numeric(9, 6), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="operational")
+    base_toll: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    road_capacity: Mapped[int] = mapped_column(nullable=False)
+    simulation_profile: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default="{}"
+    )
+
+    traffic_records: Mapped[list[TrafficRecord]] = relationship(back_populates="location")
+    toll_prices: Mapped[list[TollPrice]] = relationship(back_populates="location")
+    detections: Mapped[list[DetectionRecord]] = relationship(back_populates="location")
+    transactions: Mapped[list[TollTransaction]] = relationship(back_populates="location")
+
+
 class TrafficRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "traffic_records"
     __table_args__ = (
@@ -130,6 +162,13 @@ class TrafficRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     measured_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
+    location_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("toll_locations.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+        server_default="'f44f0255-9134-5c7f-9a71-5aaadf7cd095'",
+    )
     vehicle_count: Mapped[int] = mapped_column(nullable=False)
     road_capacity: Mapped[int] = mapped_column(nullable=False)
     congestion_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
@@ -142,6 +181,7 @@ class TrafficRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Boolean, nullable=False, default=True, server_default="true"
     )
 
+    location: Mapped[TollLocation] = relationship(back_populates="traffic_records")
     toll_prices: Mapped[list[TollPrice]] = relationship(back_populates="traffic_record")
 
 
@@ -154,6 +194,13 @@ class TollPrice(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     traffic_record_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("traffic_records.id", ondelete="SET NULL"), index=True
+    )
+    location_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("toll_locations.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+        server_default="'f44f0255-9134-5c7f-9a71-5aaadf7cd095'",
     )
     effective_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
@@ -168,6 +215,7 @@ class TollPrice(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Boolean, nullable=False, default=True, server_default="true"
     )
 
+    location: Mapped[TollLocation] = relationship(back_populates="toll_prices")
     traffic_record: Mapped[TrafficRecord | None] = relationship(back_populates="toll_prices")
     transactions: Mapped[list[TollTransaction]] = relationship(back_populates="toll_price")
 
@@ -189,15 +237,23 @@ class TrafficSimulationSettings(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("time_mode IN ('real', 'simulated')", name="ck_simulation_time_mode"),
     )
 
-    singleton_key: Mapped[str] = mapped_column(String(32), unique=True, nullable=False, default="default")
+    singleton_key: Mapped[str] = mapped_column(
+        String(32), unique=True, nullable=False, default="default"
+    )
     is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     interval_minutes: Mapped[int] = mapped_column(nullable=False, default=5)
-    simulation_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="time_patterned")
+    simulation_mode: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="time_patterned"
+    )
     fixed_scenario: Mapped[str] = mapped_column(String(32), nullable=False, default="moderate")
     time_mode: Mapped[str] = mapped_column(String(16), nullable=False, default="real")
     simulated_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     simulated_time_anchor: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     pricing_rule_version: Mapped[int] = mapped_column(nullable=False, default=1)
+    minimum_toll: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, default=Decimal("0.50"))
+    maximum_toll_multiplier: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("3.00"))
+    minimum_price_change_minutes: Mapped[int] = mapped_column(nullable=False, default=5)
+    pricing_hysteresis_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("2.00"))
 
 
 class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -209,6 +265,7 @@ class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("maximum_percentage <= 100", name="ck_pricing_rule_maximum"),
         CheckConstraint("minimum_percentage <= maximum_percentage", name="ck_pricing_rule_order"),
         CheckConstraint("amount >= 0", name="ck_pricing_rule_amount"),
+        CheckConstraint("multiplier > 0", name="ck_pricing_rule_multiplier"),
     )
 
     scenario: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
@@ -216,6 +273,7 @@ class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     minimum_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     maximum_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("1.00"))
 
 
 class AdminAuditLog(UUIDPrimaryKeyMixin, Base):
@@ -251,6 +309,13 @@ class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     vehicle_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("vehicles.id", ondelete="SET NULL"), index=True
     )
+    location_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("toll_locations.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+        server_default="'f44f0255-9134-5c7f-9a71-5aaadf7cd095'",
+    )
     detected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
@@ -263,7 +328,13 @@ class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     image_path: Mapped[str | None] = mapped_column(Text)
     crop_path: Mapped[str | None] = mapped_column(Text)
     metadata_json: Mapped[str | None] = mapped_column(Text)
+    review_status: Mapped[str] = mapped_column(
+        String(24), nullable=False, default="not_required", server_default="not_required", index=True
+    )
+    review_note: Mapped[str | None] = mapped_column(String(255))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    location: Mapped[TollLocation] = relationship(back_populates="detections")
     vehicle: Mapped[Vehicle | None] = relationship(back_populates="detections")
     transaction: Mapped[TollTransaction | None] = relationship(back_populates="detection")
 
@@ -281,6 +352,13 @@ class TollTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     account_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="SET NULL"), index=True
+    )
+    location_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("toll_locations.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+        server_default="'f44f0255-9134-5c7f-9a71-5aaadf7cd095'",
     )
     vehicle_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("vehicles.id", ondelete="SET NULL"), index=True
@@ -305,8 +383,88 @@ class TollTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_simulated: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
+    reversed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reversal_reason: Mapped[str | None] = mapped_column(String(255))
 
+    location: Mapped[TollLocation] = relationship(back_populates="transactions")
     account: Mapped[Account | None] = relationship(back_populates="transactions")
     vehicle: Mapped[Vehicle | None] = relationship(back_populates="transactions")
     toll_price: Mapped[TollPrice | None] = relationship(back_populates="transactions")
     detection: Mapped[DetectionRecord | None] = relationship(back_populates="transaction")
+
+
+class WalletLedgerEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Immutable simulated-wallet movements, including opening balances and reversals."""
+
+    __tablename__ = "wallet_ledger_entries"
+    __table_args__ = (
+        CheckConstraint("amount >= 0", name="ck_wallet_ledger_amount_nonnegative"),
+        CheckConstraint("currency = 'MYR'", name="ck_wallet_ledger_currency_myr"),
+    )
+
+    account_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    transaction_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("toll_transactions.id", ondelete="SET NULL"), index=True
+    )
+    entry_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    direction: Mapped[str] = mapped_column(String(8), nullable=False)
+    balance_after: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MYR", server_default="MYR")
+    description: Mapped[str] = mapped_column(String(255), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+
+    account: Mapped[Account] = relationship(back_populates="ledger_entries")
+
+
+class PaymentNotification(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Synthetic user-facing payment notices retained for dashboard demonstration."""
+
+    __tablename__ = "payment_notifications"
+
+    user_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    transaction_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("toll_transactions.id", ondelete="SET NULL"), index=True
+    )
+    notification_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    message: Mapped[str] = mapped_column(String(255), nullable=False)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class OperationalAlert(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Deduplicated simulated-prototype operational incident."""
+
+    __tablename__ = "operational_alerts"
+
+    location_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("toll_locations.id", ondelete="SET NULL"), index=True)
+    alert_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="active", index=True)
+    title: Mapped[str] = mapped_column(String(160), nullable=False)
+    message: Mapped[str] = mapped_column(String(500), nullable=False)
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default="detected")
+    incident_key: Mapped[str] = mapped_column(String(180), nullable=False, unique=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    acknowledged_by_admin_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("admins.id", ondelete="SET NULL"))
+    metadata_json: Mapped[str | None] = mapped_column(Text)
+
+
+class OperationalEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Append-only record of simulated operational state and administrator actions."""
+
+    __tablename__ = "operational_events"
+
+    location_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("toll_locations.id", ondelete="SET NULL"), index=True)
+    alert_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("operational_alerts.id", ondelete="SET NULL"), index=True)
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(16), nullable=False, default="information", index=True)
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default="detected")
+    message: Mapped[str] = mapped_column(String(500), nullable=False)
+    details_json: Mapped[str | None] = mapped_column(Text)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)

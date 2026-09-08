@@ -4,7 +4,11 @@ import numpy as np
 import pytest
 
 from alpr.plate.crop import extract_plate_crop, select_best_plate_detection
-from alpr.plate.normalization import is_plausible_malaysian_plate, normalize_plate_text
+from alpr.plate.normalization import (
+    correct_common_ocr_confusions,
+    is_plausible_malaysian_plate,
+    normalize_plate_text,
+)
 from alpr.types import BoundingBox, PlateDetection, recognition_decision
 
 
@@ -14,6 +18,12 @@ def test_normalize_plate_text_removes_layout_noise() -> None:
 
 def test_normalize_plate_text_does_not_guess_ambiguous_characters() -> None:
     assert normalize_plate_text("BO 10") == "BO10"
+
+
+def test_controlled_correction_requires_one_valid_plate_layout() -> None:
+    assert correct_common_ocr_confusions("B0V1234") == "BOV1234"
+    assert correct_common_ocr_confusions("BKVI234") == "BKV1234"
+    assert correct_common_ocr_confusions("BO10") == "BO10"
 
 
 @pytest.mark.parametrize("value", ["BKV1234", "VAB12", "ABC123X"])
@@ -53,3 +63,4 @@ def test_low_confidence_cannot_be_accepted_for_charging() -> None:
     assert not recognition_decision(0.49, 0.95, 0.5, 0.7).accepted
     assert not recognition_decision(0.95, 0.69, 0.5, 0.7).accepted
     assert recognition_decision(0.95, 0.85, 0.5, 0.7).accepted
+    assert not recognition_decision(0.95, 0.85, 0.5, 0.7, plate_is_plausible=False).accepted
