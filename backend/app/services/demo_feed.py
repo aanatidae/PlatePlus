@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from collections import deque
 from random import Random
 from threading import Event, Lock, Thread
 from time import monotonic
@@ -46,14 +47,16 @@ def _latest_or_current_price(database: Session, location: TollLocation, amount: 
     database.commit()
 
 
-def generate_crossing(database: Session, location: TollLocation, telemetry: dict, *, ordinal: int) -> str:
+def select_demo_vehicle(vehicles: list[Vehicle], recent_plates: set[str], random: Random) -> Vehicle:
+    """Choose broadly from the fleet while suppressing short-term plate repeats."""
+    eligible = [vehicle for vehicle in vehicles if vehicle.plate_number not in recent_plates]
+    return random.choice(eligible or vehicles)
+
+
+def generate_crossing(database: Session, location: TollLocation, telemetry: dict, *, vehicle: Vehicle) -> str:
     """Create one transparently synthetic detection and its normal simulated payment outcome."""
     if is_webcam_toll(location):
         raise ValueError("Simulator Toll Plaza is webcam-only and cannot receive demo crossings.")
-    vehicles = list(database.scalars(select(Vehicle).where(Vehicle.is_active.is_(True)).order_by(Vehicle.plate_number)))
-    if not vehicles:
-        raise ValueError("Synthetic demo vehicles must be seeded before starting the live feed.")
-    vehicle = vehicles[ordinal % len(vehicles)]
     now = datetime.now(UTC)
     _latest_or_current_price(database, location, Decimal(str(telemetry["current_toll_price"])), telemetry["congestion_category"], now)
     outcome = process_toll_event(
@@ -94,9 +97,10 @@ class DemoFeed:
         self._lock = Lock()
         self._stop = Event()
         self._thread: Thread | None = None
-        self._ordinal = 0
         self._next_due: dict[str, float] = {}
         self._random = Random(20260909)
+        self._recent_by_location: dict[str, deque[str]] = {}
+        self._recent_global: deque[str] = deque(maxlen=4)
 
     @property
     def running(self) -> bool:
@@ -124,6 +128,9 @@ class DemoFeed:
             with SessionLocal() as database:
                 from app.api.locations import _state
                 locations = list(database.scalars(select(TollLocation).where(TollLocation.status == "operational")))
+                vehicles = list(database.scalars(select(Vehicle).where(Vehicle.is_active.is_(True)).order_by(Vehicle.plate_number)))
+                if not vehicles:
+                    continue
                 for location in locations:
                     if is_webcam_toll(location):
                         continue
@@ -135,8 +142,11 @@ class DemoFeed:
                     if not telemetry:
                         continue
                     try:
-                        generate_crossing(database, location, telemetry, ordinal=self._ordinal)
-                        self._ordinal += 1
+                        recent = self._recent_by_location.setdefault(key, deque(maxlen=16))
+                        vehicle = select_demo_vehicle(vehicles, set(recent) | set(self._recent_global), self._random)
+                        generate_crossing(database, location, telemetry, vehicle=vehicle)
+                        recent.append(vehicle.plate_number)
+                        self._recent_global.append(vehicle.plate_number)
                     except Exception:
                         database.rollback()
                     jitter = self._random.uniform(-0.18, 0.18) * crossing_interval_seconds(telemetry["congestion_percentage"])

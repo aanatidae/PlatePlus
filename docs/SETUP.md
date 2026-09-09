@@ -108,6 +108,32 @@ npm run dev
 
 Open the Vite URL (normally `http://127.0.0.1:5173`) and sign in with the seed values from `.env`.
 
+### Phone camera scanner (local presentation)
+
+The Simulator Toll Plaza accepts either the laptop browser camera or an optional phone browser camera. Both use the same sampled-frame FastAPI session, YOLO/PaddleOCR processing, duplicate protection, simulated payment workflow, and rolling 60-second / 10-crossing congestion model. Phone frames are processed in memory on the laptop and are never persisted.
+
+For a phone on the same Wi-Fi, start both services on the laptop LAN interface and set the frontend API URL to the laptop's LAN address (replace `192.168.x.x` with the address shown by `ipconfig`):
+
+```powershell
+cd backend
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+cd ..\frontend
+$env:VITE_API_BASE_URL="https://192.168.x.x:8000"
+$env:VITE_SCANNER_URL="https://192.168.x.x:5173"
+npm run dev -- --host 0.0.0.0
+```
+
+Add the exact LAN frontend origin to `CORS_ALLOWED_ORIGINS` in `.env`, for example `https://192.168.x.x:5173`, before starting FastAPI. From the laptop Overview, select **Simulator Toll Plaza**, choose **Open Camera** → **Phone camera**, then open:
+
+```text
+https://192.168.x.x:5173/scanner
+```
+
+The scanner is deliberately not a dashboard sidebar page. It requires the same local administrator sign-in, exposes only camera controls/status/latest result, and sends compressed sampled JPEG frames to the laptop's `/api/webcam/sessions/.../frames` endpoint.
+
+Mobile browsers generally require HTTPS for `getUserMedia()` on a LAN IP; plain `http://192.168.x.x` is not a secure-context workaround and may not be allowed to use the phone camera. Configure a trusted local development certificate for both the Vite frontend and FastAPI before relying on phone scanning in a presentation. If HTTPS is not available, use the laptop camera PiP fallback. No Vercel, Render, cloud inference, or third-party camera service is involved.
+
 ## Test commands
 
 Run each Python suite from its own project directory because both `backend` and `ml` define a `tests` package.

@@ -11,6 +11,42 @@ from app.models import Account, Admin, TollPrice, TrafficRecord, User, Vehicle, 
 from app.services.auth.service import hash_password
 
 
+DEMO_VEHICLE_TARGET = 96
+
+
+def synthetic_demo_people() -> tuple[tuple[str, str, str, str, str, str, str, Decimal], ...]:
+    """Return a deliberately varied, entirely fictional presentation fleet.
+
+    The plates are normalised Malaysian-style strings (letters followed by four
+    digits) and are stable across reseeds, which makes a local demo repeatable.
+    """
+    legacy = (
+        ("Aina Rahman", "aina.rahman@example.test", "+60123456789", "VAA1234", "Proton", "X50", "White", Decimal("50.00")),
+        ("Daniel Lee", "daniel.lee@example.test", "+60187654321", "WXY5678", "Perodua", "Myvi", "Blue", Decimal("12.00")),
+        ("Siti Hajar", "siti.hajar@example.test", "+60111222333", "JTU9090", "Honda", "City", "Silver", Decimal("1.50")),
+        ("Kumaravel Raj", "kumaravel.raj@example.test", "+60135556677", "BKV2026", "Toyota", "Hilux", "Black", Decimal("85.75")),
+        ("Mei Ling Tan", "mei.ling.tan@example.test", "+60178889900", "VDR8812", "Tesla", "Model 3", "Red", Decimal("6.20")),
+        ("Farid Iskandar", "farid.iskandar@example.test", "+60194443322", "BQR7310", "Yamaha", "NVX", "Grey", Decimal("0.80")),
+    )
+    prefixes = ("VBC", "VCE", "VDF", "VEH", "VJK", "VLM", "VNP", "VQR", "VST", "WAB", "WCE", "WDF", "WGH", "WJK", "WLM", "WNP", "WQR", "WST", "WUV", "BCA", "BCD", "BDE", "BEF", "BFG", "BGH", "BJK", "BLM", "BNP", "JAA", "JBC", "JDE", "JFG", "JHK", "JLM", "JNP", "JQR", "JST", "JUV", "PAA", "PBC", "PDE", "PFG", "PHK", "PLM", "PNP", "PQR", "PST", "PUV", "NAA", "NBC", "NDE", "NFG", "NHK", "NLM", "NNP", "NQR", "NST", "NUV", "KAA", "KBC", "KDE", "KFG", "KHK", "KLM", "KNP", "KQR", "KST", "KUV", "TAA", "TBC", "TDE", "TFG", "THK", "TLM", "TNP", "TQR", "TST", "TUV", "RAB", "RCE", "RDF", "RGH", "RJK", "RLM", "RNP", "RQR", "RST", "RUV", "SAB", "SCE", "SDF")
+    makes = (("Perodua", "Myvi"), ("Perodua", "Axia"), ("Perodua", "Bezza"), ("Proton", "Saga"), ("Proton", "Persona"), ("Proton", "X50"), ("Proton", "X70"), ("Honda", "City"), ("Honda", "Civic"), ("Toyota", "Vios"), ("Toyota", "Corolla Cross"), ("Nissan", "Almera"))
+    colors = ("White", "Silver", "Grey", "Blue", "Black", "Red", "Pearl White", "Bronze")
+    generated = []
+    for index, prefix in enumerate(prefixes[: DEMO_VEHICLE_TARGET - len(legacy)]):
+        make, model = makes[index % len(makes)]
+        # Every 17th wallet intentionally cannot cover a normal toll; failures
+        # are visible in a demo without dominating the generated activity.
+        balance = Decimal("0.90") if index % 17 == 0 else (Decimal("6.50") + Decimal(index % 7) * Decimal("8.25"))
+        generated.append((
+            f"Synthetic Driver {index + 1:02d}", f"synthetic.driver.{index + 1:02d}@example.test", f"+6018{index + 1000000:07d}",
+            f"{prefix}{((2381 + index * 673) % 9000) + 1000}", make, model, colors[index % len(colors)], balance,
+        ))
+    result = legacy + tuple(generated)
+    assert len(result) == DEMO_VEHICLE_TARGET
+    assert len({item[3] for item in result}) == DEMO_VEHICLE_TARGET
+    return result
+
+
 def seed_demo_data() -> None:
     settings = Settings()
     with SessionLocal.begin() as database:
@@ -26,69 +62,7 @@ def seed_demo_data() -> None:
         elif admin.password_hash is None:
             admin.password_hash = hash_password(settings.demo_admin_password)
 
-        demo_people = (
-            (
-                "Aina Rahman",
-                "aina.rahman@example.test",
-                "+60123456789",
-                "VAA1234",
-                "Proton",
-                "X50",
-                "White",
-                Decimal("50.00"),
-            ),
-            (
-                "Daniel Lee",
-                "daniel.lee@example.test",
-                "+60187654321",
-                "WXY5678",
-                "Perodua",
-                "Myvi",
-                "Blue",
-                Decimal("12.00"),
-            ),
-            (
-                "Siti Hajar",
-                "siti.hajar@example.test",
-                "+60111222333",
-                "JTU9090",
-                "Honda",
-                "City",
-                "Silver",
-                Decimal("1.50"),
-            ),
-            (
-                "Kumaravel Raj",
-                "kumaravel.raj@example.test",
-                "+60135556677",
-                "BKV2026",
-                "Toyota",
-                "Hilux",
-                "Black",
-                Decimal("85.75"),
-            ),
-            (
-                "Mei Ling Tan",
-                "mei.ling.tan@example.test",
-                "+60178889900",
-                "VDR8812",
-                "Tesla",
-                "Model 3",
-                "Red",
-                Decimal("6.20"),
-            ),
-            (
-                "Farid Iskandar",
-                "farid.iskandar@example.test",
-                "+60194443322",
-                "BQR7310",
-                "Yamaha",
-                "NVX",
-                "Grey",
-                Decimal("0.80"),
-            ),
-        )
-        for name, email, phone, plate, make, model, color, balance in demo_people:
+        for name, email, phone, plate, make, model, color, balance in synthetic_demo_people():
             user = database.scalar(select(User).where(User.email == email))
             if user is None:
                 user = User(full_name=name, email=email, phone=phone)

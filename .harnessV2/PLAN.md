@@ -368,7 +368,9 @@ Success condition:
 
 ## Local Presentation Simplification — 2026-09-09
 
-The current capstone presentation surface is intentionally reduced to three administrator pages: live Overview, Dynamic Pricing Management, and Prediction. ALPR/payment capabilities remain behind Overview's Simulator Toll Plaza camera drawer rather than a separate navigation destination. The local Overview can run a transparent, congestion-paced synthetic crossing feed for normal simulated tolls; Simulator Toll Plaza remains exclusively driven by accepted local-webcam crossings and its active congestion window is 60 seconds / 10 crossings. Prediction is restricted to the existing time-based profile and remains browser-local and isolated from the live network.
+The current capstone presentation surface is intentionally reduced to three administrator pages: live Overview, Dynamic Pricing Management, and Prediction. ALPR/payment capabilities remain behind Overview's compact Simulator Toll Plaza camera PiP rather than a separate navigation destination. The local Overview can run a transparent, congestion-paced synthetic crossing feed for normal simulated tolls; Simulator Toll Plaza remains exclusively driven by accepted local-webcam crossings and its active congestion window is 60 seconds / 10 crossings. Prediction is restricted to the existing time-based profile and remains browser-local and isolated from the live network.
+
+The Overview now uses a compact floating camera PiP rather than a drawer, and can direct an authenticated local phone to `/scanner` for sampled LAN frames processed solely by the laptop. The 96-vehicle synthetic fleet and per-location repeat suppression improve live-feed realism while retaining simulated-only scope.
 
 The improved PlatePlus prototype should:
 

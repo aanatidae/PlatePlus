@@ -7,7 +7,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
-from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -42,10 +42,17 @@ service = WebcamService(
 
 
 @router.post("/sessions", status_code=status.HTTP_201_CREATED)
-def start_session() -> dict[str, object]:
+def start_session(source: str = Query(default="laptop", pattern="^(laptop|phone)$")) -> dict[str, object]:
     session_id = str(uuid4())
-    service.start_session(session_id)
-    return {"session_id": session_id, "frame_interval_ms": settings.webcam_frame_interval_ms}
+    service.start_session(session_id, source=source)
+    return {"session_id": session_id, "frame_interval_ms": settings.webcam_frame_interval_ms, "source": source}
+
+
+@router.get("/status")
+def camera_status() -> dict[str, object]:
+    """Report only active local camera sources, never frame/image content."""
+    active = service.active_sources()
+    return {"laptop_connected": "laptop" in active, "phone_connected": "phone" in active}
 
 
 @router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -73,6 +80,7 @@ async def process_frame(
         raise HTTPException(status_code=503, detail=str(error)) from error
 
     payment = None
+    source = "phone_camera" if service.source_for_session(session_id) == "phone" else "webcam"
     if result.plate_text and not result.status.startswith("duplicate_plate"):
         simulator_location = database.scalar(
             select(TollLocation).where(TollLocation.code == "SIMULATOR")
@@ -89,6 +97,7 @@ async def process_frame(
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
+            source=source,
             location_id=simulator_location.id,
         )
     box = result.bounding_box

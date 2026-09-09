@@ -3,6 +3,7 @@ import { Activity, CircleDollarSign, Gauge, LineChart, MapPin, Menu, RefreshCw, 
 import NetworkOverview from "./NetworkOverview";
 import PricingManagement from "./PricingManagement";
 import Prediction from "./Prediction";
+import Scanner from "./Scanner";
 import { LocationProvider, LocationSelect, useLocations } from "./locations";
 
 type Admin = { id: string; email: string; display_name: string };
@@ -14,9 +15,9 @@ const DASHBOARD_ROUTES = ["/dashboard", "/pricing", "/prediction"];
 function readStoredSession(): LoginResponse | null { try { const value = sessionStorage.getItem(AUTH_STORAGE_KEY); return value ? JSON.parse(value) as LoginResponse : null; } catch { return null; } }
 export function navigate(path: string, replace = false) { history[replace ? "replaceState" : "pushState"]({}, "", path); dispatchEvent(new PopStateEvent("popstate")); }
 
-function Login({ onLogin }: { onLogin: (session: LoginResponse) => void }) {
+function Login({ onLogin, returnTo = "/dashboard" }: { onLogin: (session: LoginResponse) => void; returnTo?: string }) {
   const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
-  async function submit(event: FormEvent) { event.preventDefault(); setBusy(true); setError(""); try { const response = await fetch(`${API_BASE_URL}/api/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) }); if (!response.ok) throw new Error("Email or password is incorrect."); onLogin(await response.json() as LoginResponse); } catch (reason) { setError(reason instanceof Error ? reason.message : "Sign-in could not be completed."); } finally { setBusy(false); } }
+  async function submit(event: FormEvent) { event.preventDefault(); setBusy(true); setError(""); try { const response = await fetch(`${API_BASE_URL}/api/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) }); if (!response.ok) throw new Error("Email or password is incorrect."); onLogin(await response.json() as LoginResponse); navigate(returnTo, true); } catch (reason) { setError(reason instanceof Error ? reason.message : "Sign-in could not be completed."); } finally { setBusy(false); } }
   return <main className="auth-shell"><section className="login-card"><div className="brand"><Activity size={22} /><span>PlatePlus</span></div><h1>Administrator sign in</h1><p>Local capstone demonstration access.</p><form onSubmit={submit}><label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} required /></label><label>Password<input type="password" value={password} onChange={event => setPassword(event.target.value)} required /></label>{error && <p className="form-error" role="alert">{error}</p>}<button disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button></form></section></main>;
 }
 
@@ -33,7 +34,8 @@ export function ruleMultiplier(amount: number, normalAmount: number) { return no
 export function App() {
   const [session, setSession] = useState<LoginResponse | null>(readStoredSession); const [route, setRoute] = useState(location.pathname);
   useEffect(() => { const onPop = () => setRoute(location.pathname); addEventListener("popstate", onPop); return () => removeEventListener("popstate", onPop); }, []);
-  useEffect(() => { if (!session) { if (route !== "/login") navigate("/login", true); return; } if (!DASHBOARD_ROUTES.includes(route)) navigate("/dashboard", true); }, [route, session]);
-  if (!session) return <Login onLogin={next => { sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next)); setSession(next); navigate("/dashboard", true); }} />;
+  useEffect(() => { if (!session) { if (route !== "/login" && route !== "/scanner") navigate("/login", true); return; } if (!DASHBOARD_ROUTES.includes(route) && route !== "/scanner") navigate("/dashboard", true); }, [route, session]);
+  if (!session) return <Login returnTo={route === "/scanner" ? "/scanner" : "/dashboard"} onLogin={next => { sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next)); setSession(next); }} />;
+  if (route === "/scanner") return <Scanner />;
   return <LocationProvider><Shell admin={session.admin} route={route} onLogout={() => { sessionStorage.removeItem(AUTH_STORAGE_KEY); setSession(null); navigate("/login", true); }} /></LocationProvider>;
 }
