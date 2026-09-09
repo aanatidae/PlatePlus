@@ -53,15 +53,3 @@ def test_service_does_not_apply_cooldown_to_rejected_recognition() -> None:
     service.start_session("session")
 
     assert service.process_frame("session", b"frame").status == "ocr_confidence_below_threshold"
-
-
-def test_phone_session_is_active_only_after_it_sends_a_frame() -> None:
-    clock_values = iter([10.0, 11.0, 12.0, 18.0])
-    service = WebcamService(_FakeProcessor(_accepted_result()), 20, clock=lambda: next(clock_values))
-    service.start_session("phone", source="phone")
-
-    assert service.source_for_session("phone") == "phone"
-    assert service.active_sources() == set()
-    service.process_frame("phone", b"frame")
-    assert service.active_sources() == {"phone"}
-    assert service.active_sources() == set()

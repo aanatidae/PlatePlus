@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 const app = readFileSync(resolve(import.meta.dirname, "App.tsx"), "utf8");
 const overview = readFileSync(resolve(import.meta.dirname, "NetworkOverview.tsx"), "utf8");
 const prediction = readFileSync(resolve(import.meta.dirname, "Prediction.tsx"), "utf8");
-const scanner = readFileSync(resolve(import.meta.dirname, "Scanner.tsx"), "utf8");
 const camera = readFileSync(resolve(import.meta.dirname, "CameraCapture.tsx"), "utf8");
 
 describe("simplified local-demo dashboard", () => {
@@ -15,7 +14,7 @@ describe("simplified local-demo dashboard", () => {
   });
   it("safely redirects retired standalone routes", () => {
     expect(app).toContain('const DASHBOARD_ROUTES = ["/dashboard", "/pricing", "/prediction"]');
-    expect(app).toContain('if (!DASHBOARD_ROUTES.includes(route) && route !== "/scanner") navigate("/dashboard", true)');
+    expect(app).toContain('if (!DASHBOARD_ROUTES.includes(route)) navigate("/dashboard", true)');
   });
   it("places demo feed and webcam access in Overview with transparent labels", () => {
     expect(overview).toContain("Start Live Feed");
@@ -24,15 +23,13 @@ describe("simplified local-demo dashboard", () => {
     expect(overview).toContain("Open Camera");
     expect(overview).toContain("Simulated live feed");
     expect(overview).toContain("Local webcam ALPR");
-    expect(overview).toContain("Phone camera");
     expect(camera).toContain('"camera-pip"');
     expect(overview).not.toContain("WebcamDrawer");
   });
-  it("keeps the phone scanner outside sidebar navigation and uses the shared frame path", () => {
-    expect(app).toContain('route === "/scanner"');
-    expect(scanner).toContain('source="phone"');
-    expect(camera).toContain('/api/webcam/sessions?source=${source}');
+  it("keeps the compact laptop camera on the shared local frame path", () => {
+    expect(camera).toContain('/api/webcam/sessions');
     expect(camera).toContain('/frames');
+    expect(camera).toContain("Laptop camera");
   });
   it("keeps prediction time-profile-only and isolated", () => {
     expect(prediction).toContain('"time_based"');

@@ -23,24 +23,14 @@ class WebcamService:
         self._cooldown = duplicate_cooldown_seconds
         self._clock = clock
         self._sessions: dict[str, WebcamSession] = {}
-        self._session_sources: dict[str, str] = {}
-        self._last_frame_at: dict[str, float] = {}
 
-    def start_session(self, session_id: str, *, source: str = "laptop") -> None:
-        if source not in {"laptop", "phone"}:
-            raise ValueError("Camera source must be laptop or phone.")
+    def start_session(self, session_id: str) -> None:
         session = WebcamSession(self._cooldown)
         session.start()
         self._sessions[session_id] = session
-        self._session_sources[session_id] = source
-        # A connected source means it is actually sending sampled frames, not
-        # merely that a browser opened a session.
-        self._last_frame_at[session_id] = float("-inf")
 
     def stop_session(self, session_id: str) -> None:
         session = self._sessions.pop(session_id, None)
-        self._session_sources.pop(session_id, None)
-        self._last_frame_at.pop(session_id, None)
         if session is not None:
             session.stop()
 
@@ -49,7 +39,6 @@ class WebcamService:
         if session is None:
             return ProcessedFrame("webcam_session_not_active", "Start a webcam session before sending frames.")
         observed_at = self._clock()
-        self._last_frame_at[session_id] = observed_at
 
         result = self._processor.process(frame_bytes)
         if not result.charge_eligible or not result.plate_text:
@@ -66,17 +55,6 @@ class WebcamService:
             bounding_box=result.bounding_box,
             charge_eligible=False,
         )
-
-    def source_for_session(self, session_id: str) -> str | None:
-        return self._session_sources.get(session_id)
-
-    def active_sources(self, *, stale_after_seconds: float = 5.0) -> set[str]:
-        now = self._clock()
-        return {
-            self._session_sources[session_id]
-            for session_id, last_seen in self._last_frame_at.items()
-            if session_id in self._sessions and now - last_seen <= stale_after_seconds
-        }
 
     def process_image(self, image_bytes: bytes) -> ProcessedFrame:
         """Process one operator-uploaded still image without webcam-session cooldowns.

@@ -3,7 +3,6 @@ import { Activity, CircleDollarSign, Gauge, LineChart, MapPin, Menu, RefreshCw, 
 import NetworkOverview from "./NetworkOverview";
 import PricingManagement from "./PricingManagement";
 import Prediction from "./Prediction";
-import Scanner from "./Scanner";
 import { LocationProvider, LocationSelect, useLocations } from "./locations";
 
 type Admin = { id: string; email: string; display_name: string };
@@ -34,8 +33,7 @@ export function ruleMultiplier(amount: number, normalAmount: number) { return no
 export function App() {
   const [session, setSession] = useState<LoginResponse | null>(readStoredSession); const [route, setRoute] = useState(location.pathname);
   useEffect(() => { const onPop = () => setRoute(location.pathname); addEventListener("popstate", onPop); return () => removeEventListener("popstate", onPop); }, []);
-  useEffect(() => { if (!session) { if (route !== "/login" && route !== "/scanner") navigate("/login", true); return; } if (!DASHBOARD_ROUTES.includes(route) && route !== "/scanner") navigate("/dashboard", true); }, [route, session]);
-  if (!session) return <Login returnTo={route === "/scanner" ? "/scanner" : "/dashboard"} onLogin={next => { sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next)); setSession(next); }} />;
-  if (route === "/scanner") return <Scanner />;
+  useEffect(() => { if (!session) { if (route !== "/login") navigate("/login", true); return; } if (!DASHBOARD_ROUTES.includes(route)) navigate("/dashboard", true); }, [route, session]);
+  if (!session) return <Login onLogin={next => { sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next)); setSession(next); }} />;
   return <LocationProvider><Shell admin={session.admin} route={route} onLogout={() => { sessionStorage.removeItem(AUTH_STORAGE_KEY); setSession(null); navigate("/login", true); }} /></LocationProvider>;
 }

@@ -477,8 +477,8 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 ## Current Follow-Up — 2026-09-05
 
 - [x] Expand the normal-toll presentation live-feed fleet to 96 unique fictional Malaysian-style vehicles/accounts; retain varied vehicle details/balances and short-term per-location/global plate-repeat suppression.
-- [x] Replace the Overview's half-screen Simulator Toll camera drawer with a compact floating, minimizable/resizable camera PiP and source chooser.
-- [x] Add the authenticated local-only `/scanner` phone camera interface, shared FastAPI ALPR session processing, live source status, LAN/HTTPS setup documentation, and regression coverage. Phone frames remain ephemeral; Simulator Toll remains ALPR-input-only.
+- [x] Replace the Overview's half-screen Simulator Toll camera drawer with a compact floating, minimizable/resizable laptop-camera PiP.
+- [x] Simplify Simulator Toll Plaza to local laptop-webcam ALPR only; remove non-laptop camera paths, source selection, and their supporting tests/documentation.
 
 - [x] Complete the agreed Overview/context/branding milestone using the existing design and seeded locations.
 - [x] Verify Docker and development/test PostgreSQL are healthy; development migration is at head.
