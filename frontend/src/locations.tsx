@@ -49,7 +49,8 @@ export function useFeed<T>(path: string, enabled = true) {
       } finally { window.clearTimeout(timeout); }
     };
     void load();
-    const timer = window.setInterval(() => void load(), 30_000);
+    // Local capstone feed: keep the operations display fresh without a page reload.
+    const timer = window.setInterval(() => void load(), 5_000);
     const refresh = () => void load();
     window.addEventListener("dashboard-refresh", refresh);
     return () => { disposed = true; controller?.abort(); window.clearInterval(timer); window.removeEventListener("dashboard-refresh", refresh); };

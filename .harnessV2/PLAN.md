@@ -366,6 +366,10 @@ Success condition:
 
 ## Definition of Success
 
+## Local Presentation Simplification — 2026-09-09
+
+The current capstone presentation surface is intentionally reduced to three administrator pages: live Overview, Dynamic Pricing Management, and Prediction. ALPR/payment capabilities remain behind Overview's Simulator Toll Plaza camera drawer rather than a separate navigation destination. The local Overview can run a transparent, congestion-paced synthetic crossing feed for normal simulated tolls; Simulator Toll Plaza remains exclusively driven by accepted local-webcam crossings and its active congestion window is 60 seconds / 10 crossings. Prediction is restricted to the existing time-based profile and remains browser-local and isolated from the live network.
+
 The improved PlatePlus prototype should:
 
 - Represent a simulated network of toll locations rather than only one station.

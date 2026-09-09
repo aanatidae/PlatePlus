@@ -9,6 +9,21 @@
 
 ## Current Baseline
 
+## Local Presentation Simplification — 2026-09-09
+
+- [x] Reduce administrator navigation to Overview, Dynamic Pricing Management, and Prediction.
+- [x] Redirect retired standalone recognition, intelligence, simulator, webcam, and demo routes to Overview.
+- [x] Add local admin-controlled congestion-paced `demo_generated` feed for normal toll locations.
+- [x] Keep generated records location-scoped, source-labelled, and connected to existing simulated payment handling.
+- [x] Add Start Live Feed, Pause Live Feed, and Reset Demo Activity controls to Overview.
+- [x] Exclude Simulator Toll Plaza from generated feed activity.
+- [x] Move local webcam access to an Overview camera drawer shown only for Simulator Toll Plaza.
+- [x] Change Simulator Toll active crossing congestion to a rolling 60-second window with capacity 10 while retaining historical records.
+- [x] Rework Dynamic Pricing into pricing-management controls and a preview surface.
+- [x] Restrict Prediction to time-based, normal-location, browser-local forecasts.
+- [x] Add focused cadence/window and simplified-navigation tests.
+- [ ] Run the complete local PostgreSQL integration suite and physical localhost presentation verification after the database service is started for this phase.
+
 The original core implementation is substantially complete.
 
 Existing working baseline includes:

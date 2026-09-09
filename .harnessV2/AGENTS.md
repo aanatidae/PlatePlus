@@ -432,6 +432,16 @@ Existing core tests should remain passing.
 
 ## Future Agent Operating Rules
 
+## Local Presentation Dashboard Architecture — 2026-09-09
+
+- The local administrator dashboard has exactly three top-level pages: Overview (`/dashboard`), Dynamic Pricing Management (`/pricing`), and Prediction (`/prediction`). Retired direct routes redirect safely to Overview.
+- Overview is the live operations surface. Normal generated toll locations may receive explicitly labelled `demo_generated` synthetic crossings through the local presentation feed; their existing congestion controls crossing cadence, never the reverse.
+- The local feed is administrator-controlled (start, pause, reset), singleton per backend process, rate-limited with bounded jitter, and never targets Simulator Toll Plaza. Reset removes only feed-created records and reverses only their synthetic wallet effect.
+- Simulator Toll Plaza is webcam-only. Its accepted local-webcam crossings remain historically persisted but contribute to its live congestion only for a rolling 60-second window at a capacity of 10 crossings. Do not fabricate its speed or send it generated/fallback crossings.
+- The Overview selected-location panel exposes the local Camera drawer only for Simulator Toll Plaza. The drawer preserves local YOLO/PaddleOCR processing, duplicate protection, and simulated-payment logic without persisting raw frames or crops.
+- Dynamic Pricing Management owns editable pricing bands, safeguards, preview, and audit behavior. Prediction is a time-based, browser-local forecast demo for normal locations only and must never alter live telemetry, prices, detections, transactions, or the demo feed.
+- Localhost (React, FastAPI, PostgreSQL, local model runtime, browser webcam) is the primary capstone presentation architecture. Preserve deployment compatibility where practical, but do not require Vercel, Render, or internet connectivity for the local demo.
+
 - Start future work by reading `.harnessV2/AGENTS.md`, `.harnessV2/PLAN.md`, and `.harnessV2/TODOLIST.md`.
 - Treat the repository state as the source of truth for what is already implemented.
 - Do not blindly follow stale completed tasks from older documentation.

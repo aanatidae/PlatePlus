@@ -1,44 +1,31 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-
 import { describe, expect, it } from "vitest";
 
-const appSource = readFileSync(resolve(import.meta.dirname, "App.tsx"), "utf8");
-const styles = readFileSync(resolve(import.meta.dirname, "styles.css"), "utf8");
+const app = readFileSync(resolve(import.meta.dirname, "App.tsx"), "utf8");
+const overview = readFileSync(resolve(import.meta.dirname, "NetworkOverview.tsx"), "utf8");
+const prediction = readFileSync(resolve(import.meta.dirname, "Prediction.tsx"), "utf8");
 
-describe("administrator dashboard UI contract", () => {
-  it("keeps every supported operational destination in navigation", () => {
-    for (const route of ["/dashboard", "/recognition", "/pricing", "/simulator"]) {
-      expect(appSource).toContain(`to=\"${route}\"`);
-    }
-    expect(appSource).not.toContain('to="/intelligence"');
-    expect(appSource).toContain('LOCAL_WEBCAM_ENABLED && <NavLink to="/webcam"');
+describe("simplified local-demo dashboard", () => {
+  it("keeps exactly the three presentation pages in sidebar navigation", () => {
+    for (const route of ["/dashboard", "/pricing", "/prediction"]) expect(app).toContain(`to="${route}"`);
+    for (const removed of ["/recognition", "/simulator", "/webcam", "/demo", "/intelligence"]) expect(app).not.toContain(`to="${removed}"`);
   });
-
-  it("redirects the retired intelligence route to the dashboard fallback", () => {
-    expect(appSource).not.toContain('route === "/intelligence"');
-    expect(appSource).toContain('!["/dashboard", "/recognition", "/pricing", "/simulator", "/webcam"].includes(route)) navigate("/dashboard", true)');
+  it("safely redirects retired standalone routes", () => {
+    expect(app).toContain('const DASHBOARD_ROUTES = ["/dashboard", "/pricing", "/prediction"]');
+    expect(app).toContain('if (!DASHBOARD_ROUTES.includes(route)) navigate("/dashboard", true)');
   });
-
-  it("communicates loading, errors, simulation scope, and the local-only inference boundary", () => {
-    expect(appSource).toContain("Loading PlatePlus telemetry");
-    expect(appSource).toContain("form-error");
-    expect(appSource).toContain("Simulated Prototype");
-    expect(appSource).toContain("Image upload is unavailable here by design");
+  it("places demo feed and webcam access in Overview with transparent labels", () => {
+    expect(overview).toContain("Start Live Feed");
+    expect(overview).toContain("Pause Live Feed");
+    expect(overview).toContain("Reset Demo Activity");
+    expect(overview).toContain("Open Camera");
+    expect(overview).toContain("Simulated live feed");
+    expect(overview).toContain("Local webcam ALPR");
   });
-
-  it("preserves keyboard and screen-reader labels for primary controls", () => {
-    expect(appSource).toContain('aria-label="Administrator navigation"');
-    expect(appSource).toContain('aria-label="Toggle navigation"');
-    expect(appSource).toContain('aria-live="polite"');
-    expect(appSource).toContain('aria-label="Local webcam preview"');
-  });
-
-  it("defines responsive layouts at tablet and mobile breakpoints", () => {
-    expect(styles).toContain("@media (max-width: 820px)");
-    expect(styles).toContain("@media (max-width: 560px)");
-    expect(styles).toContain(".command-sidebar.open");
-    expect(styles).toContain(".data-table-wrap");
-    expect(styles).toContain("prefers-reduced-motion");
+  it("keeps prediction time-profile-only and isolated", () => {
+    expect(prediction).toContain('"time_based"');
+    expect(prediction).toContain("never writes to live traffic, prices, detections, or transactions");
+    expect(prediction).toContain('location.code !== "SIMULATOR"');
   });
 });

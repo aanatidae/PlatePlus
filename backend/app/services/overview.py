@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import DetectionRecord, TollLocation, TollTransaction
@@ -25,14 +25,17 @@ def scoped_overview(database: Session, location_id: UUID | None) -> dict:
     active = [state["telemetry"] for state in states if state["telemetry"]]
     ids = [location.id for location in locations]
     hour_ago = now - timedelta(hours=1)
-    detection_scope = [
-        DetectionRecord.location_id.in_(ids),
-        DetectionRecord.detected_at >= hour_ago,
-    ]
-    transaction_scope = [
-        TollTransaction.location_id.in_(ids),
-        TollTransaction.processed_at >= hour_ago,
-    ]
+    simulator_ids = [location.id for location in locations if location.code == "SIMULATOR"]
+    normal_ids = [location.id for location in locations if location.code != "SIMULATOR"]
+    # Webcam crossings are live for one minute; their durable database history is not deleted.
+    detection_scope = [or_(
+        and_(DetectionRecord.location_id.in_(normal_ids), DetectionRecord.detected_at >= hour_ago) if normal_ids else False,
+        and_(DetectionRecord.location_id.in_(simulator_ids), DetectionRecord.detected_at >= now - timedelta(seconds=60)) if simulator_ids else False,
+    )]
+    transaction_scope = [or_(
+        and_(TollTransaction.location_id.in_(normal_ids), TollTransaction.processed_at >= hour_ago) if normal_ids else False,
+        and_(TollTransaction.location_id.in_(simulator_ids), TollTransaction.processed_at >= now - timedelta(seconds=60)) if simulator_ids else False,
+    )]
     detections = list(
         database.scalars(
             select(DetectionRecord)

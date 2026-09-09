@@ -23,7 +23,7 @@ def is_webcam_toll(location: TollLocation) -> bool:
 def webcam_crossing_state(
     database: Session, location: TollLocation, now: datetime | None = None
 ) -> dict:
-    """Calculate the rolling one-hour state without inventing fallback traffic."""
+    """Calculate the rolling 60-second state without inventing fallback traffic."""
     now = now or datetime.now(UTC)
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
     if not {"normal", "moderate", "peak_hour", "severe"}.issubset(rules):
@@ -34,7 +34,7 @@ def webcam_crossing_state(
             DetectionRecord.location_id == location.id,
             DetectionRecord.source == "webcam",
             DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
-            DetectionRecord.detected_at >= now - timedelta(hours=1),
+            DetectionRecord.detected_at >= now - timedelta(seconds=60),
         )
     )
     crossings = int(crossings)
@@ -56,6 +56,8 @@ def webcam_crossing_state(
         "measured_at": latest_crossing or now,
         "vehicle_count": crossings,
         "vehicles_per_hour": crossings,
+        "active_crossings": crossings,
+        "crossing_window_seconds": 60,
         "road_capacity": location.road_capacity,
         "congestion_percentage": congestion,
         "congestion_category": rule.congestion_category,
