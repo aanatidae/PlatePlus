@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { mapPositionForLocation, NETWORK_ROUTES, SELANGOR_OUTLINE } from "./selangorNetwork";
 
 const styles = readFileSync(resolve(import.meta.dirname, "styles.css"), "utf8");
+const selectStyles = readFileSync(resolve(import.meta.dirname, "plateplus-select.css"), "utf8");
 const overview = readFileSync(resolve(import.meta.dirname, "NetworkOverview.tsx"), "utf8");
 
 describe("Selangor toll-road network", () => {
@@ -22,6 +23,12 @@ describe("Selangor toll-road network", () => {
   it("preserves the marker anchor translation for hover and active visual states", () => {
     expect(styles).toContain(".network-marker:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.015); }");
     expect(styles).toContain(".network-marker:active:not(:disabled) { transform: translate(-50%, -50%) scale(.995); }");
+  });
+  it("uses a reusable bounded marker width while keeping names and congestion on two clipped lines", () => {
+    expect(selectStyles).toContain(".network-marker{width:clamp(164px,15vw,210px)");
+    expect(selectStyles).toContain(".network-marker>span{display:block;min-width:0;flex:1}");
+    expect(selectStyles).toContain("text-overflow:ellipsis");
+    expect(overview).toContain("webcam-marker");
   });
   it("uses the network snapshot as the selected marker and panel telemetry source", () => {
     expect(overview).toContain("const current = states.find(state => state.location.id === selected);");

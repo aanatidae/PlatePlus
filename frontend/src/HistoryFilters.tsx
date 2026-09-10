@@ -1,3 +1,4 @@
+import { PlatePlusSelect } from "./PlatePlusSelect";
 export type HistoryValues = Record<string, string>;
 export function historyPath(path: string, values: HistoryValues) {
   const params = new URLSearchParams();
@@ -11,11 +12,11 @@ export default function HistoryFilters({ values, change, pricing = false }: { va
   return <section className="filter-bar history-filters" aria-label={pricing ? "Pricing history filters" : "Recognition and transaction history filters"}>
     <label>From (Malaysia)<input type="date" value={values.start_at ?? ""} max={values.end_at || undefined} onChange={event => set("start_at", event.target.value)} /></label>
     <label>To (Malaysia)<input type="date" value={values.end_at ?? ""} min={values.start_at || undefined} onChange={event => set("end_at", event.target.value)} /></label>
-    {pricing ? <label>Congestion<select value={values.congestion_category ?? ""} onChange={event => set("congestion_category", event.target.value)}><option value="">All</option><option value="low">Normal</option><option value="moderate">Moderate</option><option value="high">Peak hour</option><option value="severe">Severe</option></select></label> : <>
+    {pricing ? <PlatePlusSelect label="Congestion" value={values.congestion_category ?? ""} onChange={value => set("congestion_category", value)} options={[{ value: "", label: "All" }, { value: "low", label: "Normal" }, { value: "moderate", label: "Moderate" }, { value: "high", label: "Peak hour" }, { value: "severe", label: "Severe" }]} /> : <>
       <label>Plate<input value={values.plate ?? ""} placeholder="VAA1234" onChange={event => set("plate", event.target.value)} /></label>
-      <label>Registration<select value={values.registration ?? ""} onChange={event => set("registration", event.target.value)}><option value="">All</option><option value="registered">Registered</option><option value="unknown">Unknown</option></select></label>
-      <label>Detection<select value={values.detection_status ?? ""} onChange={event => set("detection_status", event.target.value)}><option value="">All</option>{["accepted", "low_confidence", "unknown_vehicle", "duplicate", "error"].map(value => <option key={value} value={value}>{value.replace(/_/g, " ")}</option>)}</select></label>
-      <label>Transaction<select value={values.transaction_status ?? ""} onChange={event => set("transaction_status", event.target.value)}><option value="">All</option>{["successful", "failed", "insufficient_balance", "low_confidence", "unknown_vehicle"].map(value => <option key={value} value={value}>{value.replace(/_/g, " ")}</option>)}</select></label>
+      <PlatePlusSelect label="Registration" value={values.registration ?? ""} onChange={value => set("registration", value)} options={[{ value: "", label: "All" }, { value: "registered", label: "Registered" }, { value: "unknown", label: "Unknown" }]} />
+      <PlatePlusSelect label="Detection" value={values.detection_status ?? ""} onChange={value => set("detection_status", value)} options={["", "accepted", "low_confidence", "unknown_vehicle", "duplicate", "error"].map(value => ({ value, label: value ? value.replace(/_/g, " ") : "All" }))} />
+      <PlatePlusSelect label="Transaction" value={values.transaction_status ?? ""} onChange={value => set("transaction_status", value)} options={["", "successful", "failed", "insufficient_balance", "low_confidence", "unknown_vehicle"].map(value => ({ value, label: value ? value.replace(/_/g, " ") : "All" }))} />
       <label>Minimum toll (RM)<input type="number" min="0" step="0.01" value={values.minimum_amount ?? ""} onChange={event => set("minimum_amount", event.target.value)} /></label>
     </>}
     <button className="secondary-button" onClick={() => change({})}>Clear filters</button>

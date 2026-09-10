@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { PlatePlusSelect } from "./PlatePlusSelect";
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 export const LOCATION_KEY = "plateplus.location.v1";
@@ -74,9 +75,6 @@ export function useLocations() {
 }
 export function LocationSelect({ value, onChange, all = true, label = "Toll location" }: { value: string; onChange: (id: string) => void; all?: boolean; label?: string }) {
   const { locations, ready } = useLocations();
-  return <label className="location-select">{label}<select aria-label={label} value={value} onChange={event => onChange(event.target.value)} disabled={!ready}>
-    {all && <option value="all">All Locations</option>}
-    {!all && !value && <option value="">Select a toll location</option>}
-    {locations.map(location => <option key={location.id} value={location.id}>{location.display_name}</option>)}
-  </select></label>;
+  const options = [...(all ? [{ value: "all", label: "All Locations" }] : []), ...(!all && !value ? [{ value: "", label: "Select a toll location", disabled: true }] : []), ...locations.map(location => ({ value: location.id, label: location.display_name }))];
+  return <div className="location-select"><PlatePlusSelect label={label} value={value} onChange={onChange} options={options} disabled={!ready} /></div>;
 }

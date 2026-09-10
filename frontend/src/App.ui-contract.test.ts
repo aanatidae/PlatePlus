@@ -9,6 +9,7 @@ const camera = readFileSync(resolve(import.meta.dirname, "CameraCapture.tsx"), "
 const pricingExplanation = readFileSync(resolve(import.meta.dirname, "PricingExplanation.tsx"), "utf8");
 const performance = readFileSync(resolve(import.meta.dirname, "ModelPerformance.tsx"), "utf8");
 const feedback = readFileSync(resolve(import.meta.dirname, "presentationFeedback.ts"), "utf8");
+const select = readFileSync(resolve(import.meta.dirname, "PlatePlusSelect.tsx"), "utf8");
 
 describe("simplified local-demo dashboard", () => {
   it("keeps exactly the three presentation pages in sidebar navigation", () => {
@@ -61,6 +62,16 @@ describe("simplified local-demo dashboard", () => {
     expect(prediction).toContain("CURRENT");
     expect(prediction).toContain("PREDICTED");
     expect(prediction).toContain("useFeed<LiveSnapshot>");
+    expect(prediction).toContain("currentTelemetryForLocation");
+    expect(prediction).toContain("setBatch(null); setIndex(0); setRunning(false);");
+  });
+  it("uses the shared accessible dark listbox instead of native selects for active controls", () => {
+    expect(select).toContain('role="listbox"');
+    expect(select).toContain('aria-expanded={open}');
+    expect(select).toContain('event.key === "Escape"');
+    expect(select).toContain("createPortal");
+    expect(select).toContain("nextEnabledOptionIndex");
+    expect(prediction).not.toContain("<select");
   });
   it("keeps compact model evidence in a modal instead of restoring a route", () => {
     expect(app).toContain("ModelPerformance");
