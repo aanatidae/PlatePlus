@@ -166,6 +166,8 @@ def test_intelligence_summary_exposes_thresholds_and_location_trace(network):
     data = response.json()
     assert data["thresholds"] == {"detection": 0.5, "ocr": 0.7}
     assert data["evaluation"]["ocr"]["exact_match_accuracy_percent"] == 84.1
+    assert data["evaluation"]["development"]["exact_matches"] == 125
+    assert data["evaluation"]["development"]["positive_detector_false_negatives"] == 0
     assert data["alpr_trace"]["stages"][0]["name"] == "Detector result"
     assert data["pricing_trace"]["location_name"] == "Test toll 0"
     assert data["pricing_trace"]["policy"]["rule_version"] == 1

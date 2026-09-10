@@ -48,3 +48,4 @@ ml/evaluation/ocr_ground_truth_template.csv
 ml/evaluation/paddleocr_review/
 ml/evaluation/paddleocr_results/
 /ml/evaluation/development/review/
+.plateplus-demo/

@@ -151,6 +151,20 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
                 "exact_match_accuracy_percent": 84.1,
                 "note": "PaddleOCR exact-match result on the preserved held-out crop set.",
             },
+            "development": {
+                "exact_matches": 125,
+                "scorable_samples": 146,
+                "exact_match_accuracy_percent": 85.6,
+                "positive_detector_images": 150,
+                "positive_detector_false_negatives": 0,
+                "condition_observations": [
+                    {"label": "Angled plates", "result": "30/31 exact matches (96.8%); development-only."},
+                    {"label": "Low light", "result": "14/16 exact matches (87.5%); development-only."},
+                    {"label": "Glare / overexposure", "result": "4/7 exact matches (57.1%); small sample and priority limitation."},
+                    {"label": "Motion blur", "result": "Insufficient readable ground truth for a reliable OCR metric."},
+                ],
+                "note": "Human-reviewed development evidence only; the held-out OCR set was not used for tuning.",
+            },
         },
         "charge_eligibility": "A plate is charge eligible only after detection and OCR meet their active thresholds, normalization retains a plate value, and a registered vehicle is matched. Payment remains simulated and may still fail for account or duplicate-protection reasons.",
         "outcome_analysis": {

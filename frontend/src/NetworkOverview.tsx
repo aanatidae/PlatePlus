@@ -3,8 +3,10 @@ import { LocateFixed, MapPin, RotateCcw } from "lucide-react";
 import { locationPath, useFeed, useLocations, type TollLocation } from "./locations";
 import { mapPositionForLocation, NETWORK_ROUTES, SELANGOR_OUTLINE } from "./selangorNetwork";
 import { CameraCapture } from "./CameraCapture";
+import { PricingExplanation } from "./PricingExplanation";
+import { simulatorPricingFeedback } from "./presentationFeedback";
 
-type Telemetry = { measured_at: string; congestion_percentage: number; congestion_category: string; vehicles_per_hour: number; average_speed_kmh: number | null; current_toll_price: number; camera_status: string; system_status: string; last_crossing_at?: string | null };
+type Telemetry = { measured_at: string; congestion_percentage: number; congestion_category: string; vehicles_per_hour: number; active_crossings?: number; road_capacity?: number; average_speed_kmh: number | null; current_toll_price: number; base_toll_price?: number; congestion_multiplier?: number; camera_status: string; system_status: string; last_crossing_at?: string | null };
 type LocationState = { location: TollLocation; telemetry: Telemetry | null; telemetry_source: string };
 type RecordItem = { id: string; location_id: string; normalized_plate?: string; detected_at?: string; processed_at?: string; amount?: number; status: string; source?: string };
 export type NetworkData = {
@@ -20,12 +22,12 @@ function Stat({ label, value, detail }: { label: string; value: string; detail: 
   return <article className="metric"><span>{label}</span><strong>{value}</strong><small>{detail}</small></article>;
 }
 
-function LocationCard({ state, openCamera }: { state: LocationState; openCamera: () => void }) {
+function LocationCard({ state, openCamera, highlighted }: { state: LocationState; openCamera: () => void; highlighted: boolean }) {
   const telemetry = state.telemetry;
   return <article className="location-card"><p className="eyebrow">SELECTED LOCATION</p><h2>{state.location.display_name}</h2><p>{state.location.highway_or_route}</p>
     {telemetry ? <><span className={`status ${telemetry.congestion_category}`}>{categoryLabel(telemetry.congestion_category)} · {Number(telemetry.congestion_percentage).toFixed(1)}%</span>
-      <dl className="location-facts"><div><dt>Current toll</dt><dd>{money(telemetry.current_toll_price)}</dd></div><div><dt>{state.telemetry_source === "webcam_alpr" ? "Crossings · last 60 sec" : "Vehicles / hour"}</dt><dd>{telemetry.vehicles_per_hour.toLocaleString()}{state.telemetry_source === "webcam_alpr" ? " / 10" : ""}</dd></div><div><dt>Average speed</dt><dd>{telemetry.average_speed_kmh == null ? "N/A" : `${telemetry.average_speed_kmh} km/h`}</dd></div><div><dt>Camera</dt><dd>{telemetry.camera_status}</dd></div><div><dt>System</dt><dd>{telemetry.system_status}</dd></div><div><dt>{state.telemetry_source === "webcam_alpr" ? "Last crossing" : "Last measurement"}</dt><dd>{time((state.telemetry_source === "webcam_alpr" ? telemetry.last_crossing_at : telemetry.measured_at) || telemetry.measured_at)}</dd></div></dl>
-      <p className="field-note">{state.telemetry_source === "webcam_alpr" ? "Local laptop webcam ALPR only · accepted crossings remain active for 60 seconds; records remain in history." : state.telemetry_source === "fallback" ? "Simulated time-profile estimate" : state.telemetry_source === "mixed" ? "Simulated estimate with recorded toll" : "Latest recorded simulation · speed estimated"}</p>{state.location.code === "SIMULATOR" && <button onClick={openCamera}>Open Camera</button>}</> : <p>Telemetry unavailable for this location.</p>}
+      <dl className="location-facts"><div><dt>Current toll</dt><dd className={highlighted ? "changed-value" : ""}>{money(telemetry.current_toll_price)}</dd></div><div><dt>{state.telemetry_source === "webcam_alpr" ? "Active crossings · 60 sec" : "Vehicles / hour"}</dt><dd className={highlighted ? "changed-value" : ""}>{(telemetry.active_crossings ?? telemetry.vehicles_per_hour).toLocaleString()}{state.telemetry_source === "webcam_alpr" ? ` / ${telemetry.road_capacity ?? 10}` : ""}</dd></div><div><dt>Congestion</dt><dd className={highlighted ? "changed-value" : ""}>{Number(telemetry.congestion_percentage).toFixed(1)}%</dd></div><div><dt>Average speed</dt><dd>{telemetry.average_speed_kmh == null ? "N/A" : `${telemetry.average_speed_kmh} km/h`}</dd></div><div><dt>Camera</dt><dd>{telemetry.camera_status}</dd></div><div><dt>{state.telemetry_source === "webcam_alpr" ? "Last crossing" : "Last measurement"}</dt><dd>{time((state.telemetry_source === "webcam_alpr" ? telemetry.last_crossing_at : telemetry.measured_at) || telemetry.measured_at)}</dd></div></dl>
+      <PricingExplanation telemetry={telemetry} source={state.telemetry_source} compact /><p className="field-note">{state.telemetry_source === "webcam_alpr" ? "Local laptop webcam ALPR only · accepted crossings remain active for 60 seconds; records remain in history." : state.telemetry_source === "fallback" ? "Simulated time-profile estimate" : state.telemetry_source === "mixed" ? "Simulated estimate with recorded toll" : "Latest recorded simulation · speed estimated"}</p>{state.location.code === "SIMULATOR" && <button onClick={openCamera}>Open Camera</button>}</> : <p>Telemetry unavailable for this location.</p>}
   </article>;
 }
 
@@ -37,6 +39,13 @@ export default function NetworkOverview() {
   const events = useFeed<{ id: string; event_type: string; severity: string; source: string; message: string; occurred_at: string }[]>("/api/operations/events");
   const feed = useFeed<{ running: boolean }>("/api/operations/demo/feed");
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [simulatorFlash, setSimulatorFlash] = useState(false);
+  const [newDetectionId, setNewDetectionId] = useState<string | null>(null);
+  const [newTransactionId, setNewTransactionId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const crossingPending = useRef(false);
+  const activityPending = useRef(false);
+  const previousSimulator = useRef<Telemetry | null>(null);
   const { data, error, receivedAt } = selected === "all" ? network : scoped;
   // Map, selected card and live KPIs share this snapshot; scoped data is only for activity records.
   const canonical = selected === "all" ? data : network.data;
@@ -47,6 +56,7 @@ export default function NetworkOverview() {
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 10_000); return () => window.clearInterval(timer); }, []);
   const states = network.data?.locations ?? [];
   const current = states.find(state => state.location.id === selected);
+  const simulatorState = states.find(state => state.location.code === "SIMULATOR");
   const live = selected === "all" ? canonical?.live : current?.telemetry ? { traffic: current.telemetry, price: { amount: current.telemetry.current_toll_price } } : undefined;
   const metrics = selected === "all" ? canonical?.metrics : data?.metrics;
   const oldMeasurement = live?.traffic && now - new Date(live.traffic.measured_at).getTime() > 120_000;
@@ -63,6 +73,30 @@ export default function NetworkOverview() {
     const point = mapPositionForLocation(location);
     setView({ zoom: 1.04, x: (50 - point.x) * rect.width * .16 / 100, y: (50 - point.y) * rect.height * .16 / 100 });
   }, [selected, locations]);
+  useEffect(() => {
+    const accepted = () => { crossingPending.current = true; activityPending.current = true; setSimulatorFlash(true); window.setTimeout(() => setSimulatorFlash(false), 1600); };
+    addEventListener("simulator-crossing-accepted", accepted);
+    return () => removeEventListener("simulator-crossing-accepted", accepted);
+  }, []);
+  useEffect(() => {
+    const next = simulatorState?.telemetry;
+    if (!next) return;
+    const prior = previousSimulator.current;
+    previousSimulator.current = next;
+    if (!prior) return;
+    const nextFeedback = simulatorPricingFeedback(prior, next, crossingPending.current);
+    if (nextFeedback) setFeedback(nextFeedback);
+    if (crossingPending.current && Number(next.congestion_percentage) > Number(prior.congestion_percentage)) crossingPending.current = false;
+  }, [simulatorState?.telemetry]);
+  useEffect(() => { if (!feedback) return; const timeout = window.setTimeout(() => setFeedback(null), 5000); return () => window.clearTimeout(timeout); }, [feedback]);
+  useEffect(() => {
+    if (!activityPending.current) return;
+    const detection = data?.detections.items.find(item => item.source === "webcam" && item.location_id === simulatorState?.location.id);
+    const transaction = data?.transactions.items.find(item => item.location_id === simulatorState?.location.id);
+    if (detection && detection.id !== newDetectionId) { setNewDetectionId(detection.id); window.setTimeout(() => setNewDetectionId(null), 2400); }
+    if (transaction && transaction.id !== newTransactionId) { setNewTransactionId(transaction.id); window.setTimeout(() => setNewTransactionId(null), 2400); }
+    if (detection || transaction) activityPending.current = false;
+  }, [data?.detections.items, data?.transactions.items, simulatorState?.location.id]);
   const values = metrics ? [
     { label: "Traffic flow", value: live?.traffic ? Number(live.traffic.vehicles_per_hour).toLocaleString() : "—", detail: "Simulated vehicles / hour" },
     { label: selected === "all" ? "Average congestion" : "Congestion", value: live?.traffic ? `${Number(live.traffic.congestion_percentage).toFixed(1)}%` : "—", detail: selected === "all" ? "Weighted by road capacity" : categoryLabel(live?.traffic?.congestion_category ?? "Unavailable") },
@@ -81,6 +115,7 @@ export default function NetworkOverview() {
     {!canonical && !error && <p role="status">Loading PlatePlus telemetry…</p>}
     {metrics && metrics.locations_reporting < metrics.locations_total && <p className="traffic-notice">Partial telemetry: {metrics.locations_reporting} of {metrics.locations_total} locations reporting. Traffic averages exclude unavailable locations.</p>}
     <section className="metric-grid network-metrics">{values.map(value => <Stat key={value.label} {...value} />)}</section>
+    {feedback && <div className="presentation-toast" role="status"><strong>Simulator Toll Plaza</strong><span>{feedback}</span></div>}
     <section className="detail-card"><div className="section-title"><div><h2>Local presentation feed</h2><p>Clearly tagged synthetic crossings for normal toll locations only. Simulator Toll Plaza remains webcam-only.</p></div><div><button onClick={() => void alertAction("/api/operations/demo/feed/start")} disabled={feed.data?.running}>Start Live Feed</button><button className="secondary-button" onClick={() => void alertAction("/api/operations/demo/feed/pause")} disabled={!feed.data?.running}>Pause Live Feed</button><button className="secondary-button" onClick={() => void alertAction("/api/operations/demo/feed/reset")}>Reset Demo Activity</button></div></div><p className="field-note">{feed.data?.running ? "Live feed running · cadence follows each location’s existing congestion." : "Live feed paused · start it when your local presentation begins."}</p></section>
     <section className="detail-card"><div className="section-title"><div><h2>Current operational issues</h2></div><div><button className="secondary-button" onClick={() => void alertAction("/api/operations/monitor")}>Refresh alerts</button></div></div><div className="records">{activeAlerts.length ? activeAlerts.map(alert => <div className="record" key={alert.id}><strong>{alert.title} {alert.source === "demo" && "· Demo"}</strong><span className={`status ${alert.severity}`}>{alert.severity}</span><small>{alert.message}<br />Started {time(alert.started_at)}</small><button className="secondary-button" onClick={() => void alertAction(`/api/operations/alerts/${alert.id}/acknowledge`)}>Acknowledge</button></div>) : <p>No active operational alerts.</p>}</div></section>
     <section className="detail-card"><div className="section-title"><div><p className="eyebrow">SIMULATED TOLL NETWORK</p><h2>Select a toll location</h2></div><button className="secondary-button" aria-pressed={selected === "all"} onClick={() => select("all")}>All Locations</button></div>
@@ -92,14 +127,14 @@ export default function NetworkOverview() {
           const state = states.find(item => item.location.id === location.id);
           const tone = state?.telemetry?.congestion_category ?? "unavailable";
           const position = mapPositionForLocation(location);
-          return <button key={location.id} className={`network-marker ${tone} ${position.webcam ? "webcam-marker" : ""} ${selected === location.id ? "selected" : ""}`} style={{ left: `${position.x}%`, top: `${position.y}%` }} aria-pressed={selected === location.id} aria-label={`${location.display_name}, ${location.highway_or_route}, ${categoryLabel(tone)}${state?.telemetry ? `, ${state.telemetry.congestion_percentage}% congestion` : ""}`} onPointerDown={event => event.stopPropagation()} onClick={() => select(location.id)} title={`${location.display_name} · ${location.highway_or_route} · ${categoryLabel(tone)}`}><MapPin size={18} /><span><strong>{location.display_name}</strong><small>{state?.telemetry ? `${Number(state.telemetry.congestion_percentage).toFixed(1)}% · ${categoryLabel(tone)}` : "Unavailable"}</small></span></button>;
+          return <button key={location.id} className={`network-marker ${tone} ${position.webcam ? "webcam-marker" : ""} ${selected === location.id ? "selected" : ""} ${location.code === "SIMULATOR" && simulatorFlash ? "crossing-pulse" : ""}`} style={{ left: `${position.x}%`, top: `${position.y}%` }} aria-pressed={selected === location.id} aria-label={`${location.display_name}, ${location.highway_or_route}, ${categoryLabel(tone)}${state?.telemetry ? `, ${state.telemetry.congestion_percentage}% congestion` : ""}`} onPointerDown={event => event.stopPropagation()} onClick={() => select(location.id)} title={`${location.display_name} · ${location.highway_or_route} · ${categoryLabel(tone)}`}><MapPin size={18} /><span><strong>{location.display_name}</strong><small>{state?.telemetry ? `${Number(state.telemetry.congestion_percentage).toFixed(1)}% · ${categoryLabel(tone)}` : "Unavailable"}</small></span></button>;
         })}
         </div>
         {!locations.length && <p className="map-empty">No toll locations available.</p>}
-      </div>{current ? <LocationCard state={current} openCamera={() => setCameraOpen(true)} /> : <article className="location-card"><p className="eyebrow">{selected === "all" ? "ALL LOCATIONS" : "LOCATION TELEMETRY"}</p><h2>{selected === "all" ? "Network health" : "Loading selected location…"}</h2><p>{selected === "all" ? "Select a marker or use the toll selector in the top bar to inspect one location." : "Waiting for this location’s current state."}</p>{selected === "all" && metrics && <dl className="location-facts"><div><dt>Online locations</dt><dd>{metrics.locations_online} / {metrics.locations_total}</dd></div><div><dt>Severe congestion</dt><dd>{metrics.severe_locations}</dd></div><div><dt>Cameras offline</dt><dd>{metrics.cameras_offline}</dd></div><div><dt>Telemetry reporting</dt><dd>{metrics.locations_reporting} / {metrics.locations_total}</dd></div></dl>}</article>}</div>
+      </div>{current ? <LocationCard state={current} openCamera={() => setCameraOpen(true)} highlighted={current.location.code === "SIMULATOR" && simulatorFlash} /> : <article className="location-card"><p className="eyebrow">{selected === "all" ? "ALL LOCATIONS" : "LOCATION TELEMETRY"}</p><h2>{selected === "all" ? "Network health" : "Loading selected location…"}</h2><p>{selected === "all" ? "Select a marker or use the toll selector in the top bar to inspect one location." : "Waiting for this location’s current state."}</p>{selected === "all" && metrics && <dl className="location-facts"><div><dt>Online locations</dt><dd>{metrics.locations_online} / {metrics.locations_total}</dd></div><div><dt>Severe congestion</dt><dd>{metrics.severe_locations}</dd></div><div><dt>Cameras offline</dt><dd>{metrics.cameras_offline}</dd></div><div><dt>Telemetry reporting</dt><dd>{metrics.locations_reporting} / {metrics.locations_total}</dd></div></dl>}</article>}</div>
       <p className="map-legend">Normal · Moderate · Peak hour · Severe · Unavailable — marker text identifies every state.</p>
     </section>
-    <section className="table-grid">{(["detections", "transactions"] as const).map(kind => <article className="record-card" key={kind}><h2>Recent {kind} · {selected === "all" ? "all locations" : "selected location"}</h2><div className="records">{data?.[kind].items.length ? data[kind].items.map(item => <div className="record" key={item.id}><strong>{kind === "detections" ? item.normalized_plate ?? "Unread plate" : money(item.amount ?? 0)}</strong><span className={`status ${item.status}`}>{item.status.replace(/_/g, " ")}</span><small>{locations.find(location => location.id === item.location_id)?.display_name ?? "Unknown location"} · {item.source === "demo_generated" ? "Simulated live feed" : item.source === "webcam" ? "Local webcam ALPR" : "Simulated record"}<br />{time(item.detected_at ?? item.processed_at ?? "")}</small></div>) : <p>{data ? "No simulated activity in this live window." : "Waiting for activity data."}</p>}</div></article>)}</section>
+    <section className="table-grid">{(["detections", "transactions"] as const).map(kind => <article className="record-card" key={kind}><h2>Recent {kind} · {selected === "all" ? "all locations" : "selected location"}</h2><div className="records">{data?.[kind].items.length ? data[kind].items.map(item => <div className={`record ${(kind === "detections" ? newDetectionId : newTransactionId) === item.id ? "new-webcam-record" : ""}`} key={item.id}><strong>{kind === "detections" ? item.normalized_plate ?? "Unread plate" : money(item.amount ?? 0)}</strong><span className={`status ${item.status}`}>{item.status.replace(/_/g, " ")}</span><small>{locations.find(location => location.id === item.location_id)?.display_name ?? "Unknown location"} · {item.source === "demo_generated" ? "Simulated live feed" : item.source === "webcam" ? "Local webcam ALPR" : "Simulated record"}<br />{time(item.detected_at ?? item.processed_at ?? "")}</small></div>) : <p>{data ? "No simulated activity in this live window." : "Waiting for activity data."}</p>}</div></article>)}</section>
     <section className="detail-card"><div className="section-title"><div><p className="eyebrow">ALERT / OPERATIONAL EVENT HISTORY</p><h2>Recorded alerts and transitions</h2></div></div><div className="records">{(alerts.data ?? []).map(alert => <div className="record" key={alert.id}><strong>Alert · {alert.title} {alert.source === "demo" && "· Demo"}</strong><span className={`status ${alert.severity}`}>{alert.status}</span><small>{alert.message}<br />{time(alert.started_at)}</small></div>)}{(events.data ?? []).map(event => <div className="record" key={event.id}><strong>Event · {event.event_type.replace(/_/g, " ")}</strong><span className={`status ${event.severity}`}>{event.source}</span><small>{event.message}<br />{time(event.occurred_at)}</small></div>)}{!alerts.data?.length && !events.data?.length && <p>No alert or operational-event history.</p>}</div></section>
     {cameraOpen && <CameraCapture onClose={() => setCameraOpen(false)} />}
   </main>;

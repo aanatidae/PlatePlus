@@ -443,6 +443,9 @@ Existing core tests should remain passing.
 - Localhost (React, FastAPI, PostgreSQL, local model runtime, browser webcam) is the primary capstone presentation architecture. Preserve deployment compatibility where practical, but do not require Vercel, Render, or internet connectivity for the local demo.
 - The normal-toll local feed uses a seeded fleet of 96 unique, plausible Malaysian-style synthetic vehicles. Selection suppresses the prior 16 plates per location and the most recent four global choices; do not reduce this presentation diversity or create obvious short-term repeats.
 - Simulator Toll Plaza uses a compact floating/minimizable/resizable laptop-camera PiP, never a half-screen drawer. It must leave the Overview usable so map, selected metrics, detections, and transactions remain observable during a scan.
+- Presentation feedback for accepted Simulator Toll Plaza webcam crossings is UI-only: marker pulses, record highlights, value emphasis, and toasts must reflect the next canonical backend telemetry snapshot and must never create, recalculate, or mutate crossings, prices, payments, or history.
+- The compact Model Performance modal may use only verified repository evaluation evidence. It must distinguish held-out and development-only results, preserve unsupported metrics as unavailable, and must not restore an AI Intelligence route/page.
+- `start_plateplus_demo.bat` is the local presentation launcher. It reuses the existing environment, Docker Compose PostgreSQL, migrations, and idempotent seed; it must not silently install major dependencies or terminate unrelated processes.
 
 - Start future work by reading `.harnessV2/AGENTS.md`, `.harnessV2/PLAN.md`, and `.harnessV2/TODOLIST.md`.
 - Treat the repository state as the source of truth for what is already implemented.

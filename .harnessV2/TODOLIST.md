@@ -23,6 +23,11 @@
 - [x] Restrict Prediction to time-based, normal-location, browser-local forecasts.
 - [x] Add focused cadence/window and simplified-navigation tests.
 - [ ] Run the complete local PostgreSQL integration suite and physical localhost presentation verification after the database service is started for this phase.
+- [x] Add focused Simulator Toll Plaza presentation feedback: accepted-crossing marker pulse, newest detection/transaction emphasis, changed active-crossing/congestion/toll values, and canonical-value toast messaging.
+- [x] Add reusable selected-location `Why this price?` explanation sourced from authoritative telemetry, including webcam crossings/capacity for Simulator Toll Plaza.
+- [x] Add Prediction current-versus-future summary while retaining browser-local, time-profile-only isolation.
+- [x] Add compact Model Performance modal using verified held-out/development evidence only; do not restore AI Intelligence navigation.
+- [x] Add `start_plateplus_demo.bat` and scoped stop script that reuse Docker Compose, migrations, idempotent seed, backend/frontend environments, and log files without installing dependencies.
 
 The original core implementation is substantially complete.
 

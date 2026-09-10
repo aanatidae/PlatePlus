@@ -372,6 +372,10 @@ The current capstone presentation surface is intentionally reduced to three admi
 
 The Overview now uses a compact floating laptop-camera PiP rather than a drawer. The 96-vehicle synthetic fleet and per-location repeat suppression improve live-feed realism while retaining simulated-only scope.
 
+## Presentation Feedback Hardening — 2026-09-10
+
+The capstone presentation emphasizes a visible, authoritative Simulator Toll Plaza flow: accepted local-webcam crossings trigger short UI-only marker/record/value feedback and a concise congestion-to-toll message after the next canonical telemetry refresh. Selected-location pricing explanation reuses backend telemetry rather than calculating prices in the browser. Prediction presents current live telemetry beside its isolated browser-local future frame. A compact Model Performance modal provides verified held-out and development evaluation evidence for Q&A without restoring an AI Intelligence page. `start_plateplus_demo.bat` provides one-command local startup using existing Docker Compose, migrations, seed data, FastAPI, and Vite without dependency installation.
+
 The improved PlatePlus prototype should:
 
 - Represent a simulated network of toll locations rather than only one station.

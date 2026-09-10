@@ -51,6 +51,17 @@ python -m app.traffic_scheduler
 
 ## Launch the local application
 
+## One-command capstone presentation startup
+
+From the project root, run `start_plateplus_demo.bat`. It reuses the existing Docker Compose PostgreSQL service, applies the current migration, runs the idempotent synthetic seed, starts FastAPI and Vite only when their ports are unused, and opens `http://localhost:5173`. It never installs Python or npm dependencies. Backend and frontend logs are written to `.plateplus-demo/logs/`.
+
+1. Run `start_plateplus_demo.bat`.
+2. Wait for `PlatePlus demo is ready.` and sign in.
+3. Select **Simulator Toll Plaza** on Overview and choose **Open Camera**.
+4. The launcher attempts to start the normal-location presentation feed using the seeded local administrator; use **Start Live Feed** on Overview if it reports a credential/API warning. Simulator Toll Plaza is intentionally excluded.
+
+Use `stop_plateplus_demo.bat` to stop only backend/frontend processes that this launcher recorded. It does not stop PostgreSQL or unrelated Python/Node processes.
+
 The backend manifest is in `backend/pyproject.toml`:
 
 ```bash
