@@ -434,12 +434,15 @@ Existing core tests should remain passing.
 
 ## Local Presentation Dashboard Architecture — 2026-09-09
 
+- The presentation UI uses a restrained dark signal-room design system: map-first Overview composition, compact three-item navigation, tabular critical metrics, purposeful sub-300ms state feedback, and visible focus/reduced-motion support. Prefer alignment and tonal surface hierarchy over nested cards, badges, glows, or decorative animation.
+
 - The local administrator dashboard has exactly three top-level pages: Overview (`/dashboard`), Dynamic Pricing Management (`/pricing`), and Prediction (`/prediction`). Retired direct routes redirect safely to Overview.
 - Overview is the live operations surface. Normal generated toll locations may receive explicitly labelled `demo_generated` synthetic crossings through the local presentation feed; their existing congestion controls crossing cadence, never the reverse.
 - The local feed is administrator-controlled (start, pause, reset), singleton per backend process, rate-limited with bounded jitter, and never targets Simulator Toll Plaza. Reset removes only feed-created records and reverses only their synthetic wallet effect.
 - Simulator Toll Plaza is webcam-only. Its accepted local-webcam crossings remain historically persisted but contribute to its live congestion only for a rolling 60-second window at a capacity of 10 crossings. Do not fabricate its speed or send it generated/fallback crossings.
 - The Overview selected-location panel exposes a compact local laptop-camera PiP only for Simulator Toll Plaza. It preserves local YOLO/PaddleOCR processing, duplicate protection, and simulated-payment logic without persisting raw frames or crops.
 - Dynamic Pricing Management owns editable pricing bands, safeguards, preview, and audit behavior. Prediction is a time-based, browser-local forecast demo for normal locations only and must never alter live telemetry, prices, detections, transactions, or the demo feed.
+- Prediction supports 30-minute, 1-, 2-, 4-, 6-, 8-, and 12-hour browser-local forecast horizons at five-minute resolution; playback speed changes only the viewing cadence, never the simulated timeline.
 - Localhost (React, FastAPI, PostgreSQL, local model runtime, browser webcam) is the primary capstone presentation architecture. Preserve deployment compatibility where practical, but do not require Vercel, Render, or internet connectivity for the local demo.
 - The normal-toll local feed uses a seeded fleet of 96 unique, plausible Malaysian-style synthetic vehicles. Selection suppresses the prior 16 plates per location and the most recent four global choices; do not reduce this presentation diversity or create obvious short-term repeats.
 - Simulator Toll Plaza uses a compact floating/minimizable/resizable laptop-camera PiP, never a half-screen drawer. It must leave the Overview usable so map, selected metrics, detections, and transactions remain observable during a scan.

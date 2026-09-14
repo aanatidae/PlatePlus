@@ -11,6 +11,8 @@
 
 ## Local Presentation Simplification — 2026-09-09
 
+- [x] Redesign the three-page administrator surface as a map-first, presentation-ready operational dashboard with a small reusable token system, restrained state-driven motion, and responsive laptop/mobile composition.
+
 - [x] Reduce administrator navigation to Overview, Dynamic Pricing Management, and Prediction.
 - [x] Redirect retired standalone recognition, intelligence, simulator, webcam, and demo routes to Overview.
 - [x] Add local admin-controlled congestion-paced `demo_generated` feed for normal toll locations.
@@ -21,6 +23,7 @@
 - [x] Change Simulator Toll active crossing congestion to a rolling 60-second window with capacity 10 while retaining historical records.
 - [x] Rework Dynamic Pricing into pricing-management controls and a preview surface.
 - [x] Restrict Prediction to time-based, normal-location, browser-local forecasts.
+- [x] Extend Prediction's browser-local forecast horizon to 12 hours while preserving five-minute frames, Malaysia-time date rollover, and playback isolation.
 - [x] Add focused cadence/window and simplified-navigation tests.
 - [ ] Run the complete local PostgreSQL integration suite and physical localhost presentation verification after the database service is started for this phase.
 - [x] Add focused Simulator Toll Plaza presentation feedback: accepted-crossing marker pulse, newest detection/transaction emphasis, changed active-crossing/congestion/toll values, and canonical-value toast messaging.
