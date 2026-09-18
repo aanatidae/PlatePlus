@@ -8,6 +8,7 @@ const prediction = readFileSync(resolve(import.meta.dirname, "Prediction.tsx"), 
 const camera = readFileSync(resolve(import.meta.dirname, "CameraCapture.tsx"), "utf8");
 const pricingExplanation = readFileSync(resolve(import.meta.dirname, "PricingExplanation.tsx"), "utf8");
 const performance = readFileSync(resolve(import.meta.dirname, "ModelPerformance.tsx"), "utf8");
+const simulatorUpload = readFileSync(resolve(import.meta.dirname, "SimulatorImageUpload.tsx"), "utf8");
 const feedback = readFileSync(resolve(import.meta.dirname, "presentationFeedback.ts"), "utf8");
 const select = readFileSync(resolve(import.meta.dirname, "PlatePlusSelect.tsx"), "utf8");
 
@@ -27,6 +28,8 @@ describe("simplified local-demo dashboard", () => {
     expect(overview).toContain("Open Camera");
     expect(overview).toContain("Simulated live feed");
     expect(overview).toContain("Local webcam ALPR");
+    expect(overview).toContain("SimulatorImageUpload");
+    expect(overview).toContain("Uploaded image ALPR");
     expect(camera).toContain('"camera-pip"');
     expect(overview).not.toContain("WebcamDrawer");
   });
@@ -78,5 +81,18 @@ describe("simplified local-demo dashboard", () => {
     expect(performance).toContain('role="dialog"');
     expect(performance).toContain("preserved and not used for tuning");
     expect(performance).toContain("Precision, recall, and F1 were not exported");
+    expect(performance).toContain('aria-label="Close model performance"');
+    expect(performance).toContain('event.key === "Escape"');
+    expect(performance).toContain("triggerRef.current?.focus()");
+    expect(performance).toContain("performance-modal-header");
+  });
+  it("keeps Simulator upload local, constrained, and on the shared crossing feedback path", () => {
+    expect(simulatorUpload).toContain("image/jpeg");
+    expect(simulatorUpload).toContain("image/png");
+    expect(simulatorUpload).toContain("image/webp");
+    expect(simulatorUpload).toContain("MAX_BYTES = 5_000_000");
+    expect(simulatorUpload).toContain("/api/webcam/images?location_id=");
+    expect(simulatorUpload).toContain('"simulator-crossing-accepted"');
+    expect(simulatorUpload).toContain("URL.revokeObjectURL");
   });
 });

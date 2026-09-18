@@ -31,6 +31,8 @@
 - [x] Add Prediction current-versus-future summary while retaining browser-local, time-profile-only isolation.
 - [x] Add compact Model Performance modal using verified held-out/development evidence only; do not restore AI Intelligence navigation.
 - [x] Add `start_plateplus_demo.bat` and scoped stop script that reuse Docker Compose, migrations, idempotent seed, backend/frontend environments, and log files without installing dependencies.
+- [x] Add a visible, sticky, keyboard-accessible close interaction to the Model Performance modal (button, Escape, backdrop close, focus trap, and trigger-focus return).
+- [x] Add Simulator Toll Plaza local still-image ALPR upload alongside the laptop webcam. JPG/JPEG, PNG, and WebP files up to 5 MB are processed ephemerally through the shared local pipeline and accepted results use `uploaded_image` while contributing to the same 60-second active-crossing window.
 
 The original core implementation is substantially complete.
 
@@ -486,15 +488,15 @@ Status: `[x]` Complete — location-relative multiplier pricing, persisted safeg
 
 - [x] Expand the normal-toll presentation live-feed fleet to 96 unique fictional Malaysian-style vehicles/accounts; retain varied vehicle details/balances and short-term per-location/global plate-repeat suppression.
 - [x] Replace the Overview's half-screen Simulator Toll camera drawer with a compact floating, minimizable/resizable laptop-camera PiP.
-- [x] Simplify Simulator Toll Plaza to local laptop-webcam ALPR only; remove non-laptop camera paths, source selection, and their supporting tests/documentation.
+- [x] Simplify Simulator Toll Plaza to local laptop-webcam and uploaded-still-image ALPR only; remove non-laptop camera paths, source selection, and their supporting tests/documentation.
 
 - [x] Complete the agreed Overview/context/branding milestone using the existing design and seeded locations.
 - [x] Verify Docker and development/test PostgreSQL are healthy; development migration is at head.
 - [x] Pass 52 backend tests including PostgreSQL integration and 8 frontend tests; production build passes.
 - [x] Browser-verify desktop/mobile, keyboard selection, refresh persistence, page context, functional plate filtering, Simulator isolation, and outage/stale-state behavior using disposable synthetic fixtures.
-- [x] Complete Multi-Location Traffic Profiles with independent scheduled traffic for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains webcam-only.
+- [x] Complete Multi-Location Traffic Profiles with independent scheduled traffic for LDP, DUKE, KESAS, and NPE; Simulator Toll Plaza remains local-ALPR-only.
 - [x] Complete Multi-Location Simulator with local-only network runs, scenario presets, time-window/playback controls, and per-location baseline/dynamic toll comparison; generated network runs exclude Simulator Toll Plaza.
-- [x] Refactor generated fallback and scheduled time-patterned traffic to calculate deterministic location-specific congestion percentages before deriving category and dynamic-pricing band; retain persisted-traffic priority and Simulator Toll Plaza webcam-only telemetry.
+- [x] Refactor generated fallback and scheduled time-patterned traffic to calculate deterministic location-specific congestion percentages before deriving category and dynamic-pricing band; retain persisted-traffic priority and Simulator Toll Plaza local-ALPR-only telemetry.
 - [x] Tune Penchala, DUKE, NPE, and KESAS profile parameters for distinct Malaysia-time daily curves; verify a representative 24-hour matrix, congestion-to-pricing handoff, speed response, determinism, and Simulator Toll Plaza isolation.
 - [x] Complete AI explainability and evaluation capability with read-only evidence endpoints, active confidence thresholds, held-out evaluation evidence, latest ALPR and per-location pricing traces, charge-eligibility rules, and known limitations; remove the dedicated frontend AI Intelligence page while retaining backend/evaluation capability.
 - [x] Implement ALPR format gating, controlled OCR-confusion correction, raw-versus-normalized audit evidence, and an error-analysis/evaluation workflow without modifying the preserved held-out set.

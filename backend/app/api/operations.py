@@ -131,7 +131,7 @@ def demo_status(database: DatabaseSession):
             "Open Plate Recognition to inspect seeded results or use local-only still-image ALPR when available.",
             "Use Dynamic Pricing history to relate simulated congestion, price, and payment outcomes.",
         ],
-        "fallback_alpr": "If local ALPR or a webcam is unavailable, use the seeded recognition records and decision evidence; no image upload is needed.",
+        "fallback_alpr": "Simulator Toll Plaza accepts a local laptop-webcam frame or a local uploaded still image; both use the same local ALPR workflow. Seeded recognition records remain available when local inference is unavailable.",
         "boundaries": ["Traffic, tolls, accounts, and payments are simulated.", "Raw images and webcam frames remain local and ephemeral.", "The deployed dashboard does not run local model inference."],
     }
 

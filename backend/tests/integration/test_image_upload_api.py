@@ -89,3 +89,31 @@ def test_image_upload_requires_administrator_authentication(database, monkeypatc
     )
 
     assert response.status_code == 401
+
+
+def test_simulator_upload_is_tagged_and_drives_one_local_crossing(
+    database, admin_auth_headers, monkeypatch
+) -> None:
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR"))
+    assert location is not None
+    user = User(full_name="Simulator Upload User", email="simulator-upload@example.test")
+    database.add(user); database.flush()
+    account = Account(user_id=user.id, balance=Decimal("20.00"), is_primary=True)
+    vehicle = Vehicle(user_id=user.id, plate_number="VAA1234")
+    database.add_all([account, vehicle]); database.flush()
+
+    app = FastAPI(); app.include_router(auth_router); app.include_router(webcam_api.router)
+    app.dependency_overrides[get_db] = lambda: database
+    monkeypatch.setattr(webcam_api, "service", _SuccessfulImageService())
+    response = TestClient(app).post(
+        f"/api/webcam/images?location_id={location.id}",
+        files={"image": ("plate.png", b"image-bytes", "image/png")},
+        headers={**admin_auth_headers, "Idempotency-Key": "simulator-upload-0001"},
+    )
+
+    detection = database.scalar(select(DetectionRecord).where(DetectionRecord.location_id == location.id))
+    transaction = database.scalar(select(TollTransaction).where(TollTransaction.location_id == location.id))
+    assert response.status_code == 200, response.text
+    assert response.json()["payment_status"] == "successful"
+    assert detection is not None and detection.source == "uploaded_image"
+    assert transaction is not None and transaction.status == "successful"

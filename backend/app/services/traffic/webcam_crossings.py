@@ -14,6 +14,7 @@ from app.services.traffic.simulation import rule_for_congestion
 
 SIMULATOR_TOLL_CODE = "SIMULATOR"
 COUNTED_WEBCAM_STATUSES = ("accepted", "unknown_vehicle")
+SIMULATOR_ALPR_SOURCES = ("webcam", "webcam_alpr", "uploaded_image")
 
 
 def is_webcam_toll(location: TollLocation) -> bool:
@@ -32,7 +33,7 @@ def webcam_crossing_state(
         select(func.count(DetectionRecord.id))
         .where(
             DetectionRecord.location_id == location.id,
-            DetectionRecord.source == "webcam",
+            DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
             DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
             DetectionRecord.detected_at >= now - timedelta(seconds=60),
         )
@@ -47,7 +48,7 @@ def webcam_crossing_state(
         select(DetectionRecord.detected_at)
         .where(
             DetectionRecord.location_id == location.id,
-            DetectionRecord.source == "webcam",
+            DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
             DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
         )
         .order_by(DetectionRecord.detected_at.desc())
@@ -70,6 +71,21 @@ def webcam_crossing_state(
         "system_status": "healthy" if location.status == "operational" else location.status,
         "last_crossing_at": latest_crossing,
     }}
+
+
+def has_recent_simulator_plate(
+    database: Session, location: TollLocation, plate: str, now: datetime, cooldown_seconds: float
+) -> bool:
+    """Share the local ALPR cooldown across webcam and uploaded-image inputs."""
+    return database.scalar(
+        select(DetectionRecord.id).where(
+            DetectionRecord.location_id == location.id,
+            DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
+            DetectionRecord.normalized_plate == plate,
+            DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
+            DetectionRecord.detected_at >= now - timedelta(seconds=cooldown_seconds),
+        ).limit(1)
+    ) is not None
 
 
 def prepare_webcam_crossing_price(database: Session, location: TollLocation, now: datetime) -> None:

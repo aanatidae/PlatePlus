@@ -39,8 +39,8 @@ def webcam_network():
     engine.dispose()
 
 
-def _crossing(database, location, when, status="accepted"):
-    database.add(DetectionRecord(location_id=location.id, detected_at=when, normalized_plate="VAA1234", detection_confidence=.9, status=status, source="webcam"))
+def _crossing(database, location, when, status="accepted", source="webcam_alpr"):
+    database.add(DetectionRecord(location_id=location.id, detected_at=when, normalized_plate="VAA1234", detection_confidence=.9, status=status, source=source))
 
 
 def test_webcam_crossings_drive_rolling_congestion_and_pricing(webcam_network):
@@ -72,3 +72,16 @@ def test_webcam_crossings_cap_at_one_hundred_and_prepare_the_next_price(webcam_n
     prepare_webcam_crossing_price(database, location, now)
     database.commit()
     assert webcam_crossing_state(database, location, now)["telemetry"]["vehicles_per_hour"] == 10
+
+
+def test_uploaded_images_share_the_simulator_crossing_window(webcam_network):
+    database, location = webcam_network
+    now = datetime.now(UTC)
+    _crossing(database, location, now, source="uploaded_image")
+    _crossing(database, location, now, source="webcam_alpr")
+    database.commit()
+
+    telemetry = webcam_crossing_state(database, location, now)["telemetry"]
+
+    assert telemetry["active_crossings"] == 2
+    assert telemetry["congestion_percentage"] == Decimal("20.00")

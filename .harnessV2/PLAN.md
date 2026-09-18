@@ -374,6 +374,8 @@ The Overview now uses a compact floating laptop-camera PiP rather than a drawer.
 
 ## Presentation Feedback Hardening — 2026-09-10
 
+Simulator Toll Plaza's local-ALPR boundary now includes two genuine local inference inputs: laptop-webcam frames and browser-selected still images. Both share the same accepted-crossing, simulated-payment, duplicate-protection, and rolling 60-second/10-crossing congestion workflow; generated network traffic remains excluded.
+
 The capstone presentation emphasizes a visible, authoritative Simulator Toll Plaza flow: accepted local-webcam crossings trigger short UI-only marker/record/value feedback and a concise congestion-to-toll message after the next canonical telemetry refresh. Selected-location pricing explanation reuses backend telemetry rather than calculating prices in the browser. Prediction presents current live telemetry beside its isolated browser-local future frame. A compact Model Performance modal provides verified held-out and development evaluation evidence for Q&A without restoring an AI Intelligence page. `start_plateplus_demo.bat` provides one-command local startup using existing Docker Compose, migrations, seed data, FastAPI, and Vite without dependency installation.
 
 The improved PlatePlus prototype should:

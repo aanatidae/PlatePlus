@@ -22,7 +22,7 @@ from app.services.detection.webcam_processor import (
     YoloPlateDetector,
 )
 from app.services.detection.webcam_service import WebcamService
-from app.services.traffic.webcam_crossings import prepare_webcam_crossing_price
+from app.services.traffic.webcam_crossings import has_recent_simulator_plate, prepare_webcam_crossing_price
 from app.services.transactions.toll_payment import process_toll_event
 
 router = APIRouter(
@@ -79,6 +79,18 @@ async def process_frame(
         )
         if simulator_location is None:
             raise HTTPException(status_code=503, detail="Simulator Toll Plaza is not initialized. Run migrations.")
+        if result.charge_eligible and has_recent_simulator_plate(
+            database, simulator_location, result.plate_text, datetime.now(UTC), settings.webcam_duplicate_cooldown_seconds
+        ):
+            result = result.__class__(
+                status="duplicate_plate_within_cooldown",
+                message="This plate was already processed recently at Simulator Toll Plaza.",
+                plate_text=result.plate_text,
+                detection_confidence=result.detection_confidence,
+                ocr_confidence=result.ocr_confidence,
+                bounding_box=result.bounding_box,
+                charge_eligible=False,
+            )
         if result.charge_eligible:
             prepare_webcam_crossing_price(database, simulator_location, datetime.now(UTC))
         payment = process_toll_event(
@@ -90,6 +102,7 @@ async def process_frame(
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
             location_id=simulator_location.id,
+            source="webcam_alpr",
         )
     box = result.bounding_box
     return WebcamFrameResult(
@@ -118,10 +131,11 @@ async def process_image(
 
     Image bytes are used only for inference and are never written to disk.
     """
+    location = None
     if location_id is not None:
         from app.api.locations import require_location
 
-        require_location(database, location_id)
+        location = require_location(database, location_id)
     if image.content_type not in SUPPORTED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail="Uploaded images must be JPEG, PNG, or WebP files.")
     image_bytes = await image.read(settings.webcam_max_frame_bytes + 1)
@@ -133,7 +147,24 @@ async def process_image(
         raise HTTPException(status_code=503, detail=str(error)) from error
 
     payment = None
+    source = "uploaded_image" if location and location.code == "SIMULATOR" else "upload"
+    now = datetime.now(UTC)
+    if location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_text:
+        if has_recent_simulator_plate(
+            database, location, result.plate_text, now, settings.webcam_duplicate_cooldown_seconds
+        ):
+            result = result.__class__(
+                status="duplicate_plate_within_cooldown",
+                message="This plate was already processed recently at Simulator Toll Plaza.",
+                plate_text=result.plate_text,
+                detection_confidence=result.detection_confidence,
+                ocr_confidence=result.ocr_confidence,
+                bounding_box=result.bounding_box,
+                charge_eligible=False,
+            )
     if result.plate_text:
+        if location and location.code == "SIMULATOR" and result.charge_eligible:
+            prepare_webcam_crossing_price(database, location, now)
         payment = process_toll_event(
             database,
             idempotency_key=idempotency_key or f"upload:{uuid4()}",
@@ -142,7 +173,7 @@ async def process_image(
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
-            source="upload",
+            source=source,
             location_id=location_id,
         )
     box = result.bounding_box
