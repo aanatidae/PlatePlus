@@ -12,7 +12,7 @@ Legend:
 - [x] Stable branch is `main`.
 - [x] `.harnessV2` exists as historical improvement documentation.
 - [x] Create `.harnessV3` guidance for current proposal alignment.
-- [x] Create a V3 feature branch only after explicit user approval. (`codex/proposal-alignment-v3`)
+- [x] Create a V3 feature branch only after explicit user approval. (Renamed to `feature/sgimplementation` by user request.)
 - [x] Record baseline test results before V3 code changes. (46 backend unit and 18 ML tests passed.)
 - [x] Search all active code/tests/docs for stale V2 toll names before implementation. (Old normal-network names remain in location, traffic, map, Prediction, tests, and historical migrations for later V3 network alignment.)
 - [x] Keep `.harness` and `.harnessV2` unchanged unless explicitly requested.

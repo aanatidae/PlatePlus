@@ -14,7 +14,7 @@ The repository already contains a mature multi-location ALPR, simulated-payment,
 6. Surface origin/foreign-charge information through the existing three-page UI.
 7. Add proposal-alignment tests and documentation.
 
-As of 2026-10-02, the repository baseline and plate-origin slice (TODO sections A–C) are complete on `codex/proposal-alignment-v3`. Detection metadata now stores a conservative origin decision and reason. Overlapping patterns are rejected. Singaporean deduction is deliberately blocked until its separate foreign-charge configuration and transaction components are implemented. Baseline tests passed before changes; post-change verification passed with 89 backend tests (including 37 PostgreSQL integration), 34 ML tests, 43 frontend tests, and a frontend production build.
+As of 2026-10-02, the repository baseline and plate-origin slice (TODO sections A–C) are complete on `feature/sgimplementation`. Detection metadata now stores a conservative origin decision and reason. Overlapping patterns are rejected. Singaporean deduction is deliberately blocked until its separate foreign-charge configuration and transaction components are implemented. Baseline tests passed before changes; post-change verification passed with 89 backend tests (including 37 PostgreSQL integration), 34 ML tests, 43 frontend tests, and a frontend production build.
 
 Origin evaluation (TODO section D) now has a separate, reproducible 32-case synthetic text fixture. It reports MY/SG/unknown confusion counts, cross-country errors, and safe rejection of overlapping or unsupported patterns. The 25/32 exact-origin result is a selected-fixture result only; OCR held-out and development results remain separate and untouched. No real-world origin accuracy is claimed.
 

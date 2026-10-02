@@ -27,7 +27,7 @@ The current phase is not a rebuild. It is a proposal-alignment, capstone-hardeni
 ## 2. Git and Change-Control Rules
 
 - Keep `main` stable.
-- Prefer a feature branch for substantial V3 work, e.g. `feature/proposal-alignment-v3`.
+- Prefer a feature branch for substantial V3 work. The active V3 branch is `feature/sgimplementation`.
 - Do not commit, push, merge, open a pull request, tag, release, or modify `main` unless the user explicitly approves it.
 - Never use Codex, ChatGPT, AI, bot, or automation identities as Git authors, committers, or co-authors.
 - Do not commit trained model binaries or other intentionally Git-ignored local assets.
