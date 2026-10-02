@@ -16,6 +16,8 @@ class WebcamFrameResult(BaseModel):
     status: str
     message: str
     plate_text: str | None = None
+    plate_origin: str = "unknown"
+    origin_reason: str | None = None
     detection_confidence: float | None = Field(default=None, ge=0, le=1)
     ocr_confidence: float | None = Field(default=None, ge=0, le=1)
     bounding_box: WebcamBoundingBox | None = None

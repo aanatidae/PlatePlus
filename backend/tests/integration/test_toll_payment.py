@@ -17,13 +17,14 @@ from app.services.transactions.toll_payment import process_toll_event
 
 
 def _seed_registered_vehicle(
-    database, *, balance: Decimal = Decimal("20.00"), is_primary: bool = True
+    database, *, balance: Decimal = Decimal("20.00"), is_primary: bool = True,
+    plate_number: str = "VAA1234"
 ) -> tuple[Account, Vehicle]:
     user = User(full_name="Payment Test User", email="payment@example.test")
     database.add(user)
     database.flush()
     account = Account(user_id=user.id, balance=balance, is_primary=is_primary)
-    vehicle = Vehicle(user_id=user.id, plate_number="VAA1234")
+    vehicle = Vehicle(user_id=user.id, plate_number=plate_number)
     database.add_all([account, vehicle])
     database.flush()
     return account, vehicle
@@ -71,6 +72,8 @@ def test_successful_payment_debits_the_primary_account(database) -> None:
     assert transaction.toll_price_id == price.id
     assert detection is not None
     assert detection.status == "accepted"
+    assert detection.plate_origin == "malaysian"
+    assert detection.origin_reason == "malaysian_supported_pattern"
     assert detection.vehicle_id == vehicle.id
     ledger = database.scalar(select(WalletLedgerEntry))
     assert ledger is not None
@@ -160,6 +163,34 @@ def test_repeated_idempotency_key_returns_the_original_result_without_another_de
     assert second.transaction_id == first.transaction_id
     assert account.balance == Decimal("18.00")
     assert len(transactions) == 1
+
+
+def test_ambiguous_origin_is_persisted_and_never_debits(database) -> None:
+    account, _ = _seed_registered_vehicle(database, plate_number="SLP1234A")
+    _seed_current_price(database)
+
+    outcome = _process(database, "payment-ambiguous-0001", normalized_plate="SLP1234A")
+
+    database.refresh(account)
+    detection = database.scalar(select(DetectionRecord))
+    assert outcome.status == "low_confidence"
+    assert account.balance == Decimal("20.00")
+    assert detection.plate_origin == "unknown"
+    assert detection.origin_reason == "ambiguous_supported_patterns"
+
+
+def test_singaporean_pattern_is_audited_without_charging_before_foreign_charge_setup(database) -> None:
+    account, _ = _seed_registered_vehicle(database, plate_number="GBC1234R")
+    _seed_current_price(database)
+
+    outcome = _process(database, "payment-sg-guard-0001", normalized_plate="GBC1234R")
+
+    database.refresh(account)
+    detection = database.scalar(select(DetectionRecord))
+    assert outcome.status == "failed"
+    assert account.balance == Decimal("20.00")
+    assert detection.plate_origin == "singaporean"
+    assert detection.origin_reason == "singaporean_supported_pattern"
 
 
 def test_only_the_designated_primary_account_is_used(database) -> None:

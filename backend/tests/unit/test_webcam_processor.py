@@ -49,6 +49,8 @@ def test_processor_requires_both_confidence_thresholds() -> None:
     result = processor.process(_frame_bytes())
 
     assert result.status == "ocr_confidence_below_threshold"
+    assert result.plate_origin == "unknown"
+    assert result.origin_reason == "not_evaluated_below_confidence"
     assert not result.charge_eligible
 
 
@@ -60,8 +62,32 @@ def test_processor_rejects_an_implausible_plate_after_confidence_gates() -> None
 
     result = processor.process(_frame_bytes())
 
-    assert result.status == "implausible_plate_format"
+    assert result.status == "unsupported_plate_origin"
     assert not result.charge_eligible
+
+
+@pytest.mark.parametrize(
+    ("plate", "expected_origin", "eligible"),
+    [
+        ("BKV1234", "malaysian", True),
+        ("GBC1234R", "singaporean", True),
+        ("SLP1234A", "unknown", False),
+    ],
+)
+def test_processor_classifies_origin_after_confidence_gates(
+    plate: str, expected_origin: str, eligible: bool
+) -> None:
+    detection = PlateDetection(BoundingBox(20, 20, 100, 45), confidence=0.9)
+    processor = WebcamFrameProcessor(
+        _Detector([detection]), _Recognizer(OcrResult(plate, plate, 0.95)), 0.5, 0.7
+    )
+
+    result = processor.process(_frame_bytes())
+
+    assert result.plate_origin == expected_origin
+    assert result.charge_eligible is eligible
+    if expected_origin == "unknown":
+        assert result.status == "ambiguous_plate_origin"
 
 
 def test_processor_rejects_invalid_image_bytes() -> None:

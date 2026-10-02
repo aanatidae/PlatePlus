@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
+from alpr.plate.origin import OriginDecision, classify_plate_origin
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -36,7 +37,7 @@ def recognition_is_charge_eligible(
     recognition_accepted: bool, normalized_plate: str | None
 ) -> bool:
     """Return whether a recognition can enter the simulated payment workflow."""
-    return recognition_accepted and bool(normalized_plate)
+    return recognition_accepted and bool(normalized_plate) and classify_plate_origin(normalized_plate).origin != "unknown"
 
 
 def has_sufficient_balance(balance: Decimal, amount: Decimal) -> bool:
@@ -60,6 +61,7 @@ def process_toll_event(
     detection_confidence: float | None,
     ocr_confidence: float | None,
     recognition_accepted: bool,
+    origin_reason: str | None = None,
     source: str = "webcam",
     detected_at: datetime | None = None,
     location_id: UUID | None = None,
@@ -80,15 +82,23 @@ def process_toll_event(
 
     now = detected_at or datetime.now(UTC)
     location_id = location_id or default_toll_location_id(database)
+    origin = (
+        classify_plate_origin(normalized_plate)
+        if recognition_accepted
+        else OriginDecision("unknown", origin_reason or "not_evaluated_or_rejected")
+    )
+    eligible = recognition_is_charge_eligible(recognition_accepted, normalized_plate)
     detection = DetectionRecord(
         location_id=location_id,
         detected_at=now,
         raw_plate_text=raw_plate_text,
         normalized_plate=normalized_plate,
+        plate_origin=origin.origin,
+        origin_reason=origin.reason,
         detection_confidence=Decimal(str(detection_confidence or 0)),
         ocr_confidence=Decimal(str(ocr_confidence)) if ocr_confidence is not None else None,
-        status="accepted" if recognition_accepted and normalized_plate else "low_confidence",
-        review_status="not_required" if recognition_accepted and normalized_plate else "pending",
+        status="accepted" if eligible else "low_confidence",
+        review_status="not_required" if eligible else "pending",
         source=source,
     )
     database.add(detection)
@@ -100,14 +110,30 @@ def process_toll_event(
         .order_by(TollPrice.effective_at.desc())
         .limit(1)
     )
-    if not recognition_is_charge_eligible(recognition_accepted, normalized_plate):
+    if not eligible:
+        reason = (
+            "Plate origin is ambiguous or unsupported; no simulated deduction was made."
+            if recognition_accepted and normalized_plate and origin.origin == "unknown"
+            else "Recognition did not pass confidence checks."
+        )
         return _record_failure(
             database,
             detection,
             idempotency_key,
             now,
             "low_confidence",
-            "Recognition did not pass confidence checks.",
+            reason,
+        )
+    if origin.origin == "singaporean":
+        # Phase 3 adds the separately itemized foreign charge. Until then,
+        # accepting a Singaporean plate must never silently charge a MY toll.
+        return _record_failure(
+            database,
+            detection,
+            idempotency_key,
+            now,
+            "failed",
+            "Singaporean simulated charging is not yet configured; no deduction was made.",
         )
     if price is None:
         detection.status = "error"

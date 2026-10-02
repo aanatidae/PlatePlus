@@ -1,0 +1,362 @@
+{
+  "fixture_type": "synthetic_text_only",
+  "sample_count": 32,
+  "reference_origin_confusion": {
+    "malaysian": {
+      "malaysian": 9,
+      "singaporean": 0,
+      "unknown": 3
+    },
+    "singaporean": {
+      "malaysian": 0,
+      "singaporean": 8,
+      "unknown": 4
+    },
+    "unknown": {
+      "malaysian": 0,
+      "singaporean": 0,
+      "unknown": 8
+    }
+  },
+  "exact_origin_matches": 25,
+  "exact_origin_accuracy_percent": 78.1,
+  "malaysian_to_singaporean": 0,
+  "singaporean_to_malaysian": 0,
+  "malaysian_to_unknown": 3,
+  "singaporean_to_unknown": 4,
+  "ambiguous_rejected": {
+    "correct": 7,
+    "total": 7
+  },
+  "unsupported_rejected": {
+    "correct": 8,
+    "total": 8
+  },
+  "policy_decision_agreement": {
+    "correct": 32,
+    "total": 32
+  },
+  "cases": [
+    {
+      "sample_id": "MY01",
+      "plate_text": "BKV1234",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY02",
+      "plate_text": "VAB12",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY03",
+      "plate_text": "ABC123X",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY04",
+      "plate_text": "QAB1234",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY05",
+      "plate_text": "ZZ193",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY06",
+      "plate_text": "TBU5553",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY07",
+      "plate_text": "JRN8721",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY08",
+      "plate_text": "PQR204",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY09",
+      "plate_text": "W2496F",
+      "reference_origin": "malaysian",
+      "case_type": "supported",
+      "expected_decision": "malaysian",
+      "predicted_origin": "malaysian",
+      "predicted_reason": "malaysian_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY10",
+      "plate_text": "SA377N",
+      "reference_origin": "malaysian",
+      "case_type": "ambiguous",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "ambiguous_supported_patterns",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY11",
+      "plate_text": "SLP1234A",
+      "reference_origin": "malaysian",
+      "case_type": "ambiguous",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "ambiguous_supported_patterns",
+      "policy_match": true
+    },
+    {
+      "sample_id": "MY12",
+      "plate_text": "FB761A",
+      "reference_origin": "malaysian",
+      "case_type": "ambiguous",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "ambiguous_supported_patterns",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG01",
+      "plate_text": "GBC1234R",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG02",
+      "plate_text": "YN1234R",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG03",
+      "plate_text": "XD1234E",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG04",
+      "plate_text": "GDA482K",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG05",
+      "plate_text": "YTK91P",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG06",
+      "plate_text": "XAB7M",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG07",
+      "plate_text": "GBC1R",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG08",
+      "plate_text": "XZ9999E",
+      "reference_origin": "singaporean",
+      "case_type": "supported",
+      "expected_decision": "singaporean",
+      "predicted_origin": "singaporean",
+      "predicted_reason": "singaporean_supported_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG09",
+      "plate_text": "SPM5821K",
+      "reference_origin": "singaporean",
+      "case_type": "ambiguous",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "ambiguous_supported_patterns",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG10",
+      "plate_text": "SLQ77C",
+      "reference_origin": "singaporean",
+      "case_type": "ambiguous",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "ambiguous_supported_patterns",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG11",
+      "plate_text": "FBZ8812R",
+      "reference_origin": "singaporean",
+      "case_type": "ambiguous",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "ambiguous_supported_patterns",
+      "policy_match": true
+    },
+    {
+      "sample_id": "SG12",
+      "plate_text": "FLE77B",
+      "reference_origin": "singaporean",
+      "case_type": "ambiguous",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "ambiguous_supported_patterns",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN01",
+      "plate_text": "1234",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN02",
+      "plate_text": "ABCDEF",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN03",
+      "plate_text": "ABCD1234",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN04",
+      "plate_text": "GBC1234",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN05",
+      "plate_text": "ABC12345",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN06",
+      "plate_text": "",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN07",
+      "plate_text": "AB12C34",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    },
+    {
+      "sample_id": "UN08",
+      "plate_text": "S12345A",
+      "reference_origin": "unknown",
+      "case_type": "unsupported",
+      "expected_decision": "unknown",
+      "predicted_origin": "unknown",
+      "predicted_reason": "unsupported_plate_pattern",
+      "policy_match": true
+    }
+  ],
+  "limitations": "Synthetic normalized text only; no image, OCR, issued-registration, or real-world population accuracy is measured. The intentionally enriched ambiguous cases make the aggregate percentage non-representative."
+}

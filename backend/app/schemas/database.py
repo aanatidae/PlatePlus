@@ -136,6 +136,8 @@ class DetectionRecordCreate(BaseModel):
     detected_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     raw_plate_text: str | None = Field(default=None, max_length=64)
     normalized_plate: str | None = Field(default=None, max_length=16)
+    plate_origin: Literal["malaysian", "singaporean", "unknown"] = "unknown"
+    origin_reason: str | None = Field(default=None, max_length=64)
     detection_confidence: Decimal = Field(ge=0, le=1, max_digits=5, decimal_places=4)
     ocr_confidence: Decimal | None = Field(default=None, ge=0, le=1, max_digits=5, decimal_places=4)
     status: Literal["accepted", "low_confidence", "unknown_vehicle", "duplicate", "error"]
@@ -154,6 +156,8 @@ class DetectionRecordRead(ORMModel):
     detected_at: datetime
     raw_plate_text: str | None
     normalized_plate: str | None
+    plate_origin: str
+    origin_reason: str | None
     detection_confidence: Decimal
     ocr_confidence: Decimal | None
     status: str

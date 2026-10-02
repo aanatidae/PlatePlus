@@ -22,7 +22,10 @@ from app.services.detection.webcam_processor import (
     YoloPlateDetector,
 )
 from app.services.detection.webcam_service import WebcamService
-from app.services.traffic.webcam_crossings import has_recent_simulator_plate, prepare_webcam_crossing_price
+from app.services.traffic.webcam_crossings import (
+    has_recent_simulator_plate,
+    prepare_webcam_crossing_price,
+)
 from app.services.transactions.toll_payment import process_toll_event
 
 router = APIRouter(
@@ -79,19 +82,22 @@ async def process_frame(
         )
         if simulator_location is None:
             raise HTTPException(status_code=503, detail="Simulator Toll Plaza is not initialized. Run migrations.")
-        if result.charge_eligible and has_recent_simulator_plate(
+        if result.charge_eligible and result.plate_origin == "malaysian" and has_recent_simulator_plate(
             database, simulator_location, result.plate_text, datetime.now(UTC), settings.webcam_duplicate_cooldown_seconds
         ):
             result = result.__class__(
                 status="duplicate_plate_within_cooldown",
                 message="This plate was already processed recently at Simulator Toll Plaza.",
                 plate_text=result.plate_text,
+                raw_plate_text=result.raw_plate_text,
+                plate_origin=result.plate_origin,
+                origin_reason=result.origin_reason,
                 detection_confidence=result.detection_confidence,
                 ocr_confidence=result.ocr_confidence,
                 bounding_box=result.bounding_box,
                 charge_eligible=False,
             )
-        if result.charge_eligible:
+        if result.charge_eligible and result.plate_origin == "malaysian":
             prepare_webcam_crossing_price(database, simulator_location, datetime.now(UTC))
         payment = process_toll_event(
             database,
@@ -101,6 +107,7 @@ async def process_frame(
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
+            origin_reason=result.origin_reason,
             location_id=simulator_location.id,
             source="webcam_alpr",
         )
@@ -109,6 +116,8 @@ async def process_frame(
         status=result.status,
         message=result.message,
         plate_text=result.plate_text,
+        plate_origin=result.plate_origin,
+        origin_reason=result.origin_reason,
         detection_confidence=result.detection_confidence,
         ocr_confidence=result.ocr_confidence,
         bounding_box=WebcamBoundingBox(**box.__dict__) if box else None,
@@ -149,21 +158,27 @@ async def process_image(
     payment = None
     source = "uploaded_image" if location and location.code == "SIMULATOR" else "upload"
     now = datetime.now(UTC)
-    if location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_text:
-        if has_recent_simulator_plate(
+    if (
+        location and location.code == "SIMULATOR" and result.charge_eligible
+        and result.plate_origin == "malaysian" and result.plate_text
+        and has_recent_simulator_plate(
             database, location, result.plate_text, now, settings.webcam_duplicate_cooldown_seconds
-        ):
-            result = result.__class__(
-                status="duplicate_plate_within_cooldown",
-                message="This plate was already processed recently at Simulator Toll Plaza.",
-                plate_text=result.plate_text,
-                detection_confidence=result.detection_confidence,
-                ocr_confidence=result.ocr_confidence,
-                bounding_box=result.bounding_box,
-                charge_eligible=False,
-            )
+        )
+    ):
+        result = result.__class__(
+            status="duplicate_plate_within_cooldown",
+            message="This plate was already processed recently at Simulator Toll Plaza.",
+            plate_text=result.plate_text,
+            raw_plate_text=result.raw_plate_text,
+            plate_origin=result.plate_origin,
+            origin_reason=result.origin_reason,
+            detection_confidence=result.detection_confidence,
+            ocr_confidence=result.ocr_confidence,
+            bounding_box=result.bounding_box,
+            charge_eligible=False,
+        )
     if result.plate_text:
-        if location and location.code == "SIMULATOR" and result.charge_eligible:
+        if location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_origin == "malaysian":
             prepare_webcam_crossing_price(database, location, now)
         payment = process_toll_event(
             database,
@@ -173,6 +188,7 @@ async def process_image(
             detection_confidence=result.detection_confidence,
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
+            origin_reason=result.origin_reason,
             source=source,
             location_id=location_id,
         )
@@ -181,6 +197,8 @@ async def process_image(
         status=result.status,
         message=result.message,
         plate_text=result.plate_text,
+        plate_origin=result.plate_origin,
+        origin_reason=result.origin_reason,
         detection_confidence=result.detection_confidence,
         ocr_confidence=result.ocr_confidence,
         bounding_box=WebcamBoundingBox(**box.__dict__) if box else None,

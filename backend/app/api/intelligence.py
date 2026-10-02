@@ -84,8 +84,13 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
                 },
                 {
                     "name": "Normalization",
-                    "detail": detection.normalized_plate or "No normalized Malaysian plate was retained.",
+                    "detail": detection.normalized_plate or "No normalized plate was retained.",
                     "result": "normalized" if detection.normalized_plate else "not accepted",
+                },
+                {
+                    "name": "Plate origin",
+                    "detail": detection.origin_reason or "Origin was not classified for this record.",
+                    "result": detection.plate_origin,
                 },
                 {
                     "name": "Charge eligibility",
@@ -166,7 +171,7 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
                 "note": "Human-reviewed development evidence only; the held-out OCR set was not used for tuning.",
             },
         },
-        "charge_eligibility": "A plate is charge eligible only after detection and OCR meet their active thresholds, normalization retains a plate value, and a registered vehicle is matched. Payment remains simulated and may still fail for account or duplicate-protection reasons.",
+        "charge_eligibility": "A plate enters vehicle lookup only after detection and OCR meet their active thresholds and a supported, unambiguous origin pattern is found. Pattern classification does not verify registration country or ownership. Singaporean deduction remains disabled until a separate simulated foreign charge is configured. Payment remains simulated and may still fail for account or duplicate-protection reasons.",
         "outcome_analysis": {
             "accepted": outcome_counts.get("accepted", 0),
             "low_confidence": outcome_counts.get("low_confidence", 0),

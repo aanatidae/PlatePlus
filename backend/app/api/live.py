@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from math import sin
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -38,7 +38,7 @@ def _telemetry(now: datetime, rules: dict[str, DynamicPricingRule]) -> dict:
 
 
 @router.get("/overview")
-def live_overview(location_id: UUID | None = None, database: Session = Depends(get_db), scope: Literal["all_locations"] | None = None):
+def live_overview(database: Annotated[Session, Depends(get_db)], location_id: UUID | None = None, scope: Literal["all_locations"] | None = None):
     """Return live time-patterned telemetry and persisted ALPR/payment activity.
 
     This endpoint does not create or update traffic, price, or transaction records.
@@ -69,6 +69,6 @@ def live_overview(location_id: UUID | None = None, database: Session = Depends(g
         "live": {"traffic": telemetry, "price": {"amount": telemetry["current_toll_price"], "base_amount": telemetry["base_toll_price"], "multiplier": telemetry["congestion_multiplier"]}},
         "metrics": {"detections": len(all_detections), "detections_this_hour": len(hourly_detections), "transactions": len(successful_transactions), "successful_transactions": len(successful_transactions), "failed_transactions": len(hourly_detections) - len(accepted), "revenue": sum((item.amount for item in successful_transactions), Decimal(0)), "average_recognition_confidence": average_confidence},
         "traffic_series": traffic_series, "price_series": [{"effective_at": item["measured_at"], "amount": telemetry["current_toll_price"]} for item in traffic_series],
-        "detections": {"items": [{"id": item.id, "detected_at": item.detected_at, "normalized_plate": item.normalized_plate, "status": item.status, "vehicle_id": item.vehicle_id, "detection_confidence": item.detection_confidence, "ocr_confidence": item.ocr_confidence} for item in detections], "has_more": False},
+        "detections": {"items": [{"id": item.id, "detected_at": item.detected_at, "normalized_plate": item.normalized_plate, "plate_origin": item.plate_origin, "origin_reason": item.origin_reason, "status": item.status, "vehicle_id": item.vehicle_id, "detection_confidence": item.detection_confidence, "ocr_confidence": item.ocr_confidence} for item in detections], "has_more": False},
         "transactions": {"items": [{"id": item.id, "processed_at": item.processed_at, "amount": item.amount, "status": item.status, "vehicle_id": item.vehicle_id, "balance_after": item.balance_after} for item in transactions], "has_more": False},
     }

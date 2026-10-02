@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 from alpr.plate.crop import extract_plate_crop, select_best_plate_detection
-from alpr.plate.normalization import is_plausible_malaysian_plate
+from alpr.plate.origin import OriginDecision, classify_plate_origin
 from alpr.types import BoundingBox, PlateDetection, recognition_decision
 
 
@@ -24,6 +24,8 @@ class ProcessedFrame:
     message: str
     plate_text: str | None = None
     raw_plate_text: str | None = None
+    plate_origin: str = "unknown"
+    origin_reason: str | None = None
     detection_confidence: float | None = None
     ocr_confidence: float | None = None
     bounding_box: BoundingBox | None = None
@@ -102,24 +104,43 @@ class WebcamFrameProcessor:
 
         crop = extract_plate_crop(image, detection)
         ocr = self._recognizer.recognize(crop.image)
-        decision = recognition_decision(
+        confidence_decision = recognition_decision(
             detection.confidence,
             ocr.confidence,
             self._detection_threshold,
             self._ocr_threshold,
-            is_plausible_malaysian_plate(ocr.normalized_text),
+        )
+        origin = (
+            classify_plate_origin(ocr.normalized_text)
+            if confidence_decision.accepted
+            else OriginDecision("unknown", "not_evaluated_below_confidence")
+        )
+        decision = (
+            recognition_decision(
+                detection.confidence,
+                ocr.confidence,
+                self._detection_threshold,
+                self._ocr_threshold,
+                origin.origin != "unknown",
+            )
+            if confidence_decision.accepted else confidence_decision
         )
         status = "accepted_for_vehicle_lookup" if decision.accepted else decision.reason or "recognition_rejected"
+        if status == "implausible_plate_format":
+            status = "ambiguous_plate_origin" if origin.reason == "ambiguous_supported_patterns" else "unsupported_plate_origin"
         message = {
             "detection_confidence_below_threshold": "Recognition did not meet the detection confidence gate.",
             "ocr_confidence_below_threshold": "Recognition did not meet the OCR confidence gate.",
-            "implausible_plate_format": "OCR text did not match an accepted Malaysian plate format.",
-        }.get(status, "Recognition passed confidence and format checks.")
+            "ambiguous_plate_origin": "Plate pattern overlaps supported origins; manual review is required.",
+            "unsupported_plate_origin": "Plate pattern is not supported for origin classification.",
+        }.get(status, "Recognition passed confidence and origin checks.")
         return ProcessedFrame(
             status=status,
             message=message,
             plate_text=ocr.normalized_text or None,
             raw_plate_text=ocr.raw_text or None,
+            plate_origin=origin.origin,
+            origin_reason=origin.reason,
             detection_confidence=detection.confidence,
             ocr_confidence=ocr.confidence,
             bounding_box=crop.bounding_box,

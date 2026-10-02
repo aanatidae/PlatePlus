@@ -77,7 +77,7 @@ def overview(
         return {"effective_at": item.effective_at, "amount": item.amount, "congestion_category": item.congestion_category}
 
     def detection_item(item: DetectionRecord) -> dict:
-        return {"id": item.id, "detected_at": item.detected_at, "normalized_plate": item.normalized_plate, "status": item.status, "vehicle_id": item.vehicle_id, "detection_confidence": item.detection_confidence, "ocr_confidence": item.ocr_confidence}
+        return {"id": item.id, "detected_at": item.detected_at, "normalized_plate": item.normalized_plate, "plate_origin": item.plate_origin, "origin_reason": item.origin_reason, "status": item.status, "vehicle_id": item.vehicle_id, "detection_confidence": item.detection_confidence, "ocr_confidence": item.ocr_confidence}
 
     def transaction_item(item: TollTransaction) -> dict:
         return {"id": item.id, "processed_at": item.processed_at, "amount": item.amount, "status": item.status, "vehicle_id": item.vehicle_id, "balance_after": item.balance_after}

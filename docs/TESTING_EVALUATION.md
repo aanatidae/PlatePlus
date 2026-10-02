@@ -34,6 +34,20 @@ Latest local verification: backend unit tests **24 passed**, ML tests **17 passe
 | Live still-image demonstration | YOLO 92.3%, OCR 99.88%, registered match, RM2.00 simulated payment, idempotent replay | End-to-end simulated flow |
 | Toll calculation and pricing selection tests | Passing | 100% correctness |
 
+## V3 plate-origin pattern evaluation
+
+The V3 classifier was evaluated separately on [32 labelled synthetic text cases](../ml/evaluation/origin/README.md). This is a deterministic policy check on normalized plate text; it does not run YOLO or PaddleOCR and does not reuse the protected 44-crop OCR held-out set. The fixture labels describe simulated Malaysian, Singaporean, and unsupported scenarios rather than verified issued registrations.
+
+| Reference origin | Classified Malaysian | Classified Singaporean | Rejected as unknown |
+| --- | ---: | ---: | ---: |
+| Malaysian | 9 | 0 | 3 |
+| Singaporean | 0 | 8 | 4 |
+| Unknown/unsupported | 0 | 0 | 8 |
+
+Exact origin labels were **25/32 (78.1%)** on this deliberately selected synthetic fixture. MY-to-SG and SG-to-MY confusions were **0** each. The classifier correctly rejected **7/7 overlapping** and **8/8 unsupported** examples. Seven known-origin inputs were rejected because their text shapes overlap. The fixture is small and enriched with overlap cases, so the percentage is not a field-accuracy estimate. No Singaporean image/OCR evaluation or human-verified origin set exists yet. See `ml/evaluation/origin/results.json` for per-case decisions.
+
+The origin result is independent of PaddleOCR's **37/44 held-out exact-match** and **125/146 development exact-match** results; none of these numbers should be combined into a single accuracy claim.
+
 ## Development-set robustness evaluation
 
 The separate development protocol processed 150 manually reviewed, non-held-out

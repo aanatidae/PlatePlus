@@ -296,6 +296,10 @@ class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "detection_records"
     __table_args__ = (
         CheckConstraint(
+            "plate_origin IN ('malaysian', 'singaporean', 'unknown')",
+            name="ck_detection_records_plate_origin",
+        ),
+        CheckConstraint(
             "detection_confidence >= 0 AND detection_confidence <= 1",
             name="ck_detection_confidence_range",
         ),
@@ -321,6 +325,8 @@ class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     raw_plate_text: Mapped[str | None] = mapped_column(String(64))
     normalized_plate: Mapped[str | None] = mapped_column(String(16), index=True)
+    plate_origin: Mapped[str] = mapped_column(String(16), nullable=False, default="unknown", server_default="unknown")
+    origin_reason: Mapped[str | None] = mapped_column(String(64))
     detection_confidence: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False)
     ocr_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)

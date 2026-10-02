@@ -26,6 +26,9 @@ def test_insufficient_balance_never_creates_an_overdraft() -> None:
         (False, "VAA1234", False),
         (True, "", False),
         (True, None, False),
+        (True, "SLP1234A", False),
+        (True, "ABCDEF", False),
+        (True, "GBC1234R", True),
     ],
 )
 def test_only_confidence_eligible_recognitions_can_be_charged(

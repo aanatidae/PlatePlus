@@ -10,8 +10,8 @@ import numpy as np
 
 from alpr.plate.normalization import (
     correct_common_ocr_confusions,
-    is_plausible_malaysian_plate,
 )
+from alpr.plate.origin import classify_plate_origin
 from alpr.types import OcrResult
 
 
@@ -37,7 +37,10 @@ class PaddleOcrPlateRecognizer:
             return OcrResult(raw_text="", normalized_text="", confidence=0.0)
 
         corrected = [(item[0], correct_common_ocr_confusions(item[0]), item[1]) for item in candidates]
-        plausible = [item for item in corrected if is_plausible_malaysian_plate(item[1])]
+        plausible = [
+            item for item in corrected
+            if classify_plate_origin(item[1]).origin != "unknown"
+        ]
         raw_text, normalized_text, confidence = max(plausible or corrected, key=lambda item: item[2])
         return OcrResult(
             raw_text=raw_text,

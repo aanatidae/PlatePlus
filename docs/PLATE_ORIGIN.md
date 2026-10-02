@@ -1,0 +1,11 @@
+# Plate-origin pattern classification (V3)
+
+After YOLO plate detection, PaddleOCR, normalization, and both confidence gates, PlatePlus applies a deterministic pattern check. Its output is `malaysian`, `singaporean`, or `unknown`. This is a prototype pattern hint, not a legal check of registration country, nationality, vehicle ownership, or VEP status. PlatePlus does not query JPJ, LTA, VEP, or owner databases.
+
+The supported Malaysian rule accepts a common state/territory or special-series initial, one to three prefix letters, one to four digits, and up to three suffix letters. The Singaporean rule accepts selected LTA-style `S`, `F`, `G`, `X`, or `Y` prefix series, one to three prefix letters, one to four digits, and a final letter. These rules are deliberately narrower than all real registration formats. They are based on [JPJ plate information](https://www.jpj.gov.my/pusat-media-3/informasi-perkhidmatan-jpj/kenderaan/spesifikasi-no-plat-kenderaan/) and [LTA vehicle registration number examples](https://onemotoring.lta.gov.sg/content/onemotoring/home/buying/upfront-vehicle-costs/vehicle-registration-number--vrn-.html). The classifier does not validate whether an individual number was issued or whether its Singaporean check letter is correct.
+
+Some layouts overlap. For example, `SLP1234A` fits both supported shapes. PlatePlus returns `unknown` with reason `ambiguous_supported_patterns` and prevents a simulated deduction. A plate matching neither rule returns `unknown` with reason `unsupported_plate_pattern`. OCR correction retains raw text and cannot override an ambiguous origin. Low-confidence OCR is not classified.
+
+The current A–C implementation records the decision and reason with detection metadata. Singaporean-looking plates are recognized but cannot produce a successful simulated deduction until the V3 foreign-charge configuration and itemized payment work are complete. `GBC1234R`, `YN1234R`, and `XD1234E` are test shapes, not assertions that those exact numbers are available or registered. No real owner data or payment service is used.
+
+The separate [synthetic origin evaluation](../ml/evaluation/origin/README.md) reports a 32-case confusion matrix and safe-rejection counts. It does not reuse the protected OCR held-out crops or measure OCR accuracy.

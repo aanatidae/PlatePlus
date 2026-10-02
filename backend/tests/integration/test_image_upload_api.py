@@ -28,6 +28,8 @@ class _SuccessfulImageService:
             status="accepted_for_vehicle_lookup",
             message="Recognition passed confidence checks.",
             plate_text="VAA1234",
+            plate_origin="malaysian",
+            origin_reason="malaysian_supported_pattern",
             detection_confidence=0.95,
             ocr_confidence=0.93,
             charge_eligible=True,
@@ -70,6 +72,7 @@ def test_authenticated_image_upload_runs_the_complete_simulated_toll_flow(
     transaction = database.scalar(select(TollTransaction))
     assert response.status_code == 200, response.text
     assert response.json()["payment_status"] == "successful"
+    assert response.json()["plate_origin"] == "malaysian"
     assert account.balance == Decimal("18.00")
     assert detection is not None and detection.source == "upload"
     assert transaction is not None and transaction.status == "successful"
