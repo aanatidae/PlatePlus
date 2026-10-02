@@ -10,7 +10,6 @@ from app.db.session import SessionLocal
 from app.models import Account, Admin, TollPrice, TrafficRecord, User, Vehicle, WalletLedgerEntry
 from app.services.auth.service import hash_password
 
-
 DEMO_VEHICLE_TARGET = 96
 
 
@@ -47,6 +46,15 @@ def synthetic_demo_people() -> tuple[tuple[str, str, str, str, str, str, str, De
     return result
 
 
+def synthetic_singaporean_demo_people() -> tuple[tuple[str, str, None, str, str, str, str, Decimal], ...]:
+    """Fictional SG-pattern examples; these are not real owner records."""
+    return (
+        ("Synthetic Singapore Driver 01", "synthetic.sg.01@example.test", None, "GBC6427R", "Toyota", "Corolla", "Silver", Decimal("75.00")),
+        ("Synthetic Singapore Driver 02", "synthetic.sg.02@example.test", None, "YN4821R", "Honda", "Civic", "Blue", Decimal("8.00")),
+        ("Synthetic Singapore Driver 03", "synthetic.sg.03@example.test", None, "XD7316E", "Nissan", "Note", "White", Decimal("45.00")),
+    )
+
+
 def seed_demo_data() -> None:
     settings = Settings()
     with SessionLocal.begin() as database:
@@ -62,7 +70,9 @@ def seed_demo_data() -> None:
         elif admin.password_hash is None:
             admin.password_hash = hash_password(settings.demo_admin_password)
 
-        for name, email, phone, plate, make, model, color, balance in synthetic_demo_people():
+        people = ((person, "malaysian") for person in synthetic_demo_people())
+        singaporeans = ((person, "singaporean") for person in synthetic_singaporean_demo_people())
+        for (name, email, phone, plate, make, model, color, balance), origin in (*people, *singaporeans):
             user = database.scalar(select(User).where(User.email == email))
             if user is None:
                 user = User(full_name=name, email=email, phone=phone)
@@ -79,12 +89,16 @@ def seed_demo_data() -> None:
                     direction="credit", balance_after=account.balance,
                     description="Opening simulated wallet balance.", idempotency_key=f"seed-opening:{account.id}",
                 ))
-            if database.scalar(select(Vehicle).where(Vehicle.plate_number == plate)) is None:
+            vehicle = database.scalar(select(Vehicle).where(Vehicle.plate_number == plate))
+            if vehicle is None:
                 database.add(
                     Vehicle(
-                        user_id=user.id, plate_number=plate, make=make, model=model, color=color
+                        user_id=user.id, plate_number=plate, registration_origin=origin,
+                        make=make, model=model, color=color
                     )
                 )
+            elif vehicle.user_id == user.id:
+                vehicle.registration_origin = origin
 
         if database.scalar(select(TrafficRecord).limit(1)) is None:
             now = datetime.now(UTC)

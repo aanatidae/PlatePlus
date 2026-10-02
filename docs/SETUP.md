@@ -26,7 +26,7 @@ alembic upgrade head
 python -m app.db.seed
 ```
 
-The seed is idempotent. It creates only synthetic users, separate MYR accounts, Malaysian-style vehicle records, one initial traffic/price decision, and a password-hashed demo administrator. Use the `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` values from your untracked `.env` to sign in to the dashboard or `POST /api/auth/login`.
+The seed is idempotent. It creates synthetic users, separate MYR accounts, 96 Malaysian-style presentation vehicles, three fictional Singaporean-pattern vehicles with varied balances, one initial traffic/price decision, and a password-hashed demo administrator. Migration `20261002_0013` seeds a configurable RM20.00 **simulated** foreign-vehicle charge; see [charge behavior and API](FOREIGN_VEHICLE_CHARGE.md). Use the `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` values from your untracked `.env` to sign in to the dashboard or `POST /api/auth/login`.
 
 Run PostgreSQL API integration tests against only the temporary test database:
 

@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.models import (
     Account,
     DetectionRecord,
+    ForeignVehicleChargeSettings,
     PaymentNotification,
     TollPrice,
     TollTransaction,
@@ -31,6 +32,8 @@ class PaymentOutcome:
     balance_after: Decimal | None
     transaction_id: str | None
     duplicate: bool = False
+    dynamic_toll_amount: Decimal = Decimal("0.00")
+    foreign_vehicle_charge: Decimal = Decimal("0.00")
 
 
 def recognition_is_charge_eligible(
@@ -78,6 +81,8 @@ def process_toll_event(
             existing.balance_after,
             str(existing.id),
             duplicate=True,
+            dynamic_toll_amount=existing.dynamic_toll_amount,
+            foreign_vehicle_charge=existing.foreign_vehicle_charge,
         )
 
     now = detected_at or datetime.now(UTC)
@@ -124,17 +129,6 @@ def process_toll_event(
             "low_confidence",
             reason,
         )
-    if origin.origin == "singaporean":
-        # Phase 3 adds the separately itemized foreign charge. Until then,
-        # accepting a Singaporean plate must never silently charge a MY toll.
-        return _record_failure(
-            database,
-            detection,
-            idempotency_key,
-            now,
-            "failed",
-            "Singaporean simulated charging is not yet configured; no deduction was made.",
-        )
     if price is None:
         detection.status = "error"
         return _record_failure(
@@ -145,6 +139,19 @@ def process_toll_event(
             "failed",
             "No current simulated toll price is available.",
         )
+
+    foreign_charge = Decimal("0.00")
+    if origin.origin == "singaporean":
+        charge_settings = database.get(ForeignVehicleChargeSettings, "default")
+        if charge_settings is None:
+            detection.status = "error"
+            return _record_failure(
+                database, detection, idempotency_key, now, "failed",
+                "Simulated foreign-vehicle charge is not configured; no deduction was made.",
+                price=price,
+            )
+        foreign_charge = charge_settings.amount
+    final_total = price.amount + foreign_charge
 
     vehicle = database.scalar(
         select(Vehicle).where(Vehicle.plate_number == normalized_plate, Vehicle.is_active.is_(True))
@@ -159,6 +166,15 @@ def process_toll_event(
             "unknown_vehicle",
             "The recognized plate is not registered to an active simulated vehicle.",
             price=price,
+            foreign_charge=foreign_charge,
+        )
+
+    if vehicle.registration_origin != origin.origin:
+        detection.status = "error"
+        return _record_failure(
+            database, detection, idempotency_key, now, "failed",
+            "Recognized plate origin does not match the registered simulated vehicle.",
+            vehicle=vehicle, price=price, foreign_charge=foreign_charge,
         )
 
     detection.vehicle_id = vehicle.id
@@ -182,8 +198,9 @@ def process_toll_event(
             "The vehicle owner has no active primary simulated account.",
             vehicle=vehicle,
             price=price,
+            foreign_charge=foreign_charge,
         )
-    if not has_sufficient_balance(account.balance, price.amount):
+    if not has_sufficient_balance(account.balance, final_total):
         detection.status = "accepted"
         return _record_failure(
             database,
@@ -195,9 +212,10 @@ def process_toll_event(
             account=account,
             vehicle=vehicle,
             price=price,
+            foreign_charge=foreign_charge,
         )
 
-    account.balance = balance_after_toll(account.balance, price.amount)
+    account.balance = balance_after_toll(account.balance, final_total)
     transaction = TollTransaction(
         location_id=location_id,
         account_id=account.id,
@@ -206,19 +224,27 @@ def process_toll_event(
         detection_id=detection.id,
         idempotency_key=idempotency_key,
         processed_at=now,
-        amount=price.amount,
+        amount=final_total,
+        dynamic_toll_amount=price.amount,
+        foreign_vehicle_charge=foreign_charge,
         status="successful",
         balance_after=account.balance,
     )
     database.add(transaction)
     database.flush()
     _add_wallet_entry(
-        database, account, transaction, "toll_deduction", price.amount, "debit",
+        database, account, transaction, "toll_deduction", final_total, "debit",
         f"Simulated toll deduction at {location_id}.", f"toll:{idempotency_key}",
     )
+    notification_message = f"Simulated toll payment of RM{final_total:.2f} was processed."
+    if foreign_charge:
+        notification_message = (
+            f"Simulated toll payment of RM{final_total:.2f} was processed "
+            f"(RM{price.amount:.2f} dynamic toll + RM{foreign_charge:.2f} simulated foreign-vehicle charge)."
+        )
     _add_notification(
         database, vehicle.user_id, transaction, "payment_success",
-        f"Simulated toll payment of RM{price.amount:.2f} was processed.",
+        notification_message,
     )
     database.commit()
     database.refresh(transaction)
@@ -228,6 +254,8 @@ def process_toll_event(
         transaction.amount,
         transaction.balance_after,
         str(transaction.id),
+        dynamic_toll_amount=transaction.dynamic_toll_amount,
+        foreign_vehicle_charge=transaction.foreign_vehicle_charge,
     )
 
 
@@ -242,7 +270,10 @@ def _record_failure(
     account: Account | None = None,
     vehicle: Vehicle | None = None,
     price: TollPrice | None = None,
+    foreign_charge: Decimal = Decimal("0.00"),
 ) -> PaymentOutcome:
+    dynamic_toll_amount = price.amount if price else Decimal("0.00")
+    attempted_total = dynamic_toll_amount + foreign_charge
     transaction = TollTransaction(
         location_id=detection.location_id,
         account_id=account.id if account else None,
@@ -251,7 +282,9 @@ def _record_failure(
         detection_id=detection.id,
         idempotency_key=idempotency_key,
         processed_at=processed_at,
-        amount=price.amount if price else Decimal("0.00"),
+        amount=attempted_total,
+        dynamic_toll_amount=dynamic_toll_amount,
+        foreign_vehicle_charge=foreign_charge,
         status=status,
         failure_reason=message,
         balance_after=account.balance if account else None,
@@ -266,7 +299,9 @@ def _record_failure(
     database.commit()
     database.refresh(transaction)
     return PaymentOutcome(
-        status, message, transaction.amount, transaction.balance_after, str(transaction.id)
+        status, message, transaction.amount, transaction.balance_after, str(transaction.id),
+        dynamic_toll_amount=transaction.dynamic_toll_amount,
+        foreign_vehicle_charge=transaction.foreign_vehicle_charge,
     )
 
 

@@ -156,7 +156,7 @@ def reset_full_demo(database: DatabaseSession):
             price = TollPrice(location_id=location.id, effective_at=detection.detected_at, amount=location.base_toll, congestion_category="low", rule_version="demo")
             database.add(price)
             database.flush()
-            database.add(TollTransaction(location_id=location.id, detection_id=detection.id, vehicle_id=vehicle.id if vehicle else None, toll_price_id=price.id, idempotency_key=f"demo-mode:{plate}", processed_at=detection.detected_at, amount=location.base_toll, status="successful", balance_after=None))
+            database.add(TollTransaction(location_id=location.id, detection_id=detection.id, vehicle_id=vehicle.id if vehicle else None, toll_price_id=price.id, idempotency_key=f"demo-mode:{plate}", processed_at=detection.detected_at, amount=location.base_toll, dynamic_toll_amount=location.base_toll, foreign_vehicle_charge=Decimal("0.00"), status="successful", balance_after=None))
         seeded += 1
     record_event(database, event_type="administrator_action", source="demo", message="Demo Mode baseline restored.", details={"action": "demo_mode_reset", **summary})
     database.commit()

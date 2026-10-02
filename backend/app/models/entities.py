@@ -101,6 +101,9 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "vehicles"
+    __table_args__ = (
+        CheckConstraint("registration_origin IN ('malaysian', 'singaporean')", name="ck_vehicles_registration_origin"),
+    )
 
     user_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -109,6 +112,7 @@ class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         index=True,
     )
     plate_number: Mapped[str] = mapped_column(String(16), unique=True, nullable=False, index=True)
+    registration_origin: Mapped[str] = mapped_column(String(16), nullable=False, default="malaysian", server_default="malaysian")
     make: Mapped[str | None] = mapped_column(String(80))
     model: Mapped[str | None] = mapped_column(String(80))
     color: Mapped[str | None] = mapped_column(String(40))
@@ -256,6 +260,21 @@ class TrafficSimulationSettings(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     pricing_hysteresis_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("2.00"))
 
 
+class ForeignVehicleChargeSettings(Base):
+    """Separate persisted configuration for the prototype's simulated foreign charge."""
+
+    __tablename__ = "foreign_vehicle_charge_settings"
+    __table_args__ = (
+        CheckConstraint("amount >= 0", name="ck_foreign_vehicle_charge_nonnegative"),
+    )
+
+    singleton_key: Mapped[str] = mapped_column(String(32), primary_key=True, default="default")
+    amount: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
 class DynamicPricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     """One administrator-editable, fixed scenario pricing band."""
 
@@ -349,6 +368,8 @@ class TollTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "toll_transactions"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_transactions_amount_nonnegative"),
+        CheckConstraint("dynamic_toll_amount >= 0", name="ck_transactions_dynamic_toll_nonnegative"),
+        CheckConstraint("foreign_vehicle_charge >= 0", name="ck_transactions_foreign_charge_nonnegative"),
         CheckConstraint(
             "balance_after IS NULL OR balance_after >= 0",
             name="ck_transactions_balance_nonnegative",
@@ -380,6 +401,8 @@ class TollTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         DateTime(timezone=True), nullable=False, index=True
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    dynamic_toll_amount: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, default=Decimal("0.00"), server_default="0.00")
+    foreign_vehicle_charge: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, default=Decimal("0.00"), server_default="0.00")
     currency: Mapped[str] = mapped_column(
         String(3), nullable=False, default="MYR", server_default="MYR"
     )

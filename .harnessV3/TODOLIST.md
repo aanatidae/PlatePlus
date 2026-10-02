@@ -80,33 +80,35 @@ Section D completed on 2026-10-02. The synthetic-fixture exact-origin count is 2
 - [x] Multiple synthetic account balances exist.
 - [x] Wallet ledger exists.
 - [x] Top-up/reversal/refund support exists.
-- [ ] Add fictional Singaporean-style synthetic vehicles.
-- [ ] Add synthetic accounts for Singaporean demo vehicles.
-- [ ] Add at least one successful Singaporean transaction scenario.
-- [ ] Add at least one insufficient-balance Singaporean scenario if useful.
-- [ ] Mark vehicle registration origin explicitly in data.
-- [ ] Ensure seed remains idempotent.
-- [ ] Ensure no real owner information is used.
+- [x] Add fictional Singaporean-style synthetic vehicles.
+- [x] Add synthetic accounts for Singaporean demo vehicles.
+- [x] Add at least one successful Singaporean transaction scenario.
+- [x] Add at least one insufficient-balance Singaporean scenario if useful.
+- [x] Mark vehicle registration origin explicitly in data.
+- [x] Ensure seed remains idempotent.
+- [x] Ensure no real owner information is used.
 
 ## F. Foreign-Vehicle Charge
 
-- [ ] Add configurable simulated foreign-vehicle charge setting.
-- [ ] Do not embed the foreign charge inside congestion multipliers.
-- [ ] Persist dynamic toll component separately.
-- [ ] Persist foreign charge component separately.
-- [ ] Preserve/finalize `amount` semantics as final simulated total.
-- [ ] Malaysian accepted transaction -> foreign charge `0.00`.
-- [ ] Singaporean accepted transaction -> configured foreign charge.
-- [ ] Final total = dynamic toll + foreign charge.
-- [ ] Balance sufficiency check uses final total.
-- [ ] Wallet debit uses final total.
-- [ ] Payment notification uses final total.
-- [ ] Idempotent replay does not charge foreign amount twice.
-- [ ] Refund/reversal reverses the final debited total.
-- [ ] Failure records preserve consistent component values.
-- [ ] Unknown/unsupported origin cannot create successful deduction.
-- [ ] Keep all foreign charging clearly simulated.
-- [ ] If RM20 is seeded, label it as a configurable simulated demo value, not a real toll-plaza fee.
+- [x] Add configurable simulated foreign-vehicle charge setting.
+- [x] Do not embed the foreign charge inside congestion multipliers.
+- [x] Persist dynamic toll component separately.
+- [x] Persist foreign charge component separately.
+- [x] Preserve/finalize `amount` semantics as final simulated total.
+- [x] Malaysian accepted transaction -> foreign charge `0.00`.
+- [x] Singaporean accepted transaction -> configured foreign charge.
+- [x] Final total = dynamic toll + foreign charge.
+- [x] Balance sufficiency check uses final total.
+- [x] Wallet debit uses final total.
+- [x] Payment notification uses final total.
+- [x] Idempotent replay does not charge foreign amount twice.
+- [x] Refund/reversal reverses the final debited total.
+- [x] Failure records preserve consistent component values.
+- [x] Unknown/unsupported origin cannot create successful deduction.
+- [x] Keep all foreign charging clearly simulated.
+- [x] If RM20 is seeded, label it as a configurable simulated demo value, not a real toll-plaza fee.
+
+Sections E–F completed on 2026-10-02. Migration `20261002_0013` adds explicit vehicle origin, transaction components, and a separate persisted charge setting seeded at a clearly simulated RM20.00. Three fictional Singaporean vehicles/accounts are seeded idempotently, including a low-balance case. The payment, ledger, notification, replay, refund, API, and Simulator upload paths have PostgreSQL integration coverage; the full backend suite passed (96 tests). See `docs/FOREIGN_VEHICLE_CHARGE.md`.
 
 ## G. Database / Migration
 
@@ -114,14 +116,14 @@ Section D completed on 2026-10-02. The synthetic-fixture exact-origin count is 2
 - [x] Location ownership exists for traffic/prices/detections/transactions.
 - [x] `toll_locations.base_toll` exists.
 - [x] `simulation_profile` exists.
-- [ ] Add a new V3 Alembic migration; do not rewrite old migrations.
-- [ ] Add vehicle registration-origin field or equivalent.
-- [ ] Add detection plate-origin field or equivalent.
-- [ ] Add transaction dynamic-toll component field.
-- [ ] Add transaction foreign-charge component field.
-- [ ] Add/configure foreign-charge setting source.
-- [ ] Backfill existing records safely.
-- [ ] Verify downgrade behavior.
+- [x] Add a new V3 Alembic migration; do not rewrite old migrations. (`20261002_0013` follows origin migration `0012`.)
+- [x] Add vehicle registration-origin field or equivalent.
+- [x] Add detection plate-origin field or equivalent. (Completed in `0012`.)
+- [x] Add transaction dynamic-toll component field.
+- [x] Add transaction foreign-charge component field.
+- [x] Add/configure foreign-charge setting source.
+- [x] Backfill existing records safely. (Historical `amount` becomes dynamic toll; foreign charge stays zero.)
+- [x] Verify downgrade behavior. (Verified against the dedicated test database.)
 - [ ] Verify clean database and upgraded database converge to valid V3 state.
 - [ ] Verify existing Simulator Toll Plaza records remain attached correctly.
 
@@ -185,10 +187,10 @@ Tasks:
 - [x] Average speed is not fabricated.
 - [x] Detection/payment history persists.
 - [x] Raw images remain ephemeral.
-- [ ] Route Simulator Toll recognition through the new origin classifier.
-- [ ] Malaysian Simulator recognition follows normal toll charge.
-- [ ] Singaporean Simulator recognition receives separate simulated foreign charge.
-- [ ] Unknown origin fails safely.
+- [x] Route Simulator Toll recognition through the new origin classifier.
+- [x] Malaysian Simulator recognition follows normal toll charge.
+- [x] Singaporean Simulator recognition receives separate simulated foreign charge.
+- [x] Unknown origin fails safely.
 - [ ] Verify 60-second congestion expiry is independent of charge nationality/origin.
 - [ ] Regression-test webcam and uploaded-image paths after V3 changes.
 
@@ -221,10 +223,10 @@ Tasks:
 - [x] Pricing preview exists.
 - [x] Pricing audit history exists.
 - [x] Pricing remains rule-based, not ML.
-- [ ] Ensure foreign charge is applied only after the pricing decision.
+- [x] Ensure foreign charge is applied only after the pricing decision.
 - [ ] Ensure `Why this price?` explains congestion toll separately from foreign charge.
 - [ ] Verify V3 location base tolls work with existing safeguards.
-- [ ] Verify foreign charge never changes congestion band/multiplier.
+- [x] Verify foreign charge never changes congestion band/multiplier. (Payment adds it after reading the stored price.)
 
 ## M. Simulated Payment
 
@@ -238,12 +240,12 @@ Tasks:
 - [x] Refund/reversal exists.
 - [x] Per-location revenue exists.
 - [x] Simulated payment notifications exist.
-- [ ] Extend payment outcome/schema for charge breakdown.
-- [ ] Use origin-aware charge calculation.
-- [ ] Add combined-total balance test.
-- [ ] Add combined-total ledger test.
-- [ ] Add combined-total refund test.
-- [ ] Add foreign-charge idempotency test.
+- [x] Extend payment outcome/schema for charge breakdown.
+- [x] Use origin-aware charge calculation.
+- [x] Add combined-total balance test.
+- [x] Add combined-total ledger test.
+- [x] Add combined-total refund test.
+- [x] Add foreign-charge idempotency test.
 
 ## N. Dashboard Navigation / Structure
 
@@ -419,10 +421,10 @@ Tasks:
 
 ## Z. Highest-Priority Next Tasks
 
-1. [ ] Add V3 schema migration for origin and charge components.
-2. [ ] Implement Malaysian/Singaporean/unknown origin classifier.
-3. [ ] Add Singaporean synthetic seed records.
-4. [ ] Implement separately itemized foreign-vehicle charge.
+1. [x] Add V3 schema migration for origin and charge components.
+2. [x] Implement Malaysian/Singaporean/unknown origin classifier.
+3. [x] Add Singaporean synthetic seed records.
+4. [x] Implement separately itemized foreign-vehicle charge.
 5. [ ] Align normal network to LDP/AKLEH/NPE/Grand Saga.
 6. [ ] Update Overview transaction/detection display.
 7. [ ] Update Prediction/map/location fixtures.

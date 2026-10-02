@@ -128,7 +128,9 @@ class DemoFeed:
             with SessionLocal() as database:
                 from app.api.locations import _state
                 locations = list(database.scalars(select(TollLocation).where(TollLocation.status == "operational")))
-                vehicles = list(database.scalars(select(Vehicle).where(Vehicle.is_active.is_(True)).order_by(Vehicle.plate_number)))
+                vehicles = list(database.scalars(select(Vehicle).where(
+                    Vehicle.is_active.is_(True), Vehicle.registration_origin == "malaysian"
+                ).order_by(Vehicle.plate_number)))
                 if not vehicles:
                     continue
                 for location in locations:

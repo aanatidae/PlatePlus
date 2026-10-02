@@ -55,7 +55,7 @@ Treat the following as already implemented unless repository inspection proves o
 - Webcam source tagging as `webcam_alpr`.
 - Raw local webcam frames, uploaded images, and plate crops remain ephemeral by default.
 - A separate deterministic plate-origin stage now runs after OCR normalization and confidence gates. It returns `malaysian`, `singaporean`, or `unknown`; overlapping supported shapes fail safely. Its outcome and reason are persisted on detection records by migration `20261002_0012`.
-- Singaporean-looking plates are recognized but cannot make a successful simulated deduction until the separately itemized foreign-charge payment work is complete.
+- Singaporean-pattern plates can create a successful simulated deduction only when an active synthetic vehicle has matching `singaporean` registration origin and the separately persisted foreign-charge setting is available. The dynamic toll and foreign charge are stored separately; the final amount is debited once.
 
 ### Simulator Toll Plaza
 
@@ -124,11 +124,11 @@ Current presentation features include:
 
 ## 4. Proposal Alignment Requirements and Status
 
-These are V3 requirements. Section 4.1 is implemented for the A–C slice; the remaining payment, network, UI, and evaluation work is tracked separately.
+These are V3 requirements. Origin classification and its synthetic fixture evaluation are complete. Synthetic Singaporean records and the separate foreign-charge payment path are also implemented; network and UI alignment remain tracked separately.
 
 ### 4.1 Malaysian vs Singaporean plate-origin classification (implemented in A–C)
 
-The V3 origin stage is implemented for a conservative subset of Malaysian and Singaporean patterns. `docs/PLATE_ORIGIN.md` defines supported shapes and limitations. Continue to treat origin evaluation metrics as pending until a labelled set exists.
+The V3 origin stage is implemented for a conservative subset of Malaysian and Singaporean patterns. `docs/PLATE_ORIGIN.md` defines supported shapes and limitations. The origin evaluation is limited to its labelled synthetic text fixture.
 
 Required output states:
 

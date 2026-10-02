@@ -25,5 +25,7 @@ class WebcamFrameResult(BaseModel):
     cooldown_remaining_seconds: float | None = Field(default=None, ge=0)
     payment_status: str | None = None
     payment_amount: float | None = Field(default=None, ge=0)
+    payment_dynamic_toll_amount: float | None = Field(default=None, ge=0)
+    payment_foreign_vehicle_charge: float | None = Field(default=None, ge=0)
     payment_balance_after: float | None = Field(default=None, ge=0)
     payment_duplicate: bool = False

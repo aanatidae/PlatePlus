@@ -1,8 +1,8 @@
 # PlatePlus
 
-Capstone prototype for Malaysian automatic license plate recognition (ALPR), OCR-based plate matching, simulated toll transactions, simulated traffic conditions, and configurable dynamic toll pricing.
+Capstone prototype for automatic license plate recognition (ALPR) with supported Malaysian and Singaporean plate patterns, OCR-based plate matching, simulated toll transactions, simulated traffic conditions, and configurable dynamic toll pricing.
 
-The computer-vision baseline is complete: a one-class YOLO detector identifies Malaysian car plates and PaddleOCR recognizes plate text from detected crops. The FastAPI/PostgreSQL foundation, simulated toll workflow, configurable traffic-pricing backend, and administrator dashboard are complete.
+The computer-vision baseline is complete: a one-class YOLO detector trained on Malaysian car-plate images identifies plates, PaddleOCR reads detected crops, and a conservative pattern stage classifies supported Malaysian or Singaporean results. The FastAPI/PostgreSQL foundation, simulated toll workflow, configurable traffic-pricing backend, and administrator dashboard are complete.
 
 The dashboard now supports the four seeded toll locations. Overview opens in All Locations, offers selectable schematic markers and location-specific monitoring, and remembers selection across navigation and refreshes. Recognition, Dynamic Pricing, and AI Intelligence share that selection; Simulator keeps its own. History filters live on the detailed pages, while Overview shows current state and activity from the last hour. See [multi-location monitoring](docs/MULTI_LOCATION.md) for API behavior and limitations.
 
@@ -10,6 +10,7 @@ The dashboard now supports the four seeded toll locations. Overview opens in All
 
 - Traffic data is simulated.
 - Toll payments and account balances are simulated.
+- Unambiguous Malaysian and Singaporean plate patterns can match fictional demo vehicles; Singaporean simulated payments add a separately configured foreign-vehicle charge.
 - No real banking, toll infrastructure, traffic-feed, enforcement, or vehicle-owner integrations are in scope.
 - Recognition supports local browser-webcam frames and one-time still-image uploads. Both local inference paths remain unavailable from the cloud dashboard by design.
 - The detector should focus on the `car plate` class.
@@ -52,6 +53,7 @@ The repository includes ML dataset preparation, plate processing, YOLO crop extr
 - [Capstone demo flow](docs/DEMO.md)
 - [Testing, metrics, limitations, and failure cases](docs/TESTING_EVALUATION.md)
 - [OCR workflow](docs/OCR_PLATE_PROCESSING.md)
+- [Plate-origin rules and simulated foreign-vehicle charge](docs/FOREIGN_VEHICLE_CHARGE.md)
 - [YOLO training workflow](docs/COLAB_TRAINING.md)
 - [Vercel and Render deployment](docs/DEPLOYMENT.md)
 

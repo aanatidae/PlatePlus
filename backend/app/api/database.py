@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from collections import defaultdict
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -21,7 +22,9 @@ from app.db.session import get_db
 from app.models import (
     Account,
     Admin,
+    AdminAuditLog,
     DetectionRecord,
+    ForeignVehicleChargeSettings,
     PaymentNotification,
     TollLocation,
     TollPrice,
@@ -38,6 +41,8 @@ from app.schemas.database import (
     DetectionRecordCreate,
     DetectionRecordRead,
     DetectionReviewUpdate,
+    ForeignVehicleChargeRead,
+    ForeignVehicleChargeUpdate,
     PaymentNotificationRead,
     TollPriceCreate,
     TollPriceRead,
@@ -59,6 +64,32 @@ router = APIRouter(
 )
 ModelT = TypeVar("ModelT")
 DatabaseSession = Annotated[Session, Depends(get_db)]
+CurrentAdmin = Annotated[Admin, Depends(require_admin)]
+
+
+@router.get("/foreign-vehicle-charge", response_model=ForeignVehicleChargeRead)
+def get_foreign_vehicle_charge(database: DatabaseSession):
+    settings = database.get(ForeignVehicleChargeSettings, "default")
+    if settings is None:
+        raise HTTPException(status_code=503, detail="Simulated foreign-vehicle charge is not configured. Run migrations.")
+    return settings
+
+
+@router.put("/foreign-vehicle-charge", response_model=ForeignVehicleChargeRead)
+def update_foreign_vehicle_charge(payload: ForeignVehicleChargeUpdate, database: DatabaseSession, admin: CurrentAdmin):
+    settings = database.get(ForeignVehicleChargeSettings, "default")
+    if settings is None:
+        raise HTTPException(status_code=503, detail="Simulated foreign-vehicle charge is not configured. Run migrations.")
+    previous = settings.amount
+    settings.amount = payload.amount
+    database.add(AdminAuditLog(
+        admin_id=admin.id, action="foreign_vehicle_charge_updated",
+        entity_type="foreign_vehicle_charge_settings",
+        details_json=json.dumps({"previous": str(previous), "amount": str(payload.amount), "simulated": True}),
+    ))
+    database.commit()
+    database.refresh(settings)
+    return settings
 
 
 def _save(database: Session, entity: ModelT, conflict_message: str) -> ModelT:

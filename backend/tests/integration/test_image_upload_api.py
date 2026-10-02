@@ -36,6 +36,21 @@ class _SuccessfulImageService:
         )
 
 
+class _SuccessfulSingaporeanImageService:
+    def process_image(self, image_bytes: bytes) -> ProcessedFrame:
+        assert image_bytes == b"image-bytes"
+        return ProcessedFrame(
+            status="accepted_for_vehicle_lookup",
+            message="Recognition passed confidence checks.",
+            plate_text="GBC1234R",
+            plate_origin="singaporean",
+            origin_reason="singaporean_supported_pattern",
+            detection_confidence=0.95,
+            ocr_confidence=0.93,
+            charge_eligible=True,
+        )
+
+
 @pytest.mark.parametrize("selected_location", [False, True])
 def test_authenticated_image_upload_runs_the_complete_simulated_toll_flow(
     database, admin_auth_headers, monkeypatch, selected_location
@@ -120,3 +135,39 @@ def test_simulator_upload_is_tagged_and_drives_one_local_crossing(
     assert response.json()["payment_status"] == "successful"
     assert detection is not None and detection.source == "uploaded_image"
     assert transaction is not None and transaction.status == "successful"
+
+
+def test_singaporean_simulator_upload_returns_separate_charge_components(
+    database, admin_auth_headers, monkeypatch
+) -> None:
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR"))
+    user = User(full_name="Synthetic Singapore Upload Driver", email="sg-upload@example.test")
+    database.add(user)
+    database.flush()
+    account = Account(user_id=user.id, balance=Decimal("50.00"), is_primary=True)
+    vehicle = Vehicle(user_id=user.id, plate_number="GBC1234R", registration_origin="singaporean")
+    database.add_all([account, vehicle])
+    database.flush()
+    app = FastAPI()
+    app.include_router(auth_router)
+    app.include_router(webcam_api.router)
+    app.dependency_overrides[get_db] = lambda: database
+    monkeypatch.setattr(webcam_api, "service", _SuccessfulSingaporeanImageService())
+
+    response = TestClient(app).post(
+        f"/api/webcam/images?location_id={location.id}",
+        files={"image": ("plate.png", b"image-bytes", "image/png")},
+        headers={**admin_auth_headers, "Idempotency-Key": "simulator-sg-upload-0001"},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["payment_status"] == "successful"
+    assert body["plate_origin"] == "singaporean"
+    assert Decimal(str(body["payment_foreign_vehicle_charge"])) == Decimal("20.00")
+    assert Decimal(str(body["payment_amount"])) == (
+        Decimal(str(body["payment_dynamic_toll_amount"])) + Decimal("20.00")
+    )
+    transaction = database.scalar(select(TollTransaction).where(TollTransaction.location_id == location.id))
+    assert transaction.foreign_vehicle_charge == Decimal("20.00")
+    assert transaction.amount == Decimal(str(body["payment_amount"]))

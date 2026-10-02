@@ -18,6 +18,8 @@ As of 2026-10-02, the repository baseline and plate-origin slice (TODO sections 
 
 Origin evaluation (TODO section D) now has a separate, reproducible 32-case synthetic text fixture. It reports MY/SG/unknown confusion counts, cross-country errors, and safe rejection of overlapping or unsupported patterns. The 25/32 exact-origin result is a selected-fixture result only; OCR held-out and development results remain separate and untouched. No real-world origin accuracy is claimed.
 
+Synthetic Singaporean records and the separate foreign-charge workflow (TODO sections E–F) are complete on this branch. Migration `20261002_0013` stores vehicle registration origin, itemized transaction components, and a separate persisted charge setting. The idempotent seed adds three fictional Singaporean-pattern vehicles/accounts; payment uses the final total for sufficiency, debit, ledger, notification, replay, and reversal. Simulator Toll Plaza accepts eligible Singaporean webcam/upload results through the same path. The RM20.00 seeded foreign charge is a configurable simulated proposal example, not a real-world fee. Backend PostgreSQL integration and unit tests passed; network/UI alignment remains pending.
+
 ## V3 Target Architecture
 
 Recognition path:

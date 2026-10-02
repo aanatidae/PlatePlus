@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class ORMModel(BaseModel):
@@ -53,6 +53,7 @@ class AccountRead(ORMModel):
 class VehicleCreate(BaseModel):
     user_id: UUID
     plate_number: str = Field(min_length=2, max_length=16)
+    registration_origin: Literal["malaysian", "singaporean"] = "malaysian"
     make: str | None = Field(default=None, max_length=80)
     model: str | None = Field(default=None, max_length=80)
     color: str | None = Field(default=None, max_length=40)
@@ -70,6 +71,7 @@ class VehicleRead(ORMModel):
     id: UUID
     user_id: UUID
     plate_number: str
+    registration_origin: str
     make: str | None
     model: str | None
     color: str | None
@@ -178,6 +180,8 @@ class TollTransactionCreate(BaseModel):
     idempotency_key: str = Field(min_length=8, max_length=128)
     processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     amount: Decimal = Field(ge=0, max_digits=8, decimal_places=2)
+    dynamic_toll_amount: Decimal | None = Field(default=None, ge=0, max_digits=8, decimal_places=2)
+    foreign_vehicle_charge: Decimal = Field(default=Decimal("0.00"), ge=0, max_digits=8, decimal_places=2)
     currency: Literal["MYR"] = "MYR"
     status: Literal[
         "successful",
@@ -190,6 +194,14 @@ class TollTransactionCreate(BaseModel):
     failure_reason: str | None = Field(default=None, max_length=255)
     balance_after: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
 
+    @model_validator(mode="after")
+    def reconcile_components(self) -> TollTransactionCreate:
+        if self.dynamic_toll_amount is None:
+            self.dynamic_toll_amount = self.amount - self.foreign_vehicle_charge
+        if self.dynamic_toll_amount < 0 or self.amount != self.dynamic_toll_amount + self.foreign_vehicle_charge:
+            raise ValueError("amount must equal dynamic_toll_amount plus foreign_vehicle_charge")
+        return self
+
 
 class TollTransactionRead(ORMModel):
     id: UUID
@@ -201,6 +213,8 @@ class TollTransactionRead(ORMModel):
     idempotency_key: str
     processed_at: datetime
     amount: Decimal
+    dynamic_toll_amount: Decimal
+    foreign_vehicle_charge: Decimal
     currency: str
     status: str
     failure_reason: str | None
@@ -209,6 +223,15 @@ class TollTransactionRead(ORMModel):
     created_at: datetime
     reversed_at: datetime | None
     reversal_reason: str | None
+
+
+class ForeignVehicleChargeUpdate(BaseModel):
+    amount: Decimal = Field(ge=0, max_digits=8, decimal_places=2)
+
+
+class ForeignVehicleChargeRead(ORMModel):
+    amount: Decimal
+    updated_at: datetime
 
 
 class WalletTopUpCreate(BaseModel):

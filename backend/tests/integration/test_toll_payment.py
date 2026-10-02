@@ -1,11 +1,14 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
+from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.models import (
     Account,
+    AdminAuditLog,
     DetectionRecord,
+    ForeignVehicleChargeSettings,
     PaymentNotification,
     TollPrice,
     TollTransaction,
@@ -18,13 +21,13 @@ from app.services.transactions.toll_payment import process_toll_event
 
 def _seed_registered_vehicle(
     database, *, balance: Decimal = Decimal("20.00"), is_primary: bool = True,
-    plate_number: str = "VAA1234"
+    plate_number: str = "VAA1234", registration_origin: str = "malaysian",
 ) -> tuple[Account, Vehicle]:
     user = User(full_name="Payment Test User", email="payment@example.test")
     database.add(user)
     database.flush()
     account = Account(user_id=user.id, balance=balance, is_primary=is_primary)
-    vehicle = Vehicle(user_id=user.id, plate_number=plate_number)
+    vehicle = Vehicle(user_id=user.id, plate_number=plate_number, registration_origin=registration_origin)
     database.add_all([account, vehicle])
     database.flush()
     return account, vehicle
@@ -65,11 +68,15 @@ def test_successful_payment_debits_the_primary_account(database) -> None:
     detection = database.scalar(select(DetectionRecord))
     assert outcome.status == "successful"
     assert outcome.amount == Decimal("2.00")
+    assert outcome.dynamic_toll_amount == Decimal("2.00")
+    assert outcome.foreign_vehicle_charge == Decimal("0.00")
     assert account.balance == Decimal("18.00")
     assert transaction is not None
     assert transaction.account_id == account.id
     assert transaction.vehicle_id == vehicle.id
     assert transaction.toll_price_id == price.id
+    assert transaction.dynamic_toll_amount == Decimal("2.00")
+    assert transaction.foreign_vehicle_charge == Decimal("0.00")
     assert detection is not None
     assert detection.status == "accepted"
     assert detection.plate_origin == "malaysian"
@@ -179,18 +186,102 @@ def test_ambiguous_origin_is_persisted_and_never_debits(database) -> None:
     assert detection.origin_reason == "ambiguous_supported_patterns"
 
 
-def test_singaporean_pattern_is_audited_without_charging_before_foreign_charge_setup(database) -> None:
-    account, _ = _seed_registered_vehicle(database, plate_number="GBC1234R")
+def test_singaporean_payment_adds_configured_foreign_charge_once(database) -> None:
+    account, _ = _seed_registered_vehicle(database, balance=Decimal("30.00"), plate_number="GBC1234R", registration_origin="singaporean")
     _seed_current_price(database)
+    database.get(ForeignVehicleChargeSettings, "default").amount = Decimal("7.50")
 
-    outcome = _process(database, "payment-sg-guard-0001", normalized_plate="GBC1234R")
+    outcome = _process(database, "payment-sg-0001", normalized_plate="GBC1234R")
+    duplicate = _process(database, "payment-sg-0001", normalized_plate="GBC1234R")
 
     database.refresh(account)
     detection = database.scalar(select(DetectionRecord))
-    assert outcome.status == "failed"
-    assert account.balance == Decimal("20.00")
+    transaction = database.scalar(select(TollTransaction))
+    assert outcome.status == "successful"
+    assert outcome.amount == Decimal("9.50")
+    assert outcome.dynamic_toll_amount == Decimal("2.00")
+    assert outcome.foreign_vehicle_charge == Decimal("7.50")
+    assert duplicate.duplicate is True
+    assert duplicate.amount == outcome.amount
+    assert account.balance == Decimal("20.50")
+    assert transaction.dynamic_toll_amount + transaction.foreign_vehicle_charge == transaction.amount
+    assert database.scalar(select(WalletLedgerEntry)).amount == Decimal("9.50")
+    assert "RM9.50" in database.scalar(select(PaymentNotification)).message
     assert detection.plate_origin == "singaporean"
     assert detection.origin_reason == "singaporean_supported_pattern"
+
+
+def test_singaporean_insufficient_balance_uses_final_total(database) -> None:
+    account, _ = _seed_registered_vehicle(database, balance=Decimal("20.00"), plate_number="GBC1234R", registration_origin="singaporean")
+    _seed_current_price(database)
+
+    outcome = _process(database, "payment-sg-low-balance-0001", normalized_plate="GBC1234R")
+
+    database.refresh(account)
+    transaction = database.scalar(select(TollTransaction))
+    assert outcome.status == "insufficient_balance"
+    assert account.balance == Decimal("20.00")
+    assert transaction.dynamic_toll_amount == Decimal("2.00")
+    assert transaction.foreign_vehicle_charge == Decimal("20.00")
+    assert transaction.amount == Decimal("22.00")
+    assert database.scalar(select(WalletLedgerEntry)) is None
+
+
+def test_registered_origin_mismatch_fails_without_debit(database) -> None:
+    account, _ = _seed_registered_vehicle(database, plate_number="GBC1234R")
+    _seed_current_price(database)
+
+    outcome = _process(database, "payment-sg-mismatch-0001", normalized_plate="GBC1234R")
+
+    database.refresh(account)
+    assert outcome.status == "failed"
+    assert account.balance == Decimal("20.00")
+    assert database.scalar(select(TollTransaction)).failure_reason.startswith("Recognized plate origin")
+
+
+def test_missing_foreign_charge_configuration_fails_singaporean_payment_safely(database) -> None:
+    account, _ = _seed_registered_vehicle(database, balance=Decimal("40.00"), plate_number="GBC1234R", registration_origin="singaporean")
+    _seed_current_price(database)
+    database.delete(database.get(ForeignVehicleChargeSettings, "default"))
+    database.flush()
+
+    outcome = _process(database, "payment-sg-no-config-0001", normalized_plate="GBC1234R")
+
+    database.refresh(account)
+    assert outcome.status == "failed"
+    assert account.balance == Decimal("40.00")
+    assert database.scalar(select(WalletLedgerEntry)) is None
+    assert "not configured" in database.scalar(select(TollTransaction)).failure_reason
+
+
+def test_foreign_charge_configuration_and_reversal_use_final_debit(database, database_app, admin_auth_headers) -> None:
+    account, _ = _seed_registered_vehicle(database, balance=Decimal("40.00"), plate_number="GBC1234R", registration_origin="singaporean")
+    _seed_current_price(database)
+    client = TestClient(database_app)
+    response = client.put(
+        "/api/data/foreign-vehicle-charge", json={"amount": "6.25"}, headers=admin_auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["amount"] == "6.25"
+    assert database.scalar(select(AdminAuditLog).where(AdminAuditLog.action == "foreign_vehicle_charge_updated")) is not None
+
+    outcome = _process(database, "payment-sg-reversal-0001", normalized_plate="GBC1234R")
+    assert outcome.amount == Decimal("8.25")
+    transaction_response = client.get("/api/data/transactions", headers=admin_auth_headers)
+    assert transaction_response.status_code == 200, transaction_response.text
+    assert transaction_response.json()[0]["foreign_vehicle_charge"] == "6.25"
+    reversal = client.post(
+        f"/api/data/transactions/{outcome.transaction_id}/reversal",
+        json={"reason": "Synthetic demonstration refund", "idempotency_key": "payment-sg-reversal-key"},
+        headers=admin_auth_headers,
+    )
+    assert reversal.status_code == 200, reversal.text
+    database.refresh(account)
+    assert account.balance == Decimal("40.00")
+    ledger = list(database.scalars(select(WalletLedgerEntry).order_by(WalletLedgerEntry.created_at)))
+    assert {entry.entry_type: entry.amount for entry in ledger} == {
+        "toll_deduction": Decimal("8.25"), "reversal": Decimal("8.25"),
+    }
 
 
 def test_only_the_designated_primary_account_is_used(database) -> None:

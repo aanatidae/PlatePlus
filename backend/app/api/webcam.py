@@ -82,7 +82,7 @@ async def process_frame(
         )
         if simulator_location is None:
             raise HTTPException(status_code=503, detail="Simulator Toll Plaza is not initialized. Run migrations.")
-        if result.charge_eligible and result.plate_origin == "malaysian" and has_recent_simulator_plate(
+        if result.charge_eligible and result.plate_origin != "unknown" and has_recent_simulator_plate(
             database, simulator_location, result.plate_text, datetime.now(UTC), settings.webcam_duplicate_cooldown_seconds
         ):
             result = result.__class__(
@@ -97,7 +97,7 @@ async def process_frame(
                 bounding_box=result.bounding_box,
                 charge_eligible=False,
             )
-        if result.charge_eligible and result.plate_origin == "malaysian":
+        if result.charge_eligible and result.plate_origin != "unknown":
             prepare_webcam_crossing_price(database, simulator_location, datetime.now(UTC))
         payment = process_toll_event(
             database,
@@ -124,6 +124,8 @@ async def process_frame(
         charge_eligible=result.charge_eligible,
         payment_status=payment.status if payment else None,
         payment_amount=float(payment.amount) if payment else None,
+        payment_dynamic_toll_amount=float(payment.dynamic_toll_amount) if payment else None,
+        payment_foreign_vehicle_charge=float(payment.foreign_vehicle_charge) if payment else None,
         payment_balance_after=float(payment.balance_after) if payment and payment.balance_after is not None else None,
         payment_duplicate=payment.duplicate if payment else False,
     )
@@ -160,7 +162,7 @@ async def process_image(
     now = datetime.now(UTC)
     if (
         location and location.code == "SIMULATOR" and result.charge_eligible
-        and result.plate_origin == "malaysian" and result.plate_text
+        and result.plate_origin != "unknown" and result.plate_text
         and has_recent_simulator_plate(
             database, location, result.plate_text, now, settings.webcam_duplicate_cooldown_seconds
         )
@@ -178,7 +180,7 @@ async def process_image(
             charge_eligible=False,
         )
     if result.plate_text:
-        if location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_origin == "malaysian":
+        if location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_origin != "unknown":
             prepare_webcam_crossing_price(database, location, now)
         payment = process_toll_event(
             database,
@@ -205,6 +207,8 @@ async def process_image(
         charge_eligible=result.charge_eligible,
         payment_status=payment.status if payment else None,
         payment_amount=float(payment.amount) if payment else None,
+        payment_dynamic_toll_amount=float(payment.dynamic_toll_amount) if payment else None,
+        payment_foreign_vehicle_charge=float(payment.foreign_vehicle_charge) if payment else None,
         payment_balance_after=float(payment.balance_after)
         if payment and payment.balance_after is not None
         else None,

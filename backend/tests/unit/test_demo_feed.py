@@ -2,7 +2,8 @@ from decimal import Decimal
 from random import Random
 from types import SimpleNamespace
 
-from app.db.seed import DEMO_VEHICLE_TARGET, synthetic_demo_people
+from app.db.seed import DEMO_VEHICLE_TARGET, synthetic_demo_people, synthetic_singaporean_demo_people
+from alpr.plate.origin import classify_plate_origin
 from app.services.demo_feed import crossing_interval_seconds, select_demo_vehicle
 from alpr.plate.normalization import is_plausible_malaysian_plate
 
@@ -27,6 +28,16 @@ def test_seeded_presentation_fleet_is_large_unique_and_plate_plausible():
     assert len(plates) == len(set(plates))
     assert all(is_plausible_malaysian_plate(plate) for plate in plates)
     assert any(person[-1] < Decimal("2.00") for person in fleet)
+
+
+def test_singaporean_demo_records_are_fictional_unambiguous_and_include_low_balance():
+    people = synthetic_singaporean_demo_people()
+    assert len(people) >= 2
+    assert len({person[3] for person in people}) == len(people)
+    assert all(person[1].endswith("@example.test") and person[0].startswith("Synthetic ") for person in people)
+    assert all(classify_plate_origin(person[3]).origin == "singaporean" for person in people)
+    assert any(person[-1] > Decimal("22.00") for person in people)
+    assert any(person[-1] < Decimal("20.00") for person in people)
 
 
 def test_demo_selection_suppresses_recent_location_and_global_plates():
