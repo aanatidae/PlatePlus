@@ -22,6 +22,15 @@ Synthetic Singaporean records and the separate foreign-charge workflow (TODO sec
 
 ## V3 Target Architecture
 
+G/H completed on 2026-10-06: flat-rate scope is explicit in README, architecture,
+and `docs/FLAT_RATE_SCOPE.md`. After user-approved Docker Desktop/test-service startup,
+125 backend tests passed (73 unit, 52 PostgreSQL integration). Dedicated migration tests
+verify fresh/upgraded schema and seed convergence, historical Simulator ownership for
+webcam/upload sources, backfills, and populated downgrade/re-upgrade. The fixture rejects
+development targets and clears disposable rows before full legacy schema resets.
+Historical migrations and development data are unchanged. Section I network replacement
+remains separate. See `docs/V3_DATABASE_MIGRATIONS.md`.
+
 Recognition path:
 
 `Camera / uploaded image -> YOLO11 -> crop -> PaddleOCR -> normalization -> confidence gate -> origin classification -> synthetic vehicle/account lookup -> simulated toll transaction`

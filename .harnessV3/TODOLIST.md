@@ -124,19 +124,23 @@ Sections E–F completed on 2026-10-02. Migration `20261002_0013` adds explicit 
 - [x] Add/configure foreign-charge setting source.
 - [x] Backfill existing records safely. (Historical `amount` becomes dynamic toll; foreign charge stays zero.)
 - [x] Verify downgrade behavior. (Verified against the dedicated test database.)
-- [ ] Verify clean database and upgraded database converge to valid V3 state.
-- [ ] Verify existing Simulator Toll Plaza records remain attached correctly.
+- [x] Verify clean database and upgraded database converge to valid V3 state. (Fresh head+seed versus populated V2 `0011` upgraded to `0013`+seed; schema, fleet/wallets, locations/profiles, charge setting, ledger count, and repeated seed compared.)
+- [x] Verify existing Simulator Toll Plaza records remain attached correctly. (Both `webcam_alpr` and `uploaded_image`: original IDs, location, traffic/price/detection/transaction/vehicle links, timestamp, source, amount and origin/component backfills preserved.)
+
+Section G completed on 2026-10-06 after user-approved Docker Desktop/test-container startup. Both dedicated migration scenarios passed, including populated V3-to-V2 downgrade/re-upgrade. The full backend suite passed: 125 tests (73 unit, 52 PostgreSQL integration). Fixture target guard rejects development databases; full disposable-schema reset clears test rows before older network downgrades to avoid RESTRICT foreign-key failures. Historical migrations and development data remain unchanged. Ruff for the migration test/shared fixture and `git diff --check` passed. See `docs/V3_DATABASE_MIGRATIONS.md`.
 
 ## H. Flat-Rate Toll Scope
 
 - [x] Current pricing already starts from per-location `base_toll`.
 - [x] Current dynamic pricing already applies congestion-relative multipliers.
 - [x] Current system does not require route-distance calculation.
-- [ ] Make flat-rate-only scope explicit in current repository docs.
-- [ ] Ensure no entry/exit-based charge calculation is introduced.
-- [ ] Ensure no journey-distance calculation is introduced.
-- [ ] Keep `dynamic toll = flat base toll × congestion multiplier`, subject to safeguards.
-- [ ] Treat base toll values as prototype configuration unless explicitly sourced.
+- [x] Make flat-rate-only scope explicit in current repository docs. (README, architecture, and `docs/FLAT_RATE_SCOPE.md`.)
+- [x] Ensure no entry/exit-based charge calculation is introduced. (Pricing/payment input paths reviewed; each crossing uses one location's stored price.)
+- [x] Ensure no journey-distance calculation is introduced. (No distance/journey inputs in pricing/payment; map metadata is not a pricing input.)
+- [x] Keep `dynamic toll = flat base toll × congestion multiplier`, subject to safeguards. (Four new location-relative formula cases plus existing floor/cap/interval/hysteresis tests passed.)
+- [x] Treat base toll values as prototype configuration unless explicitly sourced. (Explicitly documented for seeded and example rates.)
+
+Section H completed on 2026-10-06. All 73 backend unit tests passed. Flat-rate documentation distinguishes the current normal network from the pending section I target; no network migration, entry/exit tracking, distance charging, physical webcam test, or dependency installation was introduced.
 
 ## I. Normal Simulated Toll Network
 

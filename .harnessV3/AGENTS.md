@@ -86,6 +86,8 @@ Treat the following as already implemented unless repository inspection proves o
 
 ### Payment and Persistence
 
+- V3 G/H verified on 2026-10-06: fresh and populated-V2-upgraded databases converge at `20261002_0013`; Simulator webcam/upload history retains ownership and links. Full backend verification passed (125 tests: 73 unit, 52 dedicated PostgreSQL integration). Flat-rate-only scope is documented in `docs/FLAT_RATE_SCOPE.md`; section I network replacement remains pending. Migration test details are in `docs/V3_DATABASE_MIGRATIONS.md`. The disposable test fixture rejects development database targets and clears test rows before full legacy downgrades.
+
 - PostgreSQL with SQLAlchemy and Alembic.
 - Synthetic users, accounts, vehicles, detections, traffic, prices, and transactions.
 - Simulated wallet ledger.

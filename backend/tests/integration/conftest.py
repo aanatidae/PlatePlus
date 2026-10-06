@@ -5,7 +5,8 @@ import os
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker
 
 from app.core.settings import Settings
@@ -14,25 +15,53 @@ from app.models import Admin
 from app.services.auth.service import hash_password
 
 
+def _empty_then_downgrade(engine, config):
+    # Old network downgrades delete seeded locations. Empty disposable test data
+    # first so RESTRICT foreign keys do not block full test-schema cleanup.
+    tables = [name for name in inspect(engine).get_table_names() if name != "alembic_version"]
+    if tables:
+        quote = engine.dialect.identifier_preparer.quote
+        with engine.begin() as connection:
+            connection.execute(text("TRUNCATE " + ", ".join(quote(name) for name in tables) + " CASCADE"))
+    command.downgrade(config, "base")
+
+
 @pytest.fixture(scope="session")
 def test_engine():
     if os.getenv("RUN_POSTGRES_TESTS") != "1":
         pytest.skip("Set RUN_POSTGRES_TESTS=1 after starting postgres_test.")
 
-    test_url = Settings().test_database_url
+    settings = Settings()
+    test_url = settings.test_database_url
+    # These fixtures drop the schema. Never permit a development database target.
+    target = make_url(test_url)
+    development = make_url(settings.sqlalchemy_database_url)
+    if target.database != "capstone_alpr_test" or (
+        target.host, target.port, target.database
+    ) == (development.host, development.port, development.database):
+        pytest.fail("Migration fixtures require a separate capstone_alpr_test database.")
     previous_url = os.environ.get("DATABASE_URL")
     os.environ["DATABASE_URL"] = test_url
     config = Config("alembic.ini")
-    command.downgrade(config, "base")
-    command.upgrade(config, "head")
     engine = create_engine(test_url, pool_pre_ping=True)
+    _empty_then_downgrade(engine, config)
+    command.upgrade(config, "head")
     yield engine
+    _empty_then_downgrade(engine, config)
     engine.dispose()
-    command.downgrade(config, "base")
     if previous_url is None:
         os.environ.pop("DATABASE_URL", None)
     else:
         os.environ["DATABASE_URL"] = previous_url
+
+
+@pytest.fixture()
+def reset_schema(test_engine):
+    def reset(target="head"):
+        config = Config("alembic.ini")
+        _empty_then_downgrade(test_engine, config)
+        command.upgrade(config, target)
+    return reset
 
 
 @pytest.fixture()
@@ -53,8 +82,8 @@ def database_app(database):
 
     from app.api.auth import router as auth_router
     from app.api.database import router as database_router
-    from app.api.locations import router as locations_router
     from app.api.live import router as live_router
+    from app.api.locations import router as locations_router
     from app.api.operations import router as operations_router
     from app.api.traffic import router as traffic_router
 

@@ -10,6 +10,7 @@ The dashboard now supports the four seeded toll locations. Overview opens in All
 
 - Traffic data is simulated.
 - Toll payments and account balances are simulated.
+- Toll charging is flat-rate-only: each crossing uses its location's configured flat base toll multiplied by the congestion multiplier, subject to the pricing safeguards. No entry/exit tracking, journey length, or distance-based charging is supported. Base tolls are prototype configuration, not official rates. See [flat-rate scope](docs/FLAT_RATE_SCOPE.md).
 - Unambiguous Malaysian and Singaporean plate patterns can match fictional demo vehicles; Singaporean simulated payments add a separately configured foreign-vehicle charge.
 - No real banking, toll infrastructure, traffic-feed, enforcement, or vehicle-owner integrations are in scope.
 - Recognition supports local browser-webcam frames and one-time still-image uploads. Both local inference paths remain unavailable from the cloud dashboard by design.

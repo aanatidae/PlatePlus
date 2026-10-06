@@ -26,4 +26,12 @@ The application should be built as a modular prototype with clear boundaries bet
 
 ## Data Scope
 
+Pricing is flat-rate-only. The pricing service uses the selected location's configured
+`base_toll` and congestion multiplier, with minimum toll, maximum multiplier, hysteresis,
+and change-interval safeguards. It requires no journey, entry/exit pair, or distance.
+The payment service reads the latest non-future stored price at that same location,
+then adds the separate simulated foreign charge for an eligible Singaporean vehicle.
+All base tolls are prototype configuration unless explicitly sourced. See
+[flat-rate scope](FLAT_RATE_SCOPE.md) and [V3 migration verification](V3_DATABASE_MIGRATIONS.md).
+
 All account, traffic, payment, and vehicle-owner data is synthetic. Do not connect to real payment providers, real toll infrastructure, real enforcement systems, or real owner databases.

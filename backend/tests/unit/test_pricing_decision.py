@@ -2,7 +2,25 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 
+import pytest
+
 from app.services.traffic.pricing import decide_price
+
+
+@pytest.mark.parametrize("base_toll,congestion,expected", [
+    ("2.40", "20", "2.40"), ("2.40", "45", "3.60"),
+    ("1.80", "70", "3.60"), ("1.80", "90", "4.50"),
+])
+def test_flat_rate_price_depends_on_local_base_and_congestion_only(base_toll, congestion, expected):
+    rules = [_rule("n", 0, 30, 1, "low"), _rule("m", 30.01, 60, 1.5, "moderate"),
+             _rule("p", 60.01, 80, 2, "high"), _rule("s", 80.01, 100, 2.5, "severe")]
+    settings = SimpleNamespace(minimum_toll=Decimal("0.50"), maximum_toll_multiplier=Decimal(3),
+                               minimum_price_change_minutes=0, pricing_hysteresis_percentage=Decimal(0))
+    # Only a location ID/base and current congestion are needed: no journey,
+    # prior entry/exit, distance, or geographic metadata participates in pricing.
+    location = SimpleNamespace(id="flat-rate-location", base_toll=Decimal(base_toll))
+    decision = decide_price(FakeDatabase(rules), settings, location, Decimal(congestion))
+    assert decision.amount == Decimal(expected)
 
 
 class FakeDatabase:

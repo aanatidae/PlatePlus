@@ -22,7 +22,18 @@ The backend unit suite covers account deduction, insufficient-balance rejection,
 
 The frontend Vitest contract suite checks protected route availability, user-visible loading/error/simulation messaging, primary accessibility labels, and the CSS tablet/mobile/reduced-motion rules. It is complemented by visual verification of the deployed login screen; dashboard content still requires an administrator session and an available API.
 
-Latest local verification: backend unit tests **24 passed**, ML tests **17 passed**, frontend UI-contract tests **4 passed**, and `npm run build` completed successfully. The Docker CLI was unavailable on 2026-09-04, so the opt-in PostgreSQL integration suite was not re-run in this session.
+Historical verification on 2026-09-04: backend unit tests **24 passed**, ML tests **17 passed**, frontend UI-contract tests **4 passed**, and `npm run build` completed successfully. The Docker CLI was unavailable then, so PostgreSQL integration tests were not rerun in that session.
+
+G/H verification on 2026-10-06: **125 backend tests passed** (73 unit, 52 PostgreSQL
+integration), using only the dedicated `capstone_alpr_test` database after approved
+Docker/test-service startup. New migration scenarios cover fresh/V2-upgraded schema
+and seed convergence, repeated seeding, populated V3 downgrade/re-upgrade, and preserved
+Simulator history for both webcam and image-upload sources. Four new flat-rate pricing
+cases verify location base × congestion multiplier without journey/entry/exit/distance
+inputs; existing floor, cap, interval, hysteresis, payment, and foreign-charge regressions
+also passed. Ruff passed for the migration test/shared fixture. This verification did
+not run physical webcam inference, retrain models, or change the development database.
+See [migration verification](V3_DATABASE_MIGRATIONS.md) and [flat-rate scope](FLAT_RATE_SCOPE.md).
 
 ## Recorded metrics
 
