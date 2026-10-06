@@ -39,9 +39,11 @@ def crossing_interval_seconds(congestion: Decimal | float, *, jitter: float = 0.
 
 
 def _latest_or_current_price(database: Session, location: TollLocation, amount: Decimal, category: str, now: datetime) -> None:
-    """Ensure the payment workflow has a price matching the already-calculated live state."""
+    """Keep an existing authoritative price; initialize only when none is persisted."""
     latest = database.scalar(select(TollPrice).where(TollPrice.location_id == location.id).order_by(TollPrice.effective_at.desc()))
-    if latest and latest.amount == amount and latest.congestion_category == category:
+    # Persisted prices are authoritative. A telemetry snapshot taken before a policy
+    # update must never overwrite the price committed by that update.
+    if latest is not None:
         return
     database.add(TollPrice(location_id=location.id, effective_at=now, amount=amount, congestion_category=category, rule_version="demo-feed"))
     database.commit()

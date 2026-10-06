@@ -18,8 +18,6 @@ from app.models import (
     Admin,
     AdminAuditLog,
     DynamicPricingRule,
-    TollPrice,
-    TrafficRecord,
     TrafficSimulationSettings,
     TollLocation,
 )
@@ -33,7 +31,7 @@ from app.schemas.traffic import (
     SimulationSettingsUpdate,
 )
 from app.services.traffic.simulation import current_simulation_time, run_simulation
-from app.services.traffic.pricing import decide_price
+from app.services.traffic.pricing import decide_price, reprice_current_locations
 from app.services.operations import record_event
 
 router = APIRouter(prefix="/api/traffic", tags=["traffic"], dependencies=[Depends(require_admin)])
@@ -41,12 +39,9 @@ DatabaseSession = Annotated[Session, Depends(get_db)]
 CurrentAdmin = Annotated[Admin, Depends(require_admin)]
 
 
-def _settings(database: Session) -> TrafficSimulationSettings:
-    settings = database.scalar(
-        select(TrafficSimulationSettings).where(
-            TrafficSimulationSettings.singleton_key == "default"
-        )
-    )
+def _settings(database: Session, *, lock: bool = False) -> TrafficSimulationSettings:
+    statement = select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default")
+    settings = database.scalar(statement.with_for_update() if lock else statement)
     if settings is None:
         raise HTTPException(
             status_code=503, detail="Traffic simulation is not initialized. Run migrations."
@@ -145,6 +140,7 @@ def pricing_preview(
 def update_pricing_rules(
     payload: PricingRulesUpdate, database: DatabaseSession, admin: CurrentAdmin
 ):
+    settings = _settings(database, lock=True)
     rules = {rule.scenario: rule for rule in database.scalars(select(DynamicPricingRule))}
     if set(rules) != {item.scenario for item in payload.rules}:
         raise HTTPException(
@@ -155,26 +151,8 @@ def update_pricing_rules(
         rule.minimum_percentage = item.minimum_percentage
         rule.maximum_percentage = item.maximum_percentage
         rule.multiplier = item.multiplier
-    settings = _settings(database)
     settings.pricing_rule_version += 1
-    latest_traffic = database.scalar(
-        select(TrafficRecord).order_by(TrafficRecord.measured_at.desc())
-    )
-    if latest_traffic is not None:
-        location = latest_traffic.location
-        decision = decide_price(database, settings, location, latest_traffic.congestion_percentage)
-        if decision.previous_amount != decision.amount:
-            record_event(database, event_type="pricing_change", severity="information", source="simulated", location_id=latest_traffic.location_id, message="Dynamic simulated toll price changed.", details={"previous": decision.previous_amount, "new": decision.amount, "congestion": latest_traffic.congestion_percentage, "category": decision.rule.congestion_category, "rule_version": settings.pricing_rule_version, "admin_id": admin.id})
-        database.add(
-            TollPrice(
-                traffic_record_id=latest_traffic.id,
-                location_id=latest_traffic.location_id,
-                effective_at=datetime.now(UTC),
-                amount=decision.amount,
-                congestion_category=decision.rule.congestion_category,
-                rule_version=f"v{settings.pricing_rule_version}",
-            )
-        )
+    reprice_current_locations(database, settings)
     _audit(
         database,
         admin,

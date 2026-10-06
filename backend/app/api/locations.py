@@ -134,6 +134,7 @@ def _state(database: Session, location: TollLocation) -> dict:
         fallback["average_speed_kmh"] = average_speed_for_profile(location, traffic.congestion_percentage)
     if price:
         fallback["current_toll_price"] = price.amount
+        fallback["congestion_category"] = price.congestion_category
         fallback["congestion_multiplier"] = (price.amount / location.base_toll).quantize(Decimal("0.01")) if location.base_toll else Decimal(1)
         source = "persisted" if traffic else "mixed"
     fallback["plaza_status"] = location.status

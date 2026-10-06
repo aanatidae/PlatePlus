@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { PlatePlusSelect } from "./PlatePlusSelect";
+import { requireOk } from "./apiErrors";
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 export const LOCATION_KEY = "plateplus.location.v1";
@@ -16,7 +17,7 @@ export function headers() {
 }
 export async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, { headers: headers(), signal });
-  if (!response.ok) throw new Error(`PlatePlus data is unavailable (${response.status}). Use Sync data to retry.`);
+  await requireOk(response, `PlatePlus data is unavailable (${response.status}). Use Sync data to retry.`);
   return response.json() as Promise<T>;
 }
 

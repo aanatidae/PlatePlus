@@ -81,10 +81,15 @@ class PricingRulesUpdate(BaseModel):
             raise ValueError("exactly one rule for each fixed scenario is required")
         ordered = sorted(self.rules, key=lambda rule: rule.minimum_percentage)
         if ordered[0].minimum_percentage != 0 or ordered[-1].maximum_percentage != 100:
-            raise ValueError("pricing ranges must cover 0 through 100 percent")
+            raise ValueError("pricing ranges must cover 0.00 through 100.00 percent")
         for previous, current in pairwise(ordered):
             if current.minimum_percentage != previous.maximum_percentage + Decimal("0.01"):
-                raise ValueError("pricing ranges must be contiguous without overlaps or gaps")
+                label = {"normal": "Low", "moderate": "Moderate", "peak_hour": "High", "severe": "Severe"}[current.scenario]
+                expected_minimum = previous.maximum_percentage + Decimal("0.01")
+                raise ValueError(
+                    f"{label} minimum percentage must begin at {expected_minimum:.2f}% "
+                    "to keep pricing ranges contiguous without overlaps or gaps"
+                )
         return self
 
 

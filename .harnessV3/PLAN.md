@@ -375,6 +375,8 @@ Do not imply foreign charge affects congestion pricing.
 ### Dynamic Pricing Management
 
 - Keep rule editing focused on congestion.
+- Policy propagation verified 2026-10-06: rule updates append canonical prices for every operational location in the same database transaction. Existing normal measurements and Simulator's real rolling crossing window supply congestion without simulation. Explicit policy context skips traffic-only hold mechanisms while retaining minimum toll and maximum multiplier. Overview uses persisted price/category; save invalidates shared telemetry. Feed never overwrites an existing canonical price from a stale snapshot. Historical prices/payments and the separate foreign charge remain unchanged. Validation: 119 backend tests (69 unit, 50 PostgreSQL integration), 59 frontend tests in 10 files, production build passed; real-browser KESAS RM7.20 and subsequent feed charges verified, pre-test policy restored.
+- Hardening verified 2026-10-06: percentage fields use 0.01 steps; frontend integer-hundredth validation matches backend Decimal adjacency; API decimal strings are explicitly read as numbers; successful saves use the returned rules; shared FastAPI error formatting prevents object coercion. Browser save/reload persisted High 2.50x and Severe 3.00x. Backend tests: 113 passed (68 unit, 45 PostgreSQL integration); frontend: 58 passed in 9 files; production build passed with the existing bundle-size warning. No pricing algorithm or safeguard bypass was introduced.
 - Do not add origin rules here unless explicitly requested.
 - If the foreign-charge configuration needs an admin control, place it in a compact clearly separate configuration section or existing appropriate settings surface, not inside congestion bands.
 

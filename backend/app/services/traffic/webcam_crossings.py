@@ -21,6 +21,18 @@ def is_webcam_toll(location: TollLocation) -> bool:
     return location.code == SIMULATOR_TOLL_CODE
 
 
+def active_crossing_congestion(database: Session, location: TollLocation, now: datetime) -> tuple[int, Decimal]:
+    """Read the shared rolling crossing window without creating traffic or detections."""
+    crossings = int(database.scalar(select(func.count(DetectionRecord.id)).where(
+        DetectionRecord.location_id == location.id,
+        DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
+        DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
+        DetectionRecord.detected_at >= now - timedelta(seconds=60),
+    )))
+    congestion = min(Decimal("100.00"), Decimal(crossings) * Decimal(100) / location.road_capacity)
+    return crossings, congestion
+
+
 def webcam_crossing_state(
     database: Session, location: TollLocation, now: datetime | None = None
 ) -> dict:
@@ -29,17 +41,7 @@ def webcam_crossing_state(
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
     if not {"normal", "moderate", "peak_hour", "severe"}.issubset(rules):
         return {"telemetry": None, "source": "unavailable"}
-    crossings = database.scalar(
-        select(func.count(DetectionRecord.id))
-        .where(
-            DetectionRecord.location_id == location.id,
-            DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
-            DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
-            DetectionRecord.detected_at >= now - timedelta(seconds=60),
-        )
-    )
-    crossings = int(crossings)
-    congestion = min(Decimal("100.00"), (Decimal(crossings) * Decimal(100) / location.road_capacity))
+    crossings, congestion = active_crossing_congestion(database, location, now)
     settings = database.scalar(select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default"))
     rule = rule_for_congestion(rules, congestion)
     decision = decide_price(database, settings, location, congestion, now) if settings else None

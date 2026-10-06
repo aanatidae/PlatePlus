@@ -46,3 +46,30 @@ def test_pricing_changes_when_a_derived_percentage_crosses_a_band_boundary():
     assert [decision.amount for decision in (normal, moderate, peak, severe)] == [
         Decimal("2.00"), Decimal("3.00"), Decimal("4.00"), Decimal("5.00")
     ]
+
+
+def test_edited_high_multiplier_preserves_hysteresis_then_applies_outside_boundary():
+    rules = [_rule("n", 0, 30, 1, "low"), _rule("m", 30.01, 60, 1.5, "moderate"), _rule("p", 60.01, 80, 2.5, "high"), _rule("s", 80.01, 100, 3, "severe")]
+    now = datetime.now(UTC)
+    previous = SimpleNamespace(amount=Decimal("3.00"), effective_at=now - timedelta(minutes=10), congestion_category="moderate")
+    settings = SimpleNamespace(minimum_toll=Decimal("0.50"), maximum_toll_multiplier=Decimal("3"), minimum_price_change_minutes=5, pricing_hysteresis_percentage=Decimal("2"))
+    location = SimpleNamespace(id="ldp", base_toll=Decimal("2.00"))
+    held = decide_price(FakeDatabase(rules, previous), settings, location, Decimal("60.01"), now)
+    assert held.amount == Decimal("3.00")
+    assert held.reason == "hysteresis hold near band boundary"
+    assert decide_price(FakeDatabase(rules, previous), settings, location, Decimal("70.00"), now).amount == Decimal("5.00")
+
+
+def test_policy_update_bypasses_traffic_holds_but_keeps_price_limits():
+    rules = [_rule("n", 0, 40, 1, "low"), _rule("m", 40.01, 60, 2, "moderate"), _rule("p", 60.01, 80, 2.5, "high"), _rule("s", 80.01, 100, 3, "severe")]
+    now = datetime.now(UTC)
+    previous = SimpleNamespace(amount=Decimal("3"), effective_at=now, congestion_category="moderate")
+    settings = SimpleNamespace(minimum_toll=Decimal(".50"), maximum_toll_multiplier=Decimal("2"), minimum_price_change_minutes=120, pricing_hysteresis_percentage=Decimal("20"))
+    location = SimpleNamespace(id="ldp", base_toll=Decimal("2"))
+    assert decide_price(FakeDatabase(rules, previous), settings, location, Decimal("35"), now).reason == "minimum change interval hold"
+    decision = decide_price(FakeDatabase(rules, previous), settings, location, Decimal("35"), now, context="policy_update")
+    assert decision.amount == Decimal("2") and decision.rule.congestion_category == "low"
+    assert decision.reason == "pricing policy updated"
+    assert decide_price(FakeDatabase(rules, previous), settings, location, Decimal("90"), now, context="policy_update").amount == Decimal("4")
+    settings.minimum_toll = Decimal("3")
+    assert decide_price(FakeDatabase(rules, previous), settings, location, Decimal("35"), now, context="policy_update").amount == Decimal("3")

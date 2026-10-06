@@ -21,6 +21,49 @@ from app.services.traffic.simulation import (
     run_network_simulation,
     run_simulation,
 )
+from app.services.traffic.pricing import decide_price
+
+
+def test_decimal_rules_persist_and_drive_future_prices(database, database_app, admin_auth_headers):
+    client = TestClient(database_app)
+    rules = [
+        {"scenario": scenario, "minimum_percentage": low, "maximum_percentage": high, "multiplier": multiplier}
+        for scenario, low, high, multiplier in (
+            ("normal", 0, 30, 1), ("moderate", 30.01, 60, 1.5),
+            ("peak_hour", 60.01, 80, 2.5), ("severe", 80.01, 100, 3),
+        )
+    ]
+    response = client.put("/api/traffic/pricing-rules", headers=admin_auth_headers, json={"rules": rules})
+    assert response.status_code == 200, response.text
+    database.expire_all()
+    read = client.get("/api/traffic/pricing-rules", headers=admin_auth_headers)
+    assert read.status_code == 200
+    for expected, actual in zip(rules, read.json(), strict=True):
+        for field in ("minimum_percentage", "maximum_percentage", "multiplier"):
+            assert Decimal(actual[field]) == Decimal(str(expected[field]))
+        persisted = database.scalar(select(DynamicPricingRule).where(DynamicPricingRule.scenario == expected["scenario"]))
+        assert persisted.minimum_percentage == Decimal(str(expected["minimum_percentage"]))
+        assert persisted.multiplier == Decimal(str(expected["multiplier"]))
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "PENCHALA"))
+    assert location.base_toll == Decimal("2.00")
+    settings = database.scalar(select(TrafficSimulationSettings))
+    decision = decide_price(database, settings, location, Decimal("70.00"), context="policy_update")
+    assert decision.rule.scenario == "peak_hour"
+    assert decision.amount == Decimal("5.00")
+    # Existing configured cap remains authoritative.
+    settings.maximum_toll_multiplier = Decimal("2.00")
+    assert decide_price(database, settings, location, Decimal("70.00"), context="policy_update").amount == Decimal("4.00")
+
+
+def test_invalid_gap_response_is_readable_and_does_not_update_rules(database_app, admin_auth_headers):
+    client = TestClient(database_app)
+    before = client.get("/api/traffic/pricing-rules", headers=admin_auth_headers).json()
+    rules = [{key: row[key] for key in ("scenario", "minimum_percentage", "maximum_percentage", "multiplier")} for row in before]
+    rules[1]["minimum_percentage"] = 31
+    response = client.put("/api/traffic/pricing-rules", headers=admin_auth_headers, json={"rules": rules})
+    assert response.status_code == 422
+    assert "Moderate minimum percentage must begin at 30.01%" in response.json()["detail"][0]["msg"]
+    assert client.get("/api/traffic/pricing-rules", headers=admin_auth_headers).json() == before
 
 
 def test_traffic_routes_require_administrator_authentication(database_app) -> None:
@@ -95,12 +138,13 @@ def test_pricing_rule_change_creates_a_new_current_price_and_audit_entry(
     )
 
     assert response.status_code == 200, response.text
-    latest_price = database.scalar(select(TollPrice).order_by(TollPrice.effective_at.desc()))
+    location_id = database.scalar(select(TrafficRecord.location_id))
+    latest_price = database.scalar(select(TollPrice).where(TollPrice.location_id == location_id).order_by(TollPrice.effective_at.desc()))
     assert latest_price is not None
     assert latest_price.amount == Decimal("2.50")
     assert latest_price.rule_version == "v2"
     assert database.scalar(select(AdminAuditLog).where(AdminAuditLog.action == "pricing_rules_updated"))
-    event = database.scalar(select(OperationalEvent).where(OperationalEvent.event_type == "pricing_change"))
+    event = database.scalar(select(OperationalEvent).where(OperationalEvent.event_type == "pricing_change", OperationalEvent.location_id == location_id))
     assert event is not None
     assert "previous" in event.details_json and "new" in event.details_json
     assert client.put(
@@ -112,7 +156,7 @@ def test_pricing_rule_change_creates_a_new_current_price_and_audit_entry(
             {"scenario": "severe", "minimum_percentage": "80.01", "maximum_percentage": "100", "multiplier": "2.75"},
         ]}, headers=admin_auth_headers,
     ).status_code == 200
-    assert len(list(database.scalars(select(OperationalEvent).where(OperationalEvent.event_type == "pricing_change")))) == 1
+    assert len(list(database.scalars(select(OperationalEvent).where(OperationalEvent.event_type == "pricing_change", OperationalEvent.location_id == location_id)))) == 1
 
 
 def test_network_simulation_persists_independent_profiles_and_excludes_webcam_toll(database) -> None:

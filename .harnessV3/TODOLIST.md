@@ -214,6 +214,8 @@ Tasks:
 ## L. Dynamic Pricing
 
 - [x] Four editable congestion bands exist.
+- [x] Verify hundredth-based band editing and persistence (2026-10-06): 0–30, 30.01–60, 60.01–80, 80.01–100; decimal multipliers; readable validation errors; browser save/reload and PostgreSQL round-trip passed. Existing cap, interval and hysteresis regressions pass.
+- [x] Verify immediate policy propagation (2026-10-06): save atomically appends per-location current TollPrice records using existing congestion; policy context bypasses traffic interval/hysteresis holds but preserves price limits. Normal feed and future payments use new prices; historical records remain unchanged. Simulator reads actual rolling crossings without creating traffic. Browser Overview/live-feed smoke test and PostgreSQL regressions passed; 119 backend tests and 59 frontend tests passed, production build passed.
 - [x] Per-location base toll exists.
 - [x] Minimum toll exists.
 - [x] Maximum multiplier exists.
