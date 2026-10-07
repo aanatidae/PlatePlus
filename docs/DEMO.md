@@ -24,6 +24,25 @@ This is a controlled demonstration of a simulated prototype. Do not present any 
 
 Automated endpoint regressions use controlled inference output; they do not establish real Singaporean optical recognition accuracy or replace a physical camera check. The administrator navigation remains exactly three pages. See [V3 presentation verification](V3_SIMULATOR_PRICING_NAVIGATION.md).
 
+Prepared SG synthetic seed examples are `GBC6427R` (initial RM75.00), `YN4821R`
+(initial RM8.00, insufficient for seeded RM20 foreign charge) and `XD7316E`
+(initial RM45.00). Use current balances and configured charge when explaining a
+demo; repeated seed does not restore spent wallets. Generated feed vehicles remain
+Malaysian-style; the optical SG example must be prepared separately. See
+[seed details](SETUP.md) and [API components](API.md).
+
+## Presentation accessibility
+
+Use the top-bar Toll location selector as a keyboard alternative to the schematic
+map. Enter opens it, arrows/Home/End move between options, Enter selects, and Escape
+closes. Marker labels name their location and congestion state in text. Camera and
+upload results show recognition messages, origin and successful/attempted payment
+totals separately. The camera panel is height-bounded and keyboard-scrollable;
+at shorter resolutions, focus it and scroll to see the complete charge breakdown.
+Model Performance supports Escape and focus return, while reduced-motion settings
+disable presentation animations. Browser fixture checks at six viewport sizes are
+recorded in [W/X verification](V3_ACCESSIBILITY_DOCUMENTATION.md).
+
 ## Explicit exclusions to state
 
 - No real payment, banking, Touch 'n Go, toll-road, enforcement, government, or vehicle-owner integration exists.

@@ -12,6 +12,17 @@ vi.mock("./App", () => ({ apiHeaders: () => ({ Authorization: "Bearer test" }) }
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("V3 information within the existing presentation pages", () => {
+  it.each([
+    ["origin_rejected", "The plate matches overlapping patterns; no simulated deduction was made."],
+    ["low_confidence", "Recognition confidence is below the accepted threshold."],
+    ["duplicate_plate_within_cooldown", "This plate was already processed recently."],
+    ["error", "Local model is unavailable; no simulated payment was made."],
+  ])("renders the full %s result message as text", (status, message) => {
+    render(<AlprResultDetails result={{ status, message, plate_origin: "unknown" }} />);
+    expect(screen.getByText(`Recognition: ${status.replace(/_/g, " ")}`)).toBeTruthy();
+    expect(screen.getByText(message)).toBeTruthy();
+    expect(screen.getByText("No simulated payment made")).toBeTruthy();
+  });
   it("renders stored string components as separate charges and the final total", () => {
     render(<ChargeDetails charge={{ amount: "23.60", dynamic_toll_amount: "3.60", foreign_vehicle_charge: "20.00", status: "successful" }} />);
     const breakdown = screen.getByLabelText("Simulated charge breakdown");

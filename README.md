@@ -33,8 +33,9 @@ ml/        Dataset configs, ALPR pipeline code, OCR code, and ML tests
 scripts/   Local setup, validation, seed, and utility scripts
 docs/      Architecture, setup, and demo documentation
 infra/     Docker and local infrastructure configuration
-.harness/  Agent notes, roadmap, and implementation checklist
-.harnessV2/ Current personal-improvement roadmap and milestone status
+.harness/   Historical initial implementation guidance
+.harnessV2/ Historical improvement roadmap and milestone status
+.harnessV3/ Authoritative proposal-alignment guidance and current checklist
 ```
 
 ## Setup Status
@@ -46,6 +47,7 @@ The repository includes ML dataset preparation, plate processing, YOLO crop extr
 - Detector: one-class `car plate` YOLO model, trained for 150 epochs; user-reported held-out test accuracy: 93.1%.
 - OCR: PaddleOCR reached 37 exact matches out of 44 held-out crops (84.1%) using uppercase-alphanumeric normalization.
 - Confidence gates remain required before any downstream simulated charge; low-confidence or unknown results must fail safely.
+- Origin classification is a conservative text-pattern decision, not legal nationality, ownership, registration or VEP verification. Overlapping/unsupported patterns return `unknown`. The separate 32-case synthetic text fixture reports 25/32 exact-origin decisions (78.1%), with zero cross-country classifications; this is neither field accuracy nor Singaporean OCR accuracy.
 - Still-image and browser-frame processing are available locally; prerecorded-video processing remains deferred.
 
 ## Documentation
@@ -55,6 +57,9 @@ The repository includes ML dataset preparation, plate processing, YOLO crop extr
 - [Testing, metrics, limitations, and failure cases](docs/TESTING_EVALUATION.md)
 - [OCR workflow](docs/OCR_PLATE_PROCESSING.md)
 - [Plate-origin rules and simulated foreign-vehicle charge](docs/FOREIGN_VEHICLE_CHARGE.md)
+- [Architecture and local data flow](docs/ARCHITECTURE.md)
+- [V3 database schema](docs/DATABASE_SCHEMA.md)
+- [V3 API contracts](docs/API.md)
 - [YOLO training workflow](docs/COLAB_TRAINING.md)
 - [Vercel and Render deployment](docs/DEPLOYMENT.md)
 
@@ -95,5 +100,6 @@ npm run dev
 - The administrator dashboard is administrator-only, and all of its traffic, pricing, financial, and vehicle data remain simulated.
 - The traffic scheduler is a separate local process; it is not part of the Vercel dashboard deployment boundary.
 - The trained YOLO weights are intentionally ignored by Git and must be supplied locally before inference can run on a fresh clone.
-- PaddleOCR has been selected and evaluated, but dependencies/models must still be installed locally with user approval when integration begins.
-- The initial Alembic migration creates the complete UUID-based prototype schema.
+- A fresh machine needs the existing YOLO/PaddleOCR runtime and local cached assets; installation or downloads require approval. The current local pipeline is already integrated.
+- Apply all Alembic migrations through `20261007_0014`; the initial schema alone does not include V3 origin, charge components or network alignment.
+- Final localhost demonstration and physical camera verification remain separate from automated coverage. See [testing completion](docs/V3_TESTING_COMPLETION.md).

@@ -35,7 +35,7 @@ Run PostgreSQL API integration tests against only the temporary test database:
 ```powershell
 cd backend
 $env:RUN_POSTGRES_TESTS="1"
-pytest tests/integration/test_database_api.py tests/integration/test_toll_payment.py tests/integration/test_traffic_api.py
+.\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
 Do not point `RUN_POSTGRES_TESTS` at the development database: the integration fixture migrates and resets the dedicated temporary test database.
@@ -137,4 +137,31 @@ npm test
 npm run build
 ```
 
-Open the local frontend shown by Vite, then choose **Start camera** and grant browser camera access. The first PaddleOCR use may download OCR models locally. No Docker service is needed for this webcam-only flow.
+Only when explicitly demonstrating physical inference, select Simulator Toll Plaza,
+open its camera PiP, choose **Start camera** and grant browser permission. The
+integrated camera/upload workflow requires the local API, PostgreSQL, model weights
+and cached OCR assets. Do not allow first-use asset downloads without approval.
+
+## V3 synthetic seed and foreign charge
+
+The following fictional examples are created by `app.db.seed`:
+
+| Plate | Registration origin | Initial wallet | Seeded RM20 charge scenario |
+| --- | --- | ---: | --- |
+| GBC6427R | singaporean | RM75.00 | Sufficient for typical demo toll + charge |
+| YN4821R | singaporean | RM8.00 | Insufficient for the seeded charge |
+| XD7316E | singaporean | RM45.00 | Sufficient for typical demo toll + charge |
+
+These are initial balances, not promised current balances after demo payments.
+Repeated seed preserves existing wallet balances and does not reset history or
+overwrite an edited foreign-charge setting. The normal generated feed continues
+to use the 96 Malaysian-style synthetic vehicles; it does not generate Simulator
+crossings. No real registration or owner is asserted by these examples.
+
+On Dynamic Pricing Management, expand **Simulated foreign-vehicle charge** to edit
+the separately persisted setting. Authenticated `GET`/`PUT
+`/api/data/foreign-vehicle-charge` provide the same configuration. The RM20.00
+default is a simulated proposal example, not an official fee. Changing it affects
+future transactions, not stored charges, congestion bands or Prediction.
+See [API contracts](API.md), [schema](DATABASE_SCHEMA.md) and
+[origin rules](PLATE_ORIGIN.md).

@@ -91,12 +91,12 @@ general detector-performance claim.
 - The local model artifact is Git-ignored and must be supplied separately after a fresh clone. Local inference also depends on installed YOLO/PaddleOCR assets.
 - OCR evaluation has only 44 preserved held-out crops. It is useful as a prototype benchmark, not as a broad generalization claim; further tuning needs a separate labeled development set.
 - Plate plausibility validation rejects common malformed OCR strings before simulated charging. Controlled character correction is limited to a single unambiguous Malaysian-format candidate; ambiguous OCR is retained without substitution and fails safely.
-- Condition-specific recognition accuracy, false-positive rate, and false-negative rate are not yet reported because they require independently human-labelled development/evaluation samples. The repository provides an isolated development-set manifest and condition-breakdown workflow; do not infer these values from live operational records.
+- Development condition breakdowns and positive-only false-negative counts are reported above. False-positive rate remains unavailable without labelled negatives; motion-blur/unusual-format OCR and broader obstruction coverage remain insufficient. Do not infer field rates from these samples or live records.
 - The source dataset mixes polygon and box-style labels, and has no original test split. The project reserves a deterministic subset from the supplied validation data.
 - Low detection/OCR confidence, no usable normalized plate, unknown/disabled vehicles, missing toll prices, unavailable primary accounts, insufficient balances, duplicate idempotency keys, invalid images, missing weights, and inference errors all fail safely without a successful charge.
 - Browser webcam permission and physical-camera inference have intentionally not been re-verified in this work. That explicit hardware test remains deferred.
 - The deployed dashboard is administrator-only and excludes local webcam/image inference. Its external API and database availability are platform-dependent; the free Render deployment does not run the continuous scheduler.
-- Frontend UI checks include rendered deployed login verification and automated source contracts for responsive rules; a full authenticated browser end-to-end suite remains a future enhancement.
+- Frontend checks include behavioral component tests and responsive browser checks using synthetic API fixtures. These checks do not establish physical camera or real-model inference performance; the final localhost demo is tracked separately.
 
 
 ## V3 normal network verification - 2026-10-07
@@ -143,3 +143,29 @@ is explicitly synthetic-text-only and separate from OCR; the positive detector
 review denominator is corrected to 146 scorable images. After final small telemetry
 and audit-empty-state changes, 14 Simulator/window tests and two history tests passed.
 See [behavior and verification](V3_SIMULATOR_PRICING_NAVIGATION.md).
+
+## Latest V3 automated verification
+
+T/U/V completed on 2026-10-07: **160 backend tests** (82 unit, 78 dedicated
+PostgreSQL integration), **40 ML tests**, **90 frontend tests**, production build,
+changed-test Ruff and diff checks passed. This supersedes earlier pending P/Q/S
+integration notes. Coverage includes four-location SG payment/API isolation,
+combined-total boundaries, origin normalization, protected manifest identity and
+rendered Prediction selector options. See [test coverage](V3_TESTING_COMPLETION.md).
+
+The preserved manifest's canonical Git blob hash is
+`b723d69850778f9a65d1a3db1bd386272aea80f7`. Origin fixture evaluation neither edits
+it nor performs optical recognition. The 25/32 synthetic origin result remains
+separate from held-out OCR, development OCR and user-reported detector accuracy.
+The fixture's expected policy decisions are 32/32; seven known-origin examples
+deliberately abstain because supported shapes overlap.
+
+## W/X presentation regression - 2026-10-07
+
+Latest frontend verification: **94 tests passed** and production build passed.
+Installed Edge with synthetic API responses/canvas video verifies six viewport
+sizes, keyboard-only location selection, map label containment/separation, full
+origin rejection messages and keyboard-scrollable camera totals. No hardware
+permission, actual model inference or database writes were performed. This is
+focused UX regression coverage; section Y remains a separate final local demo.
+See [W/X evidence and reproduction](V3_ACCESSIBILITY_DOCUMENTATION.md).

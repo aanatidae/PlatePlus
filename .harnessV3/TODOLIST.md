@@ -393,8 +393,8 @@ Sections T/U/V completed on 2026-10-07. Reviewed existing coverage and added bac
 - [x] Accessible alternative toll selection exists.
 - [x] Verify new origin labels are not colour-only. (J/L/N, 2026-10-07.)
 - [x] Verify charge breakdown is screen-reader readable. (J/L/N, 2026-10-07.)
-- [ ] Verify map/location changes remain usable at presentation resolutions.
-- [ ] Verify upload/camera result status remains readable.
+- [x] Verify map/location changes remain usable at presentation resolutions.
+- [x] Verify upload/camera result status remains readable.
 
 ## X. Documentation
 
@@ -402,17 +402,19 @@ Sections T/U/V completed on 2026-10-07. Reviewed existing coverage and added bac
 - [x] Setup documentation exists.
 - [x] Testing/evaluation documentation exists.
 - [x] Demo documentation exists.
-- [ ] Update README to state MY + SG origin-classification scope.
-- [ ] Update README to state flat-rate-only scope.
+- [x] Update README to state MY + SG origin-classification scope.
+- [x] Update README to state flat-rate-only scope.
 - [x] Update README normal network to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
-- [ ] Update setup/seed docs for Singaporean synthetic records and foreign charge.
-- [ ] Update database/schema docs.
-- [ ] Update API docs if response models gain origin/charge fields.
-- [ ] Update testing/evaluation docs for origin classification.
-- [ ] Update architecture diagram/documentation.
+- [x] Update setup/seed docs for Singaporean synthetic records and foreign charge.
+- [x] Update database/schema docs.
+- [x] Update API docs if response models gain origin/charge fields.
+- [x] Update testing/evaluation docs for origin classification.
+- [x] Update architecture diagram/documentation.
 - [x] Update demo flow to include one Malaysian and one Singaporean example. (J/L/N, 2026-10-07.)
-- [ ] Keep explicit simulation/no-real-payment boundaries.
+- [x] Keep explicit simulation/no-real-payment boundaries.
 - [x] Update `.harnessV3` status after implementation. (J/L/N, 2026-10-07.)
+
+Sections W/X completed on 2026-10-07. Browser regressions at 1280x720, 1366x768, 1920x1080, 1024x768, 390x844 and 960x540 verify contained/non-overlapping map markers, keyboard-only location selection, readable uploaded-image results and keyboard-scrollable camera charge totals using a synthetic canvas stream and intercepted API responses. Fixed compact marker clipping/overlap, wrapped upload messages, added full shared recognition messages and bounded/focusable camera results. No physical webcam permission/inference or database writes. Updated README, setup/seed examples, architecture diagram, schema/API references, evaluation and demo guidance; preserved simulation and metric boundaries. Frontend 94 tests, production build, script syntax, relative-documentation links and diff checks passed; existing bundle-size warning remains. Local screenshots/results are ignored evidence in .plateplus-demo/qa-w. User approved frontend startup; final section Y remains separate. See `docs/V3_ACCESSIBILITY_DOCUMENTATION.md`.
 
 ## Y. Final Capstone Demo Verification
 
@@ -447,5 +449,5 @@ Sections T/U/V completed on 2026-10-07. Reviewed existing coverage and added bac
 6. [x] Update Overview transaction/detection display. (J/L/N, 2026-10-07.)
 7. [x] Update Prediction/map/location fixtures. (Section I, 2026-10-07.)
 8. [x] Add V3 unit/integration/frontend tests. (T/U/V verified 2026-10-07.)
-9. [ ] Update repository documentation.
+9. [x] Update repository documentation. (W/X verified 2026-10-07.)
 10. [ ] Run final localhost capstone verification.

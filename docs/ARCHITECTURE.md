@@ -1,23 +1,30 @@
 # Architecture Notes
 
-The application should be built as a modular prototype with clear boundaries between machine learning, OCR, business logic, persistence, and dashboard views.
+PlatePlus is a modular local capstone prototype with separate ML/OCR, business
+logic, persistence and administrator UI boundaries. It is flat-rate-only and all
+traffic, owners, wallets and payments remain simulated.
 
-## First Prototype Path
+## Current recognition path
 
 1. Accept a still image.
 2. Detect the license plate region using a YOLO model trained for `car plate` only.
 3. Crop the plate region.
 4. Run OCR on the crop.
 5. Normalize the recognized plate text.
-6. Match against synthetic registered vehicles.
-7. Apply confidence gates before any simulated toll transaction succeeds.
+6. Apply detection/OCR confidence gates and conservative origin classification.
+7. Reject overlapping/unsupported patterns; otherwise match an active fictional
+   vehicle with the same declared registration origin and its active primary account.
+8. Read that location's latest non-future stored toll; add the configured foreign
+   charge only for Singaporean origin, then debit the combined total once if funded.
+9. Store detection, itemized transaction, wallet ledger and notification metadata.
 
 ## Service Boundaries
 
 - Detection service: YOLO inference and confidence reporting.
 - Crop service: plate-region extraction from still images.
 - OCR service: text recognition and OCR confidence reporting.
-- Plate normalization service: Malaysian plate cleanup and matching format.
+- Plate normalization/origin service: auditable raw/normalized text, constrained
+  correction and separate supported Malaysian/Singaporean pattern rules.
 - Vehicle service: synthetic registered vehicle lookup.
 - Pricing service: configurable congestion-to-price rules.
 - Transaction service: simulated balance checks and toll transaction recording.
@@ -42,3 +49,46 @@ All base tolls are prototype configuration unless explicitly sourced. See
 [flat-rate scope](FLAT_RATE_SCOPE.md) and [V3 migration verification](V3_DATABASE_MIGRATIONS.md).
 
 All account, traffic, payment, and vehicle-owner data is synthetic. Do not connect to real payment providers, real toll infrastructure, real enforcement systems, or real owner databases.
+
+## Runtime and data flow
+
+```mermaid
+flowchart LR
+    Browser[Local React administrator UI] --> Input[Simulator camera or still image]
+    Input --> Vision[Local YOLO11 and PaddleOCR]
+    Vision --> Gates[Normalization and confidence gates]
+    Gates --> Origin[MY / SG / unknown pattern decision]
+    Origin --> Match[Active synthetic vehicle and primary wallet]
+    Match --> Payment[Stored dynamic toll plus separate SG charge]
+    Payment --> DB[(PostgreSQL metadata and wallet ledger)]
+    Profile[Malaysia-time normal highway profiles] --> Pricing[Congestion bands and safeguards]
+    Pricing --> DB
+    DB --> API[Authenticated FastAPI telemetry and history]
+    API --> Browser
+    Browser --> Prediction[Browser-local time-profile forecast]
+```
+
+Unknown or ambiguous origin exits before successful payment. The one-class detector
+does not classify countries; deterministic pattern rules do not verify nationality,
+ownership or registration. Raw input bytes and crops are not retained by default.
+
+Normal generation targets only LDP, AKLEH, NPE and Grand Saga. Accepted Simulator
+crossings derive live congestion from `(now - 60 seconds, now]`, capacity 10,
+including accepted insufficient-balance outcomes; unknown origin and cooldown
+duplicates create no active crossing. Historical records remain after expiry.
+Simulator speed is unavailable. Pricing and payment replay do not create extra
+crossings or deductions.
+
+The UI has exactly Overview, Dynamic Pricing Management and Prediction. Model
+Performance is a modal, and local ALPR remains in Overview. Pricing history is
+read-only with a chart/table alternative; foreign-charge editing is separately
+labelled. Prediction reads current telemetry but does not write live data or model
+future origin/foreign charges.
+
+Localhost is the primary presentation architecture: React/Vite, FastAPI,
+PostgreSQL and local model assets. Vercel frontend/Render API compatibility remains,
+but remote APIs exclude raw-image and webcam inference. No cloud inference or
+external owner/payment service is required by the local demo.
+
+See [schema](DATABASE_SCHEMA.md), [API contracts](API.md),
+[setup](SETUP.md) and [evaluation](TESTING_EVALUATION.md).

@@ -12,6 +12,8 @@ export type AlprResult = {
 
 export function AlprResultDetails({ result }: { result: AlprResult }) {
   return <div className="alpr-result-details">
+    <span>Recognition: {result.status.replace(/_/g, " ")}</span>
+    <span>{result.message}</span>
     <span title={result.origin_reason?.replace(/_/g, " ")}>{originLabel(result.plate_origin)}</span>
     <small>Detection {result.detection_confidence == null ? "unavailable" : `${Math.round(result.detection_confidence * 100)}%`} · OCR {result.ocr_confidence == null ? "unavailable" : `${Math.round(result.ocr_confidence * 100)}%`}</small>
     <span>{result.payment_status ? `Simulated payment: ${result.payment_status.replace(/_/g, " ")}` : "No simulated payment made"}{result.payment_duplicate ? " · Prior event replayed; no new deduction" : ""}</span>
