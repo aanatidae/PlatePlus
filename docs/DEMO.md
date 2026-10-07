@@ -53,6 +53,12 @@ recorded in [W/X verification](V3_ACCESSIBILITY_DOCUMENTATION.md).
 
 ## Recovery notes
 
+Final V3 localhost checks and real fictional-image inference are recorded in
+[final demo verification](V3_FINAL_DEMO_VERIFICATION.md). Physical webcam verification
+remains pending by the user's explicit decision. The reusable operator smoke script
+creates audited simulated payments; use current wallet balances and pause the feed
+before running it. Warm the existing local OCR/model runtime before presenting.
+
 - If the dashboard cannot load data, check the backend `/health` endpoint and confirm the Vercel API base URL/CORS configuration.
 - If a local ALPR request reports missing weights or OCR assets, do not download or reinstall during the presentation. Use dashboard telemetry and the documented evaluated flow instead.
 - If Docker is unavailable, use the deployed read-only dashboard and explain that its data remains simulated; do not attempt a payment demonstration against an unavailable local database.

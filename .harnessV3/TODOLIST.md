@@ -418,26 +418,28 @@ Sections W/X completed on 2026-10-07. Browser regressions at 1280x720, 1366x768,
 
 ## Y. Final Capstone Demo Verification
 
-- [ ] One-command local startup succeeds.
-- [ ] Database migration reaches V3 head.
-- [ ] Seed succeeds idempotently.
-- [ ] Login succeeds.
-- [ ] All Locations shows LDP/AKLEH/NPE/Grand Saga + separate Simulator Toll Plaza.
-- [ ] Normal live feed uses only normal generated locations.
-- [ ] Webcam still works.
-- [ ] Image upload still works.
-- [ ] Malaysian plate is classified correctly.
-- [ ] Malaysian plate receives no foreign charge.
-- [ ] Singaporean plate is classified correctly.
-- [ ] Singaporean plate receives separate simulated foreign charge.
-- [ ] Unknown/ambiguous origin fails safely.
-- [ ] Simulator congestion updates and expires after 60 seconds.
-- [ ] Dynamic pricing still responds to congestion.
-- [ ] `Why this price?` remains accurate.
-- [ ] Prediction remains isolated.
-- [ ] Model Performance modal opens/closes.
-- [ ] No real bank/eWallet/government integration exists.
-- [ ] Final screenshots captured after V3 UI is stable.
+- [x] One-command local startup succeeds.
+- [x] Database migration reaches V3 head. (`20261007_0014`.)
+- [x] Seed succeeds idempotently. (Repeat seed preserved all counts and wallet balances.)
+- [x] Login succeeds. (Actual local administrator browser sign-in.)
+- [x] All Locations shows LDP/AKLEH/NPE/Grand Saga + separate Simulator Toll Plaza.
+- [x] Normal live feed uses only normal generated locations.
+- [ ] Webcam still works. **Physical camera explicitly deferred by the user on 2026-10-07: “Leave physical webcam verification pending.”** Real local session/frame API inference with a fictional PNG passed; this does not verify hardware capture.
+- [x] Image upload still works. (Actual YOLO/PaddleOCR API and real browser file chooser/upload.)
+- [x] Malaysian plate is classified correctly. (Fictional optical fixture VAA1234.)
+- [x] Malaysian plate receives no foreign charge. (Successful RM2.00; zero foreign charge.)
+- [x] Singaporean plate is classified correctly. (Fictional optical fixtures GBC6427R, YN4821R, XD7316E.)
+- [x] Singaporean plate receives separate simulated foreign charge. (RM2.00 + RM20.00 = RM22.00, stored ledger and actual UI.)
+- [x] Unknown/ambiguous origin fails safely. (SBA1234A: unknown, no successful deduction; unsupported cases covered by ML/backend regressions.)
+- [x] Simulator congestion updates and expires after 60 seconds. (Four accepted crossings / 40%; zero after 63 real seconds, preserved last-crossing history.)
+- [x] Dynamic pricing still responds to congestion. (Actual saved four-location decisions and AKLEH browser preview; existing safeguard regressions passed.)
+- [x] `Why this price?` remains accurate. (Actual configured values; foreign charge kept separate.)
+- [x] Prediction remains isolated. (12-hour browser run across midnight completed at frame 145; all database counts and wallets unchanged.)
+- [x] Model Performance modal opens/closes. (Verified evidence; Escape close.)
+- [x] No real bank/eWallet/government integration exists. (Runtime code/dependency review; synthetic records and local inference only.)
+- [x] Final screenshots captured after V3 UI is stable. (Ignored `.plateplus-demo/qa-y/` evidence.)
+
+Section Y verification completed on 2026-10-07 **except the user-deferred physical webcam item**. Actual optical outcomes, ledger/replay protection, shared input cooldown and real-time Simulator expiry passed. Real browser checks verify upload charge breakdowns, pricing, Model Performance and a complete 12-hour midnight-rollover forecast; database snapshots prove Prediction isolation. Fixed compact top-bar overflow between desktop/mobile breakpoints and verified 843px, 1366x768 and 390x844 layouts. Backend 160, ML 40, frontend 94 tests and production build passed; new script Ruff/syntax checks passed. No settings/history reset, dependencies/models, training, commit, push or deployment. Feed remains paused and local API/frontend/PostgreSQL remain available. Cold inference warm-up and existing stale persisted LDP traffic/scheduler state are documented honestly. See `docs/V3_FINAL_DEMO_VERIFICATION.md` and `scripts/verify_v3_local_demo.py`.
 
 ## Z. Highest-Priority Next Tasks
 
@@ -450,4 +452,4 @@ Sections W/X completed on 2026-10-07. Browser regressions at 1280x720, 1366x768,
 7. [x] Update Prediction/map/location fixtures. (Section I, 2026-10-07.)
 8. [x] Add V3 unit/integration/frontend tests. (T/U/V verified 2026-10-07.)
 9. [x] Update repository documentation. (W/X verified 2026-10-07.)
-10. [ ] Run final localhost capstone verification.
+10. [x] Run final localhost capstone verification. (2026-10-07: all authorized non-hardware checks completed; physical webcam remains explicitly deferred in Y.)
