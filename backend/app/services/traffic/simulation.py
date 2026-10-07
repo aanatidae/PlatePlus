@@ -216,7 +216,9 @@ def run_simulation(
         location_id = default_toll_location_id(database)
         location = database.get(TollLocation, location_id)
     if location is None:
-        raise ValueError("The default Penchala toll location is not initialized. Run migrations.")
+        raise ValueError("The default LDP toll location is not initialized. Run migrations.")
+    if location.status == "retired":
+        raise ValueError("Retired toll locations cannot receive simulated traffic.")
     rules = _rules_by_scenario(database)
     if settings.simulation_mode == "time_patterned" and location.simulation_profile and scenario is None:
         percentage = profile_congestion_for_time(location, effective_time, seed=seed)

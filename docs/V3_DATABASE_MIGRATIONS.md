@@ -1,6 +1,6 @@
 # V3 database migrations
 
-The current V3 schema head is `20261002_0013`. Origin migration `20261002_0012`
+The current V3 schema head is `20261007_0014`. Origin migration `20261002_0012`
 follows the V2 head `20260908_0011`; foreign-charge migration `0013` follows `0012`.
 Historical migrations remain unchanged.
 
@@ -15,8 +15,11 @@ primary wallets, and opening ledger entries without resetting existing balances.
 
 These migrations do not change location IDs or ownership. Simulator traffic, prices,
 detections, and transactions remain at Simulator Toll Plaza, with their existing links.
-Section I will perform the separate V3 normal-network alignment; G/H completion does
-not claim that LDP/AKLEH/NPE/Grand Saga are already seeded.
+Network migration `20261007_0014` follows `0013` and completes section I. It retains
+the LDP ID, retires unrelated old highway locations, and creates new AKLEH/Grand Saga
+IDs. Current selectors and generation use LDP/AKLEH/NPE/Grand Saga plus the separate
+Simulator. Historical records remain queryable. Populated new-highway downgrade is
+refused by foreign keys without deleting history; see [migration details](MULTI_LOCATION.md).
 
 ## Repeatable verification
 

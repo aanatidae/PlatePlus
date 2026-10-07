@@ -5,6 +5,9 @@ import { requireOk } from "./apiErrors";
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 export const LOCATION_KEY = "plateplus.location.v1";
 export type TollLocation = { id: string; code: string; display_name: string; highway_or_route: string; latitude: number; longitude: number; status: string; base_toll: number; road_capacity: number; simulation_profile?: Record<string, unknown> };
+export function predictionLocations(locations: TollLocation[]) {
+  return locations.filter(location => location.code !== "SIMULATOR" && location.status !== "retired");
+}
 export function locationPath(path: string, locationId: string) {
   return `${path}${path.includes("?") ? "&" : "?"}${locationId === "all" ? "scope=all_locations" : `location_id=${encodeURIComponent(locationId)}`}`;
 }
@@ -74,8 +77,9 @@ export function useLocations() {
   if (!value) throw new Error("LocationProvider is required.");
   return value;
 }
-export function LocationSelect({ value, onChange, all = true, label = "Toll location" }: { value: string; onChange: (id: string) => void; all?: boolean; label?: string }) {
+export function LocationSelect({ value, onChange, all = true, excludeSimulator = false, label = "Toll location" }: { value: string; onChange: (id: string) => void; all?: boolean; excludeSimulator?: boolean; label?: string }) {
   const { locations, ready } = useLocations();
-  const options = [...(all ? [{ value: "all", label: "All Locations" }] : []), ...(!all && !value ? [{ value: "", label: "Select a toll location", disabled: true }] : []), ...locations.map(location => ({ value: location.id, label: location.display_name }))];
+  const available = excludeSimulator ? predictionLocations(locations) : locations;
+  const options = [...(all ? [{ value: "all", label: "All Locations" }] : []), ...(!all && !value ? [{ value: "", label: "Select a toll location", disabled: true }] : []), ...available.map(location => ({ value: location.id, label: location.display_name }))];
   return <div className="location-select"><PlatePlusSelect label={label} value={value} onChange={onChange} options={options} disabled={!ready} /></div>;
 }

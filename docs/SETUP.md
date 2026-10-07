@@ -26,6 +26,8 @@ alembic upgrade head
 python -m app.db.seed
 ```
 
+Migrate to `20261007_0014` for the LDP/AKLEH/NPE/Grand Saga normal network and separate Simulator Toll Plaza. Retired highway history is retained; see [network migration](MULTI_LOCATION.md).
+
 The seed is idempotent. It creates synthetic users, separate MYR accounts, 96 Malaysian-style presentation vehicles, three fictional Singaporean-pattern vehicles with varied balances, one initial traffic/price decision, and a password-hashed demo administrator. Migration `20261002_0013` seeds a configurable RM20.00 **simulated** foreign-vehicle charge; see [charge behavior and API](FOREIGN_VEHICLE_CHARGE.md). Use the `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` values from your untracked `.env` to sign in to the dashboard or `POST /api/auth/login`.
 
 Run PostgreSQL API integration tests against only the temporary test database:

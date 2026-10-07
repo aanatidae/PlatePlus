@@ -1,39 +1,75 @@
 # Multi-location monitoring
 
-PlatePlus retains its dark command-centre design and uses the four locations seeded by migration `20260904_0004`: Penchala, Sungai Besi, Ayer Keroh, and Lima Kedai. Operational values and all payments remain simulated. Map positions form a north-to-south schematic, not a geographic navigation map.
+The normal simulated V3 network is **LDP, AKLEH, NPE, and Grand Saga**.
+Simulator Toll Plaza is a fifth, separate local-ALPR location. Traffic, toll
+rates, vehicles, wallets, and payments are simulated. The map is a stylized
+regional schematic, not a GIS or navigation map.
 
-## Dashboard context
+| Code | Route label | Prototype coordinates | Base toll | Capacity/hour | Peak hours (Malaysia time) |
+| --- | --- | --- | --- | --- | --- |
+| LDP | LDP / E11 | 3.145200, 101.621700 | RM2.00 | 1,000 | 7, 8, 17, 18 |
+| AKLEH | AKLEH | 3.160000, 101.735000 | RM2.40 | 1,200 | 7, 8, 17, 18 |
+| NPE | NPE / E10 | 3.095000, 101.672000 | RM2.80 | 1,300 | 8, 9, 17, 18 |
+| GRAND_SAGA | Grand Saga | 3.045000, 101.765000 | RM3.20 | 1,500 | 6, 7, 16, 17, 18 |
 
-The top-bar selector defaults to All Locations and saves its value under `plateplus.location.v1` in browser local storage. Invalid/deleted location IDs fall back to All Locations. Selection is shared by Overview, Recognition, Dynamic Pricing, and AI Intelligence. Native select controls and keyboard-operable map buttons provide equivalent location selection.
+Coordinates, capacities, base tolls, speed bounds, and demand profiles are demo
+configuration, not surveyed toll-plaza positions, official tariffs, or measured
+traffic. Independent deterministic profiles calculate congestion percentage
+before selecting a pricing band. The scheduler and presentation feed target only
+operational normal locations. Simulator never receives generated traffic or speed.
 
-Simulator has its own selector and local results. Its selected location supplies road capacity and base toll. Changing its location clears previous results; running it does not write live traffic, prices, detections, or transactions. Full simultaneous multi-location simulation and independent peak-hour profiles remain future improvements. Local webcam retains the default Penchala context, explicitly labelled in the top bar.
+## Monitoring and selection
 
-## Read-only monitoring API
+All endpoints require administrator authentication. `GET /api/locations` lists
+current locations and omits retired ones. `GET /api/locations/network/live` and
+`GET /api/live/overview?scope=all_locations` exclude retired locations and their
+activity from current network totals. `location_id` scopes monitoring to one
+location; network congestion and speed are capacity weighted, and network toll is
+the arithmetic mean of reporting locations. Persisted telemetry takes priority
+over deterministic profile fallback. Normal activity uses the last hour;
+Simulator activity uses its rolling 60-second window. Recent lists contain up to
+12 records, and successful payments contribute to simulated revenue.
 
-All endpoints require administrator authentication.
+Overview opens in All Locations. Map markers and the keyboard-accessible selector
+share persisted location context with Dynamic Pricing Management. A saved retired
+selection falls back to All Locations. Prediction offers only the four normal
+locations, runs browser-local five-minute frames for up to 12 hours, and never
+changes live records or wallet balances. Simulator retains its Overview webcam
+PiP and still-image upload, 10-crossing capacity, and 60-second congestion window.
+Processed history persists and raw images remain ephemeral. Frontend monitoring
+polls every five seconds, cancels obsolete requests, and uses a 15-second timeout.
 
-| Request | Meaning |
-| --- | --- |
-| `GET /api/locations` | Seeded location metadata |
-| `GET /api/live/overview?scope=all_locations` | Network monitoring, location states, and recent activity |
-| `GET /api/live/overview?location_id=<uuid>` | One location's monitoring and recent activity |
+## Upgrade and historical ownership
 
-The existing unscoped `/api/live/overview` remains a legacy compatibility endpoint; the dashboard uses an explicit scope. Unknown location IDs return 404. Monitoring requests never write records.
+Migration `20261007_0014` follows `20261002_0013`. It renames the existing
+Penchala/LDP code to `LDP`, retaining its ID, profile, configuration, and ownership.
+It retires DUKE and KESAS, preserving their IDs, metadata, traffic, prices,
+detections, transactions, and other history. AKLEH and Grand Saga receive new
+stable IDs and independent histories. Old highway activity is never relabelled
+as activity at a different highway. NPE and Simulator remain unchanged.
 
-Activity metrics use a rolling last-hour window. Transaction count includes every outcome; revenue counts successful payments only. Recent lists contain up to 12 records. Network congestion and speed are weighted by road capacity, traffic flow is summed, and network toll is an arithmetic mean across locations with telemetry. The response reports the number of reporting locations so partial coverage is visible. Missing telemetry is represented as unavailable rather than zero traffic.
+Retired metadata remains available through `GET /api/locations/{id}`. Historical
+`/api/data/detections`, `/api/data/transactions`, and `/api/data/toll-prices` APIs
+remain filterable by original `location_id`, dates, and supported status fields.
+Retired locations have no live fallback telemetry and cannot receive generated
+traffic or demo crossings. Pricing-policy edits leave their stored prices unchanged.
 
-Telemetry uses the latest persisted simulation when available and a labelled time-profile fallback otherwise. Average speed is estimated. Camera and system states are synthetic values derived from location status. These are not physical device-health measurements. Locations without history still share the baseline time pattern; richer independent profiles remain future work.
+Run the existing `alembic upgrade head` and idempotent seed before using the new
+network. Location configuration is migration-owned; repeat seeding does not reset
+operator settings, history, or balances. Fresh and upgraded databases converge to
+five current locations plus two retired historical entries.
 
-The frontend polls every 30 seconds with a 15-second request timeout, cancels old scope requests, and shows stale/error states without relabelling another location's data. Measurements older than two minutes are marked stale; the last successful refresh and measurement time are shown separately.
-
-## History and image recognition
-
-The `/api/data/detections`, `/api/data/transactions`, and `/api/data/toll-prices` list endpoints accept `location_id`, `start_at`, and `end_at`. Detection history also accepts `plate`, `registration`, and `detection_status`; transactions accept `transaction_status` and `minimum_amount`; prices accept `congestion_category`. Filters are applied before pagination. The UI displays the latest 50 matching records and converts selected dates to explicit Malaysia-time boundaries.
-
-Local `POST /api/webcam/images?location_id=<uuid>` passes location ownership through the detection and simulated payment workflow. The UI requires a specific location before upload. Omitting the parameter retains the API's legacy default-location behavior. No image bytes are retained and no cloud inference is introduced.
+Downgrade to `0013` removes the two new locations and restores legacy naming and
+operational status. PostgreSQL RESTRICT foreign keys refuse that downgrade if
+AKLEH or Grand Saga has acquired linked history; the migration transaction rolls
+back without deleting or reassigning records. Preserve that history and remain at
+V3, or explicitly plan a separate archival procedure before attempting rollback.
 
 ## Verification
 
-On 2026-09-05, the production frontend build, 8 frontend tests, and all 52 backend tests passed, including PostgreSQL integration tests. Tests cover location ownership, network aggregation, filtering, empty/unavailable telemetry, and read-only monitoring. Development PostgreSQL was at migration head; Docker's development/test containers were healthy.
-
-Manual browser verification used disposable synthetic fixtures and covered desktop/mobile layout, keyboard marker selection, persistent location context, history filtering, Simulator isolation, and stale/API-outage states. These checks do not constitute an automated browser suite or a full accessibility audit. Physical webcam inference was not run. No deployment was performed.
+PostgreSQL tests cover fresh/upgraded seed convergence, retained IDs and ownership,
+downgrade/re-upgrade, populated rollback refusal, retired-history API access,
+current aggregation, four-road scheduler generation, independent daily congestion
+and speed profiles, useful pricing bands, and Simulator exclusion. Frontend tests
+cover V3 routes and markers, Prediction selection and Malaysia-time rollover, and
+existing navigation and presentation behavior.

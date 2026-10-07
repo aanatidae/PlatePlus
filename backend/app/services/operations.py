@@ -27,7 +27,7 @@ def emit(database: Session, *, alert_type: str, severity: str, title: str, messa
 def evaluate(database: Session) -> list[OperationalAlert]:
     from app.api.locations import _state
     now = datetime.now(UTC); alerts: list[OperationalAlert] = []
-    for location in database.scalars(select(TollLocation)):
+    for location in database.scalars(select(TollLocation).where(TollLocation.status != "retired")):
         state = _state(database, location); telemetry = state["telemetry"]
         if telemetry and float(telemetry["congestion_percentage"]) > 80:
             alerts.append(emit(database, alert_type="severe_congestion", severity="critical", title="Severe congestion", message=f"{location.display_name} is at {telemetry['congestion_percentage']}% simulated congestion.", location_id=location.id))

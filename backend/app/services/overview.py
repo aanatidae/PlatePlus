@@ -19,7 +19,7 @@ def scoped_overview(database: Session, location_id: UUID | None) -> dict:
     locations = (
         [require_location(database, location_id)]
         if location_id
-        else list(database.scalars(select(TollLocation).order_by(TollLocation.display_name)))
+        else list(database.scalars(select(TollLocation).where(TollLocation.status != "retired").order_by(TollLocation.display_name)))
     )
     states = [_state(database, location) for location in locations]
     active = [state["telemetry"] for state in states if state["telemetry"]]

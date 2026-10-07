@@ -18,7 +18,7 @@ As of 2026-10-02, the repository baseline and plate-origin slice (TODO sections 
 
 Origin evaluation (TODO section D) now has a separate, reproducible 32-case synthetic text fixture. It reports MY/SG/unknown confusion counts, cross-country errors, and safe rejection of overlapping or unsupported patterns. The 25/32 exact-origin result is a selected-fixture result only; OCR held-out and development results remain separate and untouched. No real-world origin accuracy is claimed.
 
-Synthetic Singaporean records and the separate foreign-charge workflow (TODO sections E–F) are complete on this branch. Migration `20261002_0013` stores vehicle registration origin, itemized transaction components, and a separate persisted charge setting. The idempotent seed adds three fictional Singaporean-pattern vehicles/accounts; payment uses the final total for sufficiency, debit, ledger, notification, replay, and reversal. Simulator Toll Plaza accepts eligible Singaporean webcam/upload results through the same path. The RM20.00 seeded foreign charge is a configurable simulated proposal example, not a real-world fee. Backend PostgreSQL integration and unit tests passed; network/UI alignment remains pending.
+Synthetic Singaporean records and the separate foreign-charge workflow (TODO sections E–F) are complete on this branch. Migration `20261002_0013` stores vehicle registration origin, itemized transaction components, and a separate persisted charge setting. The idempotent seed adds three fictional Singaporean-pattern vehicles/accounts; payment uses the final total for sufficiency, debit, ledger, notification, replay, and reversal. Simulator Toll Plaza accepts eligible Singaporean webcam/upload results through the same path. The RM20.00 seeded foreign charge is a configurable simulated proposal example, not a real-world fee. Backend PostgreSQL integration and unit tests passed; section I network alignment is now complete. Origin/foreign-charge UI surfacing remains pending.
 
 ## V3 Target Architecture
 
@@ -28,8 +28,8 @@ and `docs/FLAT_RATE_SCOPE.md`. After user-approved Docker Desktop/test-service s
 verify fresh/upgraded schema and seed convergence, historical Simulator ownership for
 webcam/upload sources, backfills, and populated downgrade/re-upgrade. The fixture rejects
 development targets and clears disposable rows before full legacy schema resets.
-Historical migrations and development data are unchanged. Section I network replacement
-remains separate. See `docs/V3_DATABASE_MIGRATIONS.md`.
+Historical migrations and development data were unchanged during G/H. Section I
+network replacement was subsequently completed on 2026-10-07. See `docs/V3_DATABASE_MIGRATIONS.md`.
 
 Recognition path:
 
@@ -126,12 +126,14 @@ Keep `SIMULATOR` unchanged.
 
 Do not rewrite old migrations. Add a new migration.
 
-Decide carefully whether existing Penchala/DUKE/KESAS historical records should:
-
-- be mapped to new demo locations when semantically defensible, or
-- remain historical while new V3 locations are seeded.
-
-Prefer data safety over pretending old history belongs to a new toll system.
+Implemented strategy (section I, 2026-10-07): retain the LDP/Penchala ID and its
+configuration, retire DUKE/KESAS while preserving queryable original history, and
+create independent AKLEH/Grand Saga IDs. Migration `20261007_0014` follows `0013`.
+Current APIs, map/selectors, traffic generation, and Prediction use only the V3
+network plus separate Simulator. A populated new-highway downgrade is refused
+without deleting history. Local demo migration and repeated seed succeeded.
+Verification passed: 127 backend tests, 35 ML tests, 60 frontend tests and production
+build. Origin/foreign-charge display work remains a separate pending slice.
 
 ### Exit criteria
 

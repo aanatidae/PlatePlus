@@ -29,7 +29,7 @@ it("a successful policy save immediately refreshes and renders backend canonical
     }
     const data = url.endsWith("pricing-rules") ? rules : url.endsWith("settings") ? {
       minimum_toll: ".50", maximum_toll_multiplier: "3", minimum_price_change_minutes: 5, pricing_hysteresis_percentage: "2",
-    } : [{ id: "p", code: "PENCHALA", display_name: "Test Plaza", base_toll: "2.00" }];
+    } : [{ id: "p", code: "LDP", display_name: "Test Plaza", base_toll: "2.00" }];
     return new Response(JSON.stringify(data));
   }));
   render(<LocationProvider><PricingManagement /><CurrentPrice /></LocationProvider>);

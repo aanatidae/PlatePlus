@@ -83,7 +83,7 @@ def acknowledge(alert_id: str, database: DatabaseSession, admin: Admin = Depends
 
 @router.post("/alerts/seed-demo")
 def seed_demo(database: DatabaseSession):
-    locations = list(database.scalars(select(TollLocation).order_by(TollLocation.display_name)))
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.status != "retired").order_by(TollLocation.display_name)))
     if not locations: raise HTTPException(status_code=409, detail="Toll locations must be seeded first.")
     samples = (("severe_congestion", "critical", "Severe congestion", "Demo: simulated severe congestion.", locations[0]), ("camera_outage", "critical", "Camera unavailable", "Demo: simulated camera outage.", locations[min(1, len(locations)-1)]), ("repeated_low_confidence", "warning", "Repeated low-confidence ALPR", "Demo: 3 low-confidence reads in 15 minutes.", locations[0]), ("repeated_failed_payment", "warning", "Repeated failed simulated payments", "Demo: 3 failed payments in 15 minutes.", locations[min(1, len(locations)-1)]), ("backend_api_error", "warning", "Backend/API warning", "Demo: simulated recoverable API issue.", None))
     for kind, severity, title, message, location in samples: emit(database, alert_type=kind, severity=severity, title=title, message=message, location_id=location.id if location else None, source="demo", incident_key=f"demo:{kind}:{location.id if location else 'network'}")
@@ -140,7 +140,7 @@ def demo_status(database: DatabaseSession):
 def reset_full_demo(database: DatabaseSession):
     """Idempotently restore a presentation-safe synthetic demo baseline."""
     summary = _reset_demo_wallets_and_records(database)
-    locations = list(database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR").order_by(TollLocation.code)))
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR", TollLocation.status == "operational").order_by(TollLocation.code)))
     vehicles = list(database.scalars(select(Vehicle).where(Vehicle.plate_number.in_(("VAA1234", "WXY5678", "JTU9090"))).order_by(Vehicle.plate_number)))
     now = datetime.now(UTC)
     seeded = 0

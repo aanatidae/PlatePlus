@@ -10,13 +10,13 @@ const overview = readFileSync(resolve(import.meta.dirname, "NetworkOverview.tsx"
 describe("Selangor toll-road network", () => {
   it("renders only the four simulated highway routes inside a state outline", () => {
     expect(SELANGOR_OUTLINE).toContain("M120");
-    expect(NETWORK_ROUTES.map(route => route.id)).toEqual(["LDP", "DUKE", "KESAS", "NPE"]);
+    expect(NETWORK_ROUTES.map(route => route.id)).toEqual(["LDP", "AKLEH", "GRAND_SAGA", "NPE"]);
   });
   it("keeps each seeded plaza on its intended highway and identifies webcam telemetry", () => {
     const location = (code: string) => ({ code } as never);
-    expect(mapPositionForLocation(location("PENCHALA")).route).toBe("LDP");
-    expect(mapPositionForLocation(location("DUKE")).route).toBe("DUKE");
-    expect(mapPositionForLocation(location("KESAS")).route).toBe("KESAS");
+    expect(mapPositionForLocation(location("LDP")).route).toBe("LDP");
+    expect(mapPositionForLocation(location("AKLEH")).route).toBe("AKLEH");
+    expect(mapPositionForLocation(location("GRAND_SAGA")).route).toBe("GRAND_SAGA");
     expect(mapPositionForLocation(location("NPE")).route).toBe("NPE");
     expect(mapPositionForLocation(location("SIMULATOR")).webcam).toBe(true);
   });

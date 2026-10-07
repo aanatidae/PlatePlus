@@ -57,6 +57,8 @@ def select_demo_vehicle(vehicles: list[Vehicle], recent_plates: set[str], random
 
 def generate_crossing(database: Session, location: TollLocation, telemetry: dict, *, vehicle: Vehicle) -> str:
     """Create one transparently synthetic detection and its normal simulated payment outcome."""
+    if location.status == "retired":
+        raise ValueError("Retired toll locations cannot receive demo crossings.")
     if is_webcam_toll(location):
         raise ValueError("Simulator Toll Plaza is webcam-only and cannot receive demo crossings.")
     now = datetime.now(UTC)

@@ -144,7 +144,7 @@ Section H completed on 2026-10-06. All 73 backend unit tests passed. Flat-rate d
 
 ## I. Normal Simulated Toll Network
 
-Current repository normal generated locations are still based on Penchala/LDP, DUKE, KESAS, and NPE.
+Current normal generated locations are LDP, AKLEH, NPE, and Grand Saga. DUKE/KESAS are retired historical entries; Simulator Toll Plaza remains separate.
 
 Required V3 normal generated network:
 
@@ -155,29 +155,31 @@ Required V3 normal generated network:
 
 Tasks:
 
-- [ ] Replace/align normal location `PENCHALA` with LDP network naming/model as required.
-- [ ] Replace DUKE with AKLEH.
-- [ ] Keep/update NPE.
-- [ ] Replace KESAS with Grand Saga.
-- [ ] Choose stable V3 location codes: `LDP`, `AKLEH`, `NPE`, `GRAND_SAGA`.
-- [ ] Add/update display names.
-- [ ] Add/update route labels.
-- [ ] Add/update prototype map coordinates.
-- [ ] Add/update road capacities.
-- [ ] Add/update base toll configuration.
-- [ ] Add/update independent traffic profiles.
-- [ ] Add/update peak hours.
-- [ ] Add/update speed profiles.
-- [ ] Add/update variation parameters.
-- [ ] Add migration/seed behavior for V3 locations.
-- [ ] Decide safe handling of historical old-location records.
-- [ ] Update backend location tests.
-- [ ] Update scheduler/network simulation tests.
-- [ ] Update frontend location fixtures.
-- [ ] Update map route definitions.
-- [ ] Update map marker tests.
-- [ ] Update Prediction fixtures.
-- [ ] Remove stale active references to DUKE/KESAS/Penchala from current V3 docs/UI/tests.
+- [x] Replace/align normal location `PENCHALA` with LDP network naming/model as required.
+- [x] Replace DUKE with AKLEH.
+- [x] Keep/update NPE.
+- [x] Replace KESAS with Grand Saga.
+- [x] Choose stable V3 location codes: `LDP`, `AKLEH`, `NPE`, `GRAND_SAGA`.
+- [x] Add/update display names.
+- [x] Add/update route labels.
+- [x] Add/update prototype map coordinates.
+- [x] Add/update road capacities.
+- [x] Add/update base toll configuration.
+- [x] Add/update independent traffic profiles.
+- [x] Add/update peak hours.
+- [x] Add/update speed profiles.
+- [x] Add/update variation parameters.
+- [x] Add migration/seed behavior for V3 locations.
+- [x] Decide safe handling of historical old-location records.
+- [x] Update backend location tests.
+- [x] Update scheduler/network simulation tests.
+- [x] Update frontend location fixtures.
+- [x] Update map route definitions.
+- [x] Update map marker tests.
+- [x] Update Prediction fixtures.
+- [x] Remove stale active references to DUKE/KESAS/Penchala from current V3 docs/UI/tests.
+
+Section I completed on 2026-10-07. Migration `20261007_0014` retains the existing LDP/Penchala ID and configuration, retires DUKE/KESAS without transferring history, and creates independent AKLEH/Grand Saga IDs with prototype metadata, rates, capacities, and traffic profiles. Current location lists, network aggregates, alerts evaluation, demo generation/reset, pricing propagation, map routes/markers, and Prediction exclude retired locations. Historical metadata/data APIs remain queryable by original IDs. Populated new-highway rollback is safely refused by RESTRICT foreign keys. Fresh/upgraded seed convergence, downgrade/re-upgrade, history retention, four-road scheduling, independent daily pricing-band/speed profiles, map and Prediction regressions passed. Verification: 127 backend tests (73 unit, 54 dedicated PostgreSQL integration), 35 ML tests, 60 frontend tests, production build, new-file Ruff, and diff checks passed. Existing build-size warning remains. Local demo database upgraded to `0014`; pre/post migration counts remained 1 traffic record, 40 prices, 673 detections, and 673 transactions; repeated seed succeeded. The browser preview was unavailable because the frontend was not running; no physical webcam check, dependency installation, commit, push, or deployment was performed. See `docs/MULTI_LOCATION.md` and `docs/V3_DATABASE_MIGRATIONS.md`.
 
 ## J. Simulator Toll Plaza
 
@@ -210,10 +212,10 @@ Tasks:
 - [x] Deterministic testable variation exists.
 - [x] Persisted traffic history exists.
 - [x] Network generation excludes Simulator Toll Plaza.
-- [ ] Retune/verify profiles for LDP, AKLEH, NPE, Grand Saga.
-- [ ] Verify four V3 normal locations can show different congestion at the same Malaysia time.
-- [ ] Verify new profiles still traverse useful pricing bands for demos.
-- [ ] Verify no old V2 location is still generated after V3 migration.
+- [x] Retune/verify profiles for LDP, AKLEH, NPE, Grand Saga. (Section I, 2026-10-07.)
+- [x] Verify four V3 normal locations can show different congestion at the same Malaysia time. (Section I, 2026-10-07.)
+- [x] Verify new profiles still traverse useful pricing bands for demos. (Section I, 2026-10-07.)
+- [x] Verify no old V2 location is still generated after V3 migration. (Section I, 2026-10-07.)
 
 ## L. Dynamic Pricing
 
@@ -274,7 +276,7 @@ Tasks:
 - [x] Normal simulated live feed exists.
 - [x] Simulator Toll presentation feedback exists.
 - [x] Alerts/operational events exist.
-- [ ] Map normal locations to LDP/AKLEH/NPE/Grand Saga.
+- [x] Map normal locations to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
 - [ ] Show plate origin in recent detections where appropriate.
 - [ ] Show foreign charge separately in Singaporean transactions.
 - [ ] Show final simulated total.
@@ -291,7 +293,7 @@ Tasks:
 - [ ] Keep foreign charge concept visually separate from congestion bands.
 - [ ] If admin-configurable foreign charge is surfaced here, place it in a distinct clearly labelled section.
 - [ ] Never imply plate origin changes the congestion multiplier.
-- [ ] Update location selector to LDP/AKLEH/NPE/Grand Saga.
+- [x] Update location selector to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
 
 ## Q. Prediction
 
@@ -306,8 +308,8 @@ Tasks:
 - [x] Chart tooltip is themed.
 - [x] Prediction remains isolated from live state.
 - [x] Simulator Toll Plaza is excluded.
-- [ ] Update Prediction normal-location options to LDP/AKLEH/NPE/Grand Saga.
-- [ ] Verify midnight/date rollover after V3 location changes.
+- [x] Update Prediction normal-location options to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
+- [x] Verify midnight/date rollover after V3 location changes. (Section I, 2026-10-07.)
 - [ ] Do not add foreign-vehicle charging to traffic prediction.
 
 ## R. Model Performance / Evaluation UI
@@ -392,7 +394,7 @@ Tasks:
 - [x] Demo documentation exists.
 - [ ] Update README to state MY + SG origin-classification scope.
 - [ ] Update README to state flat-rate-only scope.
-- [ ] Update README normal network to LDP/AKLEH/NPE/Grand Saga.
+- [x] Update README normal network to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
 - [ ] Update setup/seed docs for Singaporean synthetic records and foreign charge.
 - [ ] Update database/schema docs.
 - [ ] Update API docs if response models gain origin/charge fields.
@@ -431,9 +433,9 @@ Tasks:
 2. [x] Implement Malaysian/Singaporean/unknown origin classifier.
 3. [x] Add Singaporean synthetic seed records.
 4. [x] Implement separately itemized foreign-vehicle charge.
-5. [ ] Align normal network to LDP/AKLEH/NPE/Grand Saga.
+5. [x] Align normal network to LDP/AKLEH/NPE/Grand Saga.
 6. [ ] Update Overview transaction/detection display.
-7. [ ] Update Prediction/map/location fixtures.
+7. [x] Update Prediction/map/location fixtures. (Section I, 2026-10-07.)
 8. [ ] Add V3 unit/integration/frontend tests.
 9. [ ] Update repository documentation.
 10. [ ] Run final localhost capstone verification.

@@ -10,7 +10,7 @@ from app.models import DetectionRecord, TollLocation, TollPrice, TollTransaction
 
 
 def test_live_overview_scopes_activity_and_network_totals(database, database_app, admin_auth_headers):
-    locations = list(database.scalars(select(TollLocation).order_by(TollLocation.code)))
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.status != "retired").order_by(TollLocation.code)))
     now = datetime.now(UTC)
     for index, location in enumerate(locations):
         database.add(DetectionRecord(location_id=location.id, detected_at=now,
@@ -49,9 +49,9 @@ def test_location_history_filters_use_malaysia_date_boundaries(database, databas
 
 
 def test_migration_seeds_the_simulated_toll_network(database) -> None:
-    locations = list(database.scalars(select(TollLocation).order_by(TollLocation.code)))
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.status != "retired").order_by(TollLocation.code)))
 
-    assert [location.code for location in locations] == ["DUKE", "KESAS", "NPE", "PENCHALA", "SIMULATOR"]
+    assert [location.code for location in locations] == ["AKLEH", "GRAND_SAGA", "LDP", "NPE", "SIMULATOR"]
     assert all(location.status == "operational" for location in locations)
     assert all(location.road_capacity > 0 for location in locations)
     assert all(location.base_toll >= Decimal("0.00") for location in locations)
@@ -60,7 +60,7 @@ def test_migration_seeds_the_simulated_toll_network(database) -> None:
     assert simulator.simulation_profile["telemetry_source"] == "webcam_alpr"
 
 
-def test_operational_records_default_to_penchala_and_keep_location_ownership(database) -> None:
+def test_operational_records_default_to_ldp_and_keep_location_ownership(database) -> None:
     now = datetime.now(UTC)
     traffic = TrafficRecord(
         measured_at=now,
@@ -95,25 +95,25 @@ def test_operational_records_default_to_penchala_and_keep_location_ownership(dat
     database.add(transaction)
     database.flush()
 
-    penchala = database.scalar(select(TollLocation).where(TollLocation.code == "PENCHALA"))
-    assert penchala is not None
+    ldp = database.scalar(select(TollLocation).where(TollLocation.code == "LDP"))
+    assert ldp is not None
     assert {
         traffic.location_id,
         price.location_id,
         detection.location_id,
         transaction.location_id,
-    } == {penchala.id}
+    } == {ldp.id}
 
 
 def test_location_endpoints_filter_records_and_reject_unknown_ids(
     database, database_app, admin_auth_headers
 ) -> None:
-    penchala, other = list(database.scalars(select(TollLocation).order_by(TollLocation.code)))[2:4]
+    ldp, other = list(database.scalars(select(TollLocation).where(TollLocation.status != "retired").order_by(TollLocation.code)))[2:4]
     now = datetime.now(UTC)
     database.add_all(
         [
             DetectionRecord(
-                location_id=penchala.id,
+                location_id=ldp.id,
                 detected_at=now,
                 detection_confidence=Decimal("0.9"),
                 status="accepted",
@@ -130,14 +130,14 @@ def test_location_endpoints_filter_records_and_reject_unknown_ids(
     client = TestClient(database_app)
     listed = client.get("/api/locations", headers=admin_auth_headers)
     filtered = client.get(
-        f"/api/data/detections?location_id={penchala.id}", headers=admin_auth_headers
+        f"/api/data/detections?location_id={ldp.id}", headers=admin_auth_headers
     )
     missing = client.get(
         "/api/locations/00000000-0000-0000-0000-000000000000", headers=admin_auth_headers
     )
     assert listed.status_code == 200 and len(listed.json()) == 5
     assert filtered.status_code == 200 and {item["location_id"] for item in filtered.json()} == {
-        str(penchala.id)
+        str(ldp.id)
     }
     assert missing.status_code == 404
 
@@ -147,7 +147,7 @@ def test_profiled_fallback_is_independent_and_matches_the_selected_overview(data
     network = client.get("/api/live/overview?scope=all_locations", headers=admin_auth_headers)
     assert network.status_code == 200, network.text
     states = {item["location"]["code"]: item for item in network.json()["locations"]}
-    percentages = {states[code]["telemetry"]["congestion_percentage"] for code in ("DUKE", "KESAS", "NPE")}
+    percentages = {states[code]["telemetry"]["congestion_percentage"] for code in ("AKLEH", "GRAND_SAGA", "NPE")}
     assert len(percentages) > 1
 
     selected = client.get(

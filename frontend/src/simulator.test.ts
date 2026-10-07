@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { advancePlayback, createSimulationFrames, createTimeline, malaysiaDailyTrafficProfile, scenarioDetails, summarizeSimulation, timeBasedTrafficCategory, type SimulatorFrame } from "./simulator";
 
 const ldp = { id: "ldp", code: "LDP", display_name: "Simulated LDP Toll Plaza", base_toll: 2, road_capacity: 1000, simulation_profile: { baseline_demand: .48, peak_hours: [8, 18], speed_free_flow_kmh: 72, speed_floor_kmh: 20, variation: .05 } };
-const duke = { id: "duke", code: "DUKE", display_name: "Simulated DUKE Toll Plaza", base_toll: 2.4, road_capacity: 1200, simulation_profile: { baseline_demand: .56, peak_hours: [7, 17], speed_free_flow_kmh: 68, speed_floor_kmh: 18, variation: .08 } };
+const akleh = { id: "akleh", code: "AKLEH", display_name: "Simulated AKLEH Toll Plaza", base_toll: 2.4, road_capacity: 1200, simulation_profile: { baseline_demand: .56, peak_hours: [7, 17], speed_free_flow_kmh: 68, speed_floor_kmh: 18, variation: .08 } };
 const parameters = { congestion: 550, lanes: 3, baseToll: 2 };
 const outputs = (scenario: keyof typeof scenarioDetails | "custom", start = "2026-09-07T07:00", duration = 240) => createSimulationFrames([ldp], scenario, parameters, start, duration).map(frame => frame.outputs[0]);
 
@@ -31,7 +31,7 @@ describe("time-dependent simulator frames", () => {
   });
 
   it("gives generated locations independent frame states at the same timestamp", () => {
-    const firstFrame = createSimulationFrames([ldp, duke], "moderate", parameters, "2026-09-07T07:00", 60)[0];
+    const firstFrame = createSimulationFrames([ldp, akleh], "moderate", parameters, "2026-09-07T07:00", 60)[0];
     expect(firstFrame.outputs[0].congestion).not.toBe(firstFrame.outputs[1].congestion);
     expect(firstFrame.outputs[0].speed).not.toBe(firstFrame.outputs[1].speed);
   });
@@ -68,7 +68,7 @@ describe("time-dependent simulator frames", () => {
   });
 
   it("creates independent location and network summaries from the same stored frames", () => {
-    const summary = summarizeSimulation(createSimulationFrames([ldp, duke], "moderate", parameters, "2026-09-07T07:00", 60));
+    const summary = summarizeSimulation(createSimulationFrames([ldp, akleh], "moderate", parameters, "2026-09-07T07:00", 60));
     expect(summary.locations).toHaveLength(2);
     expect(summary.mostCongestedLocation).not.toBeNull();
     expect(summary.highestTrafficLocation).not.toBeNull();
@@ -95,7 +95,7 @@ describe("time-dependent simulator frames", () => {
   });
 
   it("smoothly progresses across hourly bands, remains deterministic, and handles midnight", () => {
-    const frames = createSimulationFrames([ldp, duke], "time_based", parameters, "2026-09-07T05:30", 270);
+    const frames = createSimulationFrames([ldp, akleh], "time_based", parameters, "2026-09-07T05:30", 270);
     const ldpFrames = frames.map(frame => frame.outputs[0]);
     expect(ldpFrames.find(frame => frame.category === "severe")).toBeDefined();
     expect(new Set(ldpFrames.map(frame => frame.dynamicToll)).size).toBeGreaterThan(1);

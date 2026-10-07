@@ -86,7 +86,9 @@ Treat the following as already implemented unless repository inspection proves o
 
 ### Payment and Persistence
 
-- V3 G/H verified on 2026-10-06: fresh and populated-V2-upgraded databases converge at `20261002_0013`; Simulator webcam/upload history retains ownership and links. Full backend verification passed (125 tests: 73 unit, 52 dedicated PostgreSQL integration). Flat-rate-only scope is documented in `docs/FLAT_RATE_SCOPE.md`; section I network replacement remains pending. Migration test details are in `docs/V3_DATABASE_MIGRATIONS.md`. The disposable test fixture rejects development database targets and clears test rows before full legacy downgrades.
+- V3 I completed on 2026-10-07 at migration `20261007_0014`: normal network LDP/AKLEH/NPE/Grand Saga, separate Simulator, preserved retired-highway history, updated map/Prediction/selectors and daily profiles. Verification passed: 127 backend tests (73 unit, 54 PostgreSQL integration), 35 ML tests, 60 frontend tests, and production build. Local demo database is upgraded and repeated seed succeeded; history counts remained unchanged. Downgrade is refused if new highways have linked history. Browser preview and physical webcam verification were not performed.
+
+- V3 G/H verified on 2026-10-06: fresh and populated-V2-upgraded databases converge at `20261002_0013`; Simulator webcam/upload history retains ownership and links. Full backend verification passed (125 tests: 73 unit, 52 dedicated PostgreSQL integration). Flat-rate-only scope is documented in `docs/FLAT_RATE_SCOPE.md`; section I was subsequently completed on 2026-10-07. Migration test details are in `docs/V3_DATABASE_MIGRATIONS.md`. The disposable test fixture rejects development database targets and clears test rows before full legacy downgrades.
 
 - PostgreSQL with SQLAlchemy and Alembic.
 - Synthetic users, accounts, vehicles, detections, traffic, prices, and transactions.
@@ -193,7 +195,7 @@ Required normal simulated toll systems:
 - NPE
 - Grand Saga
 
-The existing repository currently uses Penchala/LDP, DUKE, KESAS, and NPE for normal generated locations. V3 must align the normal network with the proposal.
+The current normal generated network is LDP, AKLEH, NPE, and Grand Saga. Migration `20261007_0014` retains the existing LDP ID, retires DUKE/KESAS as queryable historical entries, and creates independent AKLEH/Grand Saga IDs. Current selectors, aggregates and generation exclude retired locations; do not relabel their history. See `docs/MULTI_LOCATION.md`.
 
 Rules:
 

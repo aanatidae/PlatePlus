@@ -83,12 +83,12 @@ def _pricing_rules() -> dict[str, SimpleNamespace]:
 
 def test_profile_congestion_is_deterministic_and_location_independent() -> None:
     at_time = datetime(2026, 9, 2, 9, 20, tzinfo=UTC)
-    duke = SimpleNamespace(code="DUKE", simulation_profile={"baseline_demand": .68, "peak_hours": [17], "peak_factor": 1.65, "variation": .08})
-    kesas = SimpleNamespace(code="KESAS", simulation_profile={"baseline_demand": .42, "peak_hours": [16, 17], "peak_factor": 1.75, "variation": .05})
+    akleh = SimpleNamespace(code="AKLEH", simulation_profile={"baseline_demand": .68, "peak_hours": [17], "peak_factor": 1.65, "variation": .08})
+    grand_saga = SimpleNamespace(code="GRAND_SAGA", simulation_profile={"baseline_demand": .42, "peak_hours": [16, 17], "peak_factor": 1.75, "variation": .05})
 
-    duke_percentage = profile_congestion_for_time(duke, at_time)
-    assert duke_percentage == profile_congestion_for_time(duke, at_time.replace(second=55))
-    assert duke_percentage != profile_congestion_for_time(kesas, at_time)
+    akleh_percentage = profile_congestion_for_time(akleh, at_time)
+    assert akleh_percentage == profile_congestion_for_time(akleh, at_time.replace(second=55))
+    assert akleh_percentage != profile_congestion_for_time(grand_saga, at_time)
 
 
 def test_rule_for_congestion_uses_configured_threshold_boundaries() -> None:
@@ -105,10 +105,10 @@ def test_rule_for_congestion_uses_configured_threshold_boundaries() -> None:
 def test_profiled_fallback_is_independent_and_stable_within_its_minute_bucket() -> None:
     rules = _pricing_rules()
     at_time = datetime(2026, 9, 2, 23, 20, tzinfo=UTC)
-    duke = SimpleNamespace(code="DUKE", road_capacity=1200, base_toll=Decimal("2.40"), status="operational", simulation_profile={"baseline_demand": .68, "peak_hours": [7], "peak_factor": 1.65, "variation": .08, "speed_free_flow_kmh": 68, "speed_floor_kmh": 18})
+    akleh = SimpleNamespace(code="AKLEH", road_capacity=1200, base_toll=Decimal("2.40"), status="operational", simulation_profile={"baseline_demand": .68, "peak_hours": [7], "peak_factor": 1.65, "variation": .08, "speed_free_flow_kmh": 68, "speed_floor_kmh": 18})
     npe = SimpleNamespace(code="NPE", road_capacity=1300, base_toll=Decimal("2.80"), status="operational", simulation_profile={"baseline_demand": .32, "peak_hours": [8], "peak_factor": 1.25, "variation": .04, "speed_free_flow_kmh": 74, "speed_floor_kmh": 22})
 
-    duke_state = _profiled_fallback(duke, rules, at_time)
-    assert duke_state == _profiled_fallback(duke, rules, at_time.replace(second=55))
-    assert duke_state["congestion_category"] in {"low", "moderate", "high", "severe"}
-    assert duke_state["congestion_percentage"] != _profiled_fallback(npe, rules, at_time)["congestion_percentage"]
+    akleh_state = _profiled_fallback(akleh, rules, at_time)
+    assert akleh_state == _profiled_fallback(akleh, rules, at_time.replace(second=55))
+    assert akleh_state["congestion_category"] in {"low", "moderate", "high", "severe"}
+    assert akleh_state["congestion_percentage"] != _profiled_fallback(npe, rules, at_time)["congestion_percentage"]

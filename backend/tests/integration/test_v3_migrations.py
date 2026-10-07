@@ -61,7 +61,7 @@ def test_fresh_and_upgraded_v3_converge_and_preserve_simulator_history(test_engi
         fresh_schema, fresh_seed = _schema(test_engine), _seed_state(test_engine)
         seed.seed_demo_data()
         assert _seed_state(test_engine) == fresh_seed
-        assert fresh_seed["head"] == "20261002_0013"
+        assert fresh_seed["head"] == "20261007_0014"
         assert len(fresh_seed["fleet"]) == fresh_seed["ledger_count"] == 99
 
         # Start a genuine pre-V3 database with historical crossings, not a

@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { locationPath, storedLocation } from "./locations";
+import { locationPath, predictionLocations, storedLocation, type TollLocation } from "./locations";
 import { ruleMultiplier } from "./App";
 import { historyPath } from "./HistoryFilters";
 
 describe("location and history requests", () => {
+  it("offers the four V3 highways for Prediction and excludes Simulator and retired history", () => {
+    const locations = ["LDP", "AKLEH", "NPE", "GRAND_SAGA", "SIMULATOR", "legacy"]
+      .map(code => ({ code, status: code === "legacy" ? "retired" : "operational" } as TollLocation));
+    expect(predictionLocations(locations).map(location => location.code))
+      .toEqual(["LDP", "AKLEH", "NPE", "GRAND_SAGA"]);
+  });
   it("distinguishes explicit network scope from one location without dropping filters", () => {
     expect(locationPath("/api/live/overview", "all")).toBe("/api/live/overview?scope=all_locations");
     expect(locationPath("/api/data/detections?limit=50", "toll-2")).toBe("/api/data/detections?limit=50&location_id=toll-2");

@@ -4,7 +4,7 @@ Capstone prototype for automatic license plate recognition (ALPR) with supported
 
 The computer-vision baseline is complete: a one-class YOLO detector trained on Malaysian car-plate images identifies plates, PaddleOCR reads detected crops, and a conservative pattern stage classifies supported Malaysian or Singaporean results. The FastAPI/PostgreSQL foundation, simulated toll workflow, configurable traffic-pricing backend, and administrator dashboard are complete.
 
-The dashboard now supports the four seeded toll locations. Overview opens in All Locations, offers selectable schematic markers and location-specific monitoring, and remembers selection across navigation and refreshes. Recognition, Dynamic Pricing, and AI Intelligence share that selection; Simulator keeps its own. History filters live on the detailed pages, while Overview shows current state and activity from the last hour. See [multi-location monitoring](docs/MULTI_LOCATION.md) for API behavior and limitations.
+The normal simulated network contains LDP, AKLEH, NPE, and Grand Saga, plus a separate Simulator Toll Plaza for local webcam/image ALPR. The administrator dashboard has three pages: Overview, Dynamic Pricing Management, and Prediction. Overview opens in All Locations with selectable schematic markers and persisted location context. Prediction offers only normal locations and remains isolated from live data. Historical highway records retain their original ownership; retired locations are excluded from the current network. See [multi-location monitoring](docs/MULTI_LOCATION.md) for configuration, migration, and API behavior.
 
 ## Scope
 

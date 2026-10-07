@@ -24,6 +24,13 @@ The application should be built as a modular prototype with clear boundaries bet
 - Traffic service: simulated traffic records and congestion classification.
 - Dashboard service: admin-only metrics and history views.
 
+## Normal network
+
+Normal generated traffic uses LDP, AKLEH, NPE, and Grand Saga. Simulator Toll Plaza
+is separate and derives congestion only from accepted local ALPR crossings. Retired
+highway history remains queryable but is excluded from current selectors, network
+monitoring, and generation. See [network configuration and migration](MULTI_LOCATION.md).
+
 ## Data Scope
 
 Pricing is flat-rate-only. The pricing service uses the selected location's configured

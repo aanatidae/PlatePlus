@@ -68,7 +68,7 @@ def _profiled_fallback(location: TollLocation, rules: dict[str, DynamicPricingRu
 
 @router.get("", response_model=list[TollLocationRead])
 def list_locations(database: DatabaseSession):
-    return list(database.scalars(select(TollLocation).order_by(TollLocation.display_name)))
+    return list(database.scalars(select(TollLocation).where(TollLocation.status != "retired").order_by(TollLocation.display_name)))
 
 
 @router.get("/{location_id}", response_model=TollLocationRead)
@@ -77,6 +77,9 @@ def get_location(location_id: UUID, database: DatabaseSession):
 
 
 def _state(database: Session, location: TollLocation) -> dict:
+    if location.status == "retired":
+        return {"location": location, "telemetry": None,
+                "telemetry_source": "retired", "metrics": {}}
     now = datetime.now(UTC)
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
     if not {"normal", "moderate", "peak_hour", "severe"}.issubset(rules):
@@ -171,7 +174,7 @@ def _state(database: Session, location: TollLocation) -> dict:
 
 @router.get("/network/live")
 def network_live(database: DatabaseSession):
-    states = [_state(database, item) for item in database.scalars(select(TollLocation))]
+    states = [_state(database, item) for item in database.scalars(select(TollLocation).where(TollLocation.status != "retired"))]
     active = [item for item in states if item["telemetry"]]
     capacity = sum(item["telemetry"]["road_capacity"] for item in active)
     return {

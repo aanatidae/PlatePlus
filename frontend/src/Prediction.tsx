@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts";
 import { advancePlayback, createSimulationFrames, type SimulatorFrame } from "./simulator";
-import { locationPath, LocationSelect, useFeed, useLocations } from "./locations";
+import { locationPath, predictionLocations, LocationSelect, useFeed, useLocations } from "./locations";
 import { PlatePlusSelect } from "./PlatePlusSelect";
 
 type Batch = { frames: SimulatorFrame[]; duration: number };
@@ -26,7 +26,7 @@ export default function Prediction() {
   const [start, setStart] = useState(() => new Date().toISOString().slice(0, 16));
   const [duration, setDuration] = useState(60); const [speed, setSpeed] = useState(1);
   const [batch, setBatch] = useState<Batch | null>(null); const [index, setIndex] = useState(0); const [running, setRunning] = useState(false);
-  const available = locations.filter(location => location.code !== "SIMULATOR");
+  const available = predictionLocations(locations);
   const locationId = selected !== "all" && available.some(location => location.id === selected) ? selected : available[0]?.id ?? "";
   const current = useFeed<LiveSnapshot>(locationId ? locationPath("/api/live/overview", locationId) : "/api/live/overview?scope=all_locations", Boolean(locationId));
   useEffect(() => { setBatch(null); setIndex(0); setRunning(false); }, [locationId]);
@@ -38,7 +38,7 @@ export default function Prediction() {
   return <main className="dashboard-page">
     <section className="page-heading"><div><h1>Now vs future</h1><p>See what is happening at the selected simulated toll now, then explore its browser-local time-profile forecast. Prediction never writes to live traffic, prices, detections, or transactions.</p></div></section>
     <section className="detail-card simulator-controls">
-      <LocationSelect all={false} label="Toll location" value={locationId} onChange={select} />
+      <LocationSelect excludeSimulator all={false} label="Toll location" value={locationId} onChange={select} />
       <label>Malaysia start time<input type="datetime-local" value={start} onChange={event => setStart(event.target.value)} /></label>
       <PlatePlusSelect label="Duration" value={String(duration)} onChange={value => setDuration(Number(value))} options={predictionDurationOptions} />
       <PlatePlusSelect label="Playback speed" value={String(speed)} onChange={value => setSpeed(Number(value))} options={[{ value: ".5", label: "0.5×" }, { value: "1", label: "1×" }, { value: "2", label: "2×" }, { value: "4", label: "4×" }]} />

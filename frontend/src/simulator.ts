@@ -36,7 +36,7 @@ export function advancePlayback(frameIndex: number, frameCount: number): { frame
 
 function locationProfile(location: SimulatorLocation) {
   const profile = location.simulation_profile ?? {};
-  const defaults: Record<string, { baseline: number; peaks: number[]; freeFlow: number; floor: number }> = { LDP: { baseline: .48, peaks: [7.5, 8.5, 17.5, 18.5], freeFlow: 72, floor: 20 }, DUKE: { baseline: .56, peaks: [7, 8, 17, 18], freeFlow: 68, floor: 18 }, KESAS: { baseline: .38, peaks: [7.5, 17.5], freeFlow: 70, floor: 22 }, NPE: { baseline: .46, peaks: [8, 18], freeFlow: 74, floor: 22 } };
+  const defaults: Record<string, { baseline: number; peaks: number[]; freeFlow: number; floor: number }> = { LDP: { baseline: .42, peaks: [7, 8, 17, 18], freeFlow: 74, floor: 28 }, AKLEH: { baseline: .42, peaks: [7, 8, 17, 18], freeFlow: 68, floor: 16 }, GRAND_SAGA: { baseline: .41, peaks: [6, 7, 16, 17, 18], freeFlow: 72, floor: 17 }, NPE: { baseline: .38, peaks: [8, 9, 17, 18], freeFlow: 78, floor: 20 } };
   const fallback = defaults[location.code] ?? { baseline: .48, peaks: [8, 18], freeFlow: 72, floor: 20 };
   return { baseline: Number(profile.baseline_demand ?? fallback.baseline), peaks: (profile.peak_hours as number[] | undefined)?.map(Number) ?? fallback.peaks, freeFlow: Number(profile.speed_free_flow_kmh ?? fallback.freeFlow), floor: Number(profile.speed_floor_kmh ?? fallback.floor), variation: Number(profile.variation ?? .05) };
 }

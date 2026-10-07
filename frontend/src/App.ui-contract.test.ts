@@ -41,7 +41,8 @@ describe("simplified local-demo dashboard", () => {
   it("keeps prediction time-profile-only and isolated", () => {
     expect(prediction).toContain('"time_based"');
     expect(prediction).toContain("never writes to live traffic, prices, detections, or transactions");
-    expect(prediction).toContain('location.code !== "SIMULATOR"');
+    expect(prediction).toContain('predictionLocations(locations)');
+    expect(prediction).toContain('<LocationSelect excludeSimulator');
   });
   it("makes an accepted webcam crossing a focused presentation event", () => {
     expect(camera).toContain('"simulator-crossing-accepted"');

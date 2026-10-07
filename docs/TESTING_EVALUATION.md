@@ -97,3 +97,22 @@ general detector-performance claim.
 - Browser webcam permission and physical-camera inference have intentionally not been re-verified in this work. That explicit hardware test remains deferred.
 - The deployed dashboard is administrator-only and excludes local webcam/image inference. Its external API and database availability are platform-dependent; the free Render deployment does not run the continuous scheduler.
 - Frontend UI checks include rendered deployed login verification and automated source contracts for responsive rules; a full authenticated browser end-to-end suite remains a future enhancement.
+
+
+## V3 normal network verification - 2026-10-07
+
+Section I aligns the normal network to LDP/AKLEH/NPE/Grand Saga. Verification passed:
+127 backend tests (73 unit, 54 dedicated PostgreSQL integration), 35 ML tests, 60
+frontend tests, production build, new migration/test Ruff checks, and diff checks.
+The existing frontend chunk-size warning remains. Migration tests preserve original
+normal-highway detection ownership, retain Simulator links, compare fresh/upgraded
+schema and idempotent seed, verify downgrade/re-upgrade and safe populated rollback
+refusal. API/scheduler tests exclude retired history from live aggregates and keep
+generated traffic off Simulator. Daily profile tests verify distinct Malaysia-time
+congestion, useful pricing bands, deterministic variation and congestion-related
+speed. Frontend tests verify V3 map routes/markers, Prediction options and date
+rollover, and unchanged three-page navigation. The local demo database reached
+`20261007_0014` without changing migration-time counts (1 traffic record, 40 prices,
+673 detections, 673 transactions); repeated seed succeeded. Browser preview was
+unavailable because the frontend service was not running. Physical webcam
+verification was not run. No new model-accuracy claim is made.

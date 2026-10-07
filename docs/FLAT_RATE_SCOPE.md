@@ -26,11 +26,10 @@ dynamic toll decision. Malaysian vehicles add zero. The final attempted total is
 stored as `amount`; successful wallet debit and reversal use that total. Unknown or
 ambiguous origin cannot produce a successful deduction.
 
-The V3 target normal network is LDP, AKLEH, NPE, and Grand Saga. Section I network
-alignment is still pending; the current normal locations remain Penchala/LDP, DUKE,
-KESAS, and NPE. Simulator Toll Plaza remains a separate local-ALPR location, with
-10 active crossings and a rolling 60-second congestion window. This scope does not
-rename locations or reinterpret historical records.
+The V3 normal network is LDP, AKLEH, NPE, and Grand Saga. Simulator Toll Plaza
+remains a separate local-ALPR location with 10 active crossings and a rolling
+60-second congestion window. Migration `20261007_0014` preserves historical
+ownership while replacing the active network; see [network migration](MULTI_LOCATION.md).
 
 Verification is in `backend/tests/unit/test_pricing_decision.py` (location-relative
 formula, price limits, interval and hysteresis) and the PostgreSQL payment/pricing

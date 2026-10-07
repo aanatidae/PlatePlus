@@ -44,7 +44,7 @@ def test_decimal_rules_persist_and_drive_future_prices(database, database_app, a
         persisted = database.scalar(select(DynamicPricingRule).where(DynamicPricingRule.scenario == expected["scenario"]))
         assert persisted.minimum_percentage == Decimal(str(expected["minimum_percentage"]))
         assert persisted.multiplier == Decimal(str(expected["multiplier"]))
-    location = database.scalar(select(TollLocation).where(TollLocation.code == "PENCHALA"))
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "LDP"))
     assert location.base_toll == Decimal("2.00")
     settings = database.scalar(select(TrafficSimulationSettings))
     decision = decide_price(database, settings, location, Decimal("70.00"), context="policy_update")
@@ -167,12 +167,12 @@ def test_network_simulation_persists_independent_profiles_and_excludes_webcam_to
     )
     database.commit()
 
-    assert {result.traffic_record.location.code for result in results} == {"PENCHALA", "DUKE", "KESAS", "NPE"}
+    assert {result.traffic_record.location.code for result in results} == {"LDP", "AKLEH", "GRAND_SAGA", "NPE"}
     states = {result.traffic_record.location.code: result.traffic_record for result in results}
-    assert states["DUKE"].congestion_percentage != states["NPE"].congestion_percentage
-    assert states["DUKE"].congestion_category in {"low", "moderate", "high", "severe"}
+    assert states["AKLEH"].congestion_percentage != states["NPE"].congestion_percentage
+    assert states["AKLEH"].congestion_category in {"low", "moderate", "high", "severe"}
     assert states["NPE"].congestion_category in {"low", "moderate", "high", "severe"}
-    assert states["DUKE"].vehicle_count != states["NPE"].vehicle_count
+    assert states["AKLEH"].vehicle_count != states["NPE"].vehicle_count
     assert {result.toll_price.location_id for result in results} == {
         result.traffic_record.location_id for result in results
     }
@@ -191,7 +191,7 @@ def test_tuned_location_profiles_follow_distinct_daily_patterns_and_preserve_web
     }
     locations = {
         location.code: location
-        for location in database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR"))
+        for location in database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR", TollLocation.status == "operational"))
     }
     representative_hours = (2, 7, 8, 10, 13, 17, 18, 21, 23)
     matrix = {
@@ -210,7 +210,7 @@ def test_tuned_location_profiles_follow_distinct_daily_patterns_and_preserve_web
             f"{hour:02}:00 "
             + " | ".join(
                 f"{code} {matrix[code][hour]}%/{rule_for_congestion(rules, matrix[code][hour]).scenario}"
-                for code in ("PENCHALA", "DUKE", "NPE", "KESAS")
+                for code in ("LDP", "AKLEH", "NPE", "GRAND_SAGA")
             )
         )
 
@@ -218,22 +218,22 @@ def test_tuned_location_profiles_follow_distinct_daily_patterns_and_preserve_web
         code: {hour: rule_for_congestion(rules, percentage).scenario for hour, percentage in samples.items()}
         for code, samples in matrix.items()
     }
-    assert categories["PENCHALA"][2] == "normal"
-    assert categories["PENCHALA"][7] in {"moderate", "peak_hour"}
-    assert categories["PENCHALA"][18] in {"moderate", "peak_hour"}
-    assert categories["PENCHALA"][21] == "normal"
-    assert categories["DUKE"][2] == "normal"
-    assert categories["DUKE"][10] == "moderate"
-    assert categories["DUKE"][7] in {"peak_hour", "severe"}
-    assert categories["DUKE"][18] in {"peak_hour", "severe"}
-    assert categories["DUKE"][21] == "normal"
+    assert categories["LDP"][2] == "normal"
+    assert categories["LDP"][7] in {"moderate", "peak_hour"}
+    assert categories["LDP"][18] in {"moderate", "peak_hour"}
+    assert categories["LDP"][21] == "normal"
+    assert categories["AKLEH"][2] == "normal"
+    assert categories["AKLEH"][10] == "moderate"
+    assert categories["AKLEH"][7] in {"peak_hour", "severe"}
+    assert categories["AKLEH"][18] in {"peak_hour", "severe"}
+    assert categories["AKLEH"][21] == "normal"
     assert {categories["NPE"][hour] for hour in representative_hours} >= {"normal", "moderate", "peak_hour"}
     assert categories["NPE"][21] == "normal"
-    assert {categories["KESAS"][hour] for hour in representative_hours} >= {"normal", "moderate", "peak_hour"}
-    assert categories["KESAS"][21] == "normal"
+    assert {categories["GRAND_SAGA"][hour] for hour in representative_hours} >= {"normal", "moderate", "peak_hour"}
+    assert categories["GRAND_SAGA"][21] == "normal"
     assert len({matrix[code][13] for code in matrix}) == len(matrix)
-    assert matrix["DUKE"][2] == profile_congestion_for_time(
-        locations["DUKE"], datetime(2026, 9, 2, 2, 0, 45, tzinfo=MALAYSIA_TIMEZONE)
+    assert matrix["AKLEH"][2] == profile_congestion_for_time(
+        locations["AKLEH"], datetime(2026, 9, 2, 2, 0, 45, tzinfo=MALAYSIA_TIMEZONE)
     )
     for code, location in locations.items():
         assert average_speed_for_profile(location, matrix[code][2]) > average_speed_for_profile(

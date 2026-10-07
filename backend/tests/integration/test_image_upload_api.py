@@ -55,7 +55,7 @@ class _SuccessfulSingaporeanImageService:
 def test_authenticated_image_upload_runs_the_complete_simulated_toll_flow(
     database, admin_auth_headers, monkeypatch, selected_location
 ) -> None:
-    location = database.scalar(select(TollLocation).where(TollLocation.code == ("DUKE" if selected_location else "PENCHALA")))
+    location = database.scalar(select(TollLocation).where(TollLocation.code == ("AKLEH" if selected_location else "LDP")))
     user = User(full_name="Upload Test User", email="upload@example.test")
     database.add(user)
     database.flush()

@@ -57,7 +57,9 @@ def save(database, database_app, headers, **changes):
 
 
 def test_policy_reprices_all_locations_without_traffic_changes(database, database_app, admin_auth_headers):
-    locations = list(database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR").order_by(TollLocation.code)))
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.code != "SIMULATOR", TollLocation.status == "operational").order_by(TollLocation.code)))
+    retired = database.scalar(select(TollLocation).where(TollLocation.status == "retired"))
+    _, retired_price = traffic_and_price(database, retired)
     states = [("25", "low", "1"), ("35", "moderate", "1.5"), ("70", "high", "2"), ("90", "severe", "2.5")]
     old = [traffic_and_price(database, location, *state) for location, state in zip(locations, states)]
     before = database.scalar(select(func.count(TrafficRecord.id)))
@@ -72,10 +74,11 @@ def test_policy_reprices_all_locations_without_traffic_changes(database, databas
         assert _state(database, location)["telemetry"]["current_toll_price"] == updated.amount
         assert price.amount == location.base_toll * Decimal(state[2])
     assert database.scalar(select(func.count(TrafficRecord.id))) == before
+    assert latest(database, retired).id == retired_price.id
 
 
 def test_new_payments_and_running_feed_use_new_price_history_is_immutable(database, database_app, admin_auth_headers):
-    location = database.scalar(select(TollLocation).where(TollLocation.code == "PENCHALA"))
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "LDP"))
     traffic, old_price = traffic_and_price(database, location)
     car = vehicle(database)
     assert cross(database, location, car, "before-policy").amount == Decimal("3.00")
@@ -101,7 +104,7 @@ def test_new_payments_and_running_feed_use_new_price_history_is_immutable(databa
 
 
 def test_boundary_change_reclassifies_live_band_but_preserves_measurement(database, database_app, admin_auth_headers):
-    location = database.scalar(select(TollLocation).where(TollLocation.code == "PENCHALA"))
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "LDP"))
     traffic, old_price = traffic_and_price(database, location)
     settings = database.scalar(select(TrafficSimulationSettings))
     settings.minimum_price_change_minutes = 120
