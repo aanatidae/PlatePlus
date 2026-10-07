@@ -11,6 +11,7 @@ describe("Selangor toll-road network", () => {
   it("renders only the four simulated highway routes inside a state outline", () => {
     expect(SELANGOR_OUTLINE).toContain("M120");
     expect(NETWORK_ROUTES.map(route => route.id)).toEqual(["LDP", "AKLEH", "GRAND_SAGA", "NPE"]);
+    expect(NETWORK_ROUTES.map(route => route.label)).toEqual(["LDP / E11", "AKLEH", "Grand Saga", "NPE / E10"]);
   });
   it("keeps each seeded plaza on its intended highway and identifies webcam telemetry", () => {
     const location = (code: string) => ({ code } as never);

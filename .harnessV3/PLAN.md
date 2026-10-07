@@ -601,3 +601,7 @@ are implemented. Keep origin failures inside existing rejection rollups, rather
 than creating per-detection alerts. Frontend 89, backend unit 74, and ML 35 tests
 and production build pass. Required PostgreSQL regressions await authorization
 to start the stopped dedicated test service. See `docs/V3_PRICING_PREDICTION_ALERTS.md`.
+
+## T/U/V testing completion - 2026-10-07
+
+Backend, ML and frontend checklist sections are complete: 160 backend tests (82 unit, 78 dedicated PostgreSQL integration), 40 ML tests, 90 frontend tests and production build passed, together with changed-test Ruff and diff checks. New tests cover country-payment boundaries, Singaporean payment location isolation, normalized origin decisions, protected OCR manifest identity and rendered V3 selector options. The user approved only the dedicated postgres_test service, which remains running; development data was not targeted. The full integration run verifies the previously pending P/Q/S PostgreSQL cases and supersedes their earlier pending-verification notes. Final localhost presentation and physical webcam verification remain separate. See `docs/V3_TESTING_COMPLETION.md`.

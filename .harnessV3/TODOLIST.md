@@ -346,13 +346,13 @@ P/Q/S work in progress on 2026-10-07: separate foreign-charge configuration, fee
 
 - [x] Existing backend unit tests exist.
 - [x] Existing PostgreSQL integration coverage exists.
-- [ ] Unit-test origin classifier.
-- [ ] Unit-test per-country charge behavior.
-- [ ] Unit-test V3 flat-rate location validation.
-- [ ] Integration-test plate-origin persistence.
-- [ ] Integration-test foreign-charge persistence.
-- [ ] Integration-test location-aware Singaporean transaction.
-- [ ] Integration-test upgraded V3 migration.
+- [x] Unit-test origin classifier.
+- [x] Unit-test per-country charge behavior.
+- [x] Unit-test V3 flat-rate location validation.
+- [x] Integration-test plate-origin persistence.
+- [x] Integration-test foreign-charge persistence.
+- [x] Integration-test location-aware Singaporean transaction.
+- [x] Integration-test upgraded V3 migration.
 - [x] Re-run existing location/network aggregation tests. (J/L/N, 2026-10-07.)
 - [x] Re-run existing Simulator Toll tests. (J/L/N, 2026-10-07.)
 - [x] Re-run existing wallet/reversal tests. (J/L/N, 2026-10-07.)
@@ -361,11 +361,11 @@ P/Q/S work in progress on 2026-10-07: separate foreign-charge configuration, fee
 
 - [x] ML test suite exists.
 - [x] Malaysian normalization tests exist.
-- [ ] Add Singaporean registration fixtures.
-- [ ] Add origin-classification tests.
-- [ ] Add ambiguity tests.
-- [ ] Add cross-country OCR-confusion tests.
-- [ ] Preserve held-out OCR set unchanged.
+- [x] Add Singaporean registration fixtures.
+- [x] Add origin-classification tests.
+- [x] Add ambiguity tests.
+- [x] Add cross-country OCR-confusion tests.
+- [x] Preserve held-out OCR set unchanged.
 
 ## V. Testing — Frontend
 
@@ -373,15 +373,17 @@ P/Q/S work in progress on 2026-10-07: separate foreign-charge configuration, fee
 - [x] Production build command exists.
 - [x] Location/map tests exist.
 - [x] Prediction tests exist.
-- [ ] Update expected normal toll network.
+- [x] Update expected normal toll network.
 - [x] Test origin display in detection. (J/L/N, 2026-10-07.)
 - [x] Test Singaporean charge breakdown. (J/L/N, 2026-10-07.)
 - [x] Test Malaysian no-foreign-charge case. (J/L/N, 2026-10-07.)
-- [ ] Test V3 Prediction selector options.
-- [ ] Test V3 map labels/routes.
+- [x] Test V3 Prediction selector options.
+- [x] Test V3 map labels/routes.
 - [x] Confirm three-page navigation remains unchanged. (J/L/N, 2026-10-07.)
 - [x] Run `npm test`. (J/L/N, 2026-10-07.)
 - [x] Run `npm run build`. (J/L/N, 2026-10-07.)
+
+Sections T/U/V completed on 2026-10-07. Reviewed existing coverage and added backend country-payment unit tests, four-location Singaporean payment/API isolation regressions, ML normalization and protected-held-out-manifest regressions, and rendered V3 Prediction selector coverage with exact map labels. Verification: 160 backend tests (82 unit, 78 dedicated PostgreSQL integration), 40 ML tests, 90 frontend tests in 16 files, production build, changed-test Ruff and diff checks passed. Existing bundle-size warning remains. User approved starting only postgres_test; development data was not targeted. This full run also verifies previously pending P/Q/S integration cases. No physical webcam test, dependencies/models, commit, push or deployment. See `docs/V3_TESTING_COMPLETION.md`.
 
 ## W. Accessibility / UX Regression
 
@@ -444,6 +446,6 @@ P/Q/S work in progress on 2026-10-07: separate foreign-charge configuration, fee
 5. [x] Align normal network to LDP/AKLEH/NPE/Grand Saga.
 6. [x] Update Overview transaction/detection display. (J/L/N, 2026-10-07.)
 7. [x] Update Prediction/map/location fixtures. (Section I, 2026-10-07.)
-8. [ ] Add V3 unit/integration/frontend tests.
+8. [x] Add V3 unit/integration/frontend tests. (T/U/V verified 2026-10-07.)
 9. [ ] Update repository documentation.
 10. [ ] Run final localhost capstone verification.

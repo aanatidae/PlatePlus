@@ -46,3 +46,14 @@ def test_ocr_confusion_can_recover_a_supported_singaporean_shape() -> None:
     corrected = correct_common_ocr_confusions("G8C1234R")
     assert corrected == "GBC1234R"
     assert classify_plate_origin(corrected).origin == "singaporean"
+
+
+@pytest.mark.parametrize("raw,origin,reason", [
+    (" gbc 1234-r ", "singaporean", "singaporean_supported_pattern"),
+    ("vaa 1234", "malaysian", "malaysian_supported_pattern"),
+    ("slp 1234-a", "unknown", "ambiguous_supported_patterns"),
+    (None, "unknown", "unsupported_plate_pattern"),
+])
+def test_normalization_preserves_conservative_origin_decisions(raw, origin, reason):
+    decision = classify_plate_origin(raw)
+    assert (decision.origin, decision.reason) == (origin, reason)

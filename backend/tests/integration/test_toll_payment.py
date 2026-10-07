@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -10,6 +11,7 @@ from app.models import (
     DetectionRecord,
     ForeignVehicleChargeSettings,
     PaymentNotification,
+    TollLocation,
     TollPrice,
     TollTransaction,
     User,
@@ -298,3 +300,44 @@ def test_only_the_designated_primary_account_is_used(database) -> None:
     assert outcome.status == "successful"
     assert primary.balance == Decimal("5.00")
     assert secondary.balance == Decimal("50.00")
+
+
+@pytest.mark.parametrize("code", ["LDP", "AKLEH", "NPE", "GRAND_SAGA"])
+def test_singaporean_payment_and_api_history_keep_selected_location(
+    database, database_app, admin_auth_headers, code,
+):
+    account, _ = _seed_registered_vehicle(
+        database, balance=Decimal("100.00"), plate_number="GBC1234R",
+        registration_origin="singaporean",
+    )
+    locations = list(database.scalars(select(TollLocation).where(TollLocation.status != "retired")))
+    selected = next(location for location in locations if location.code == code)
+    for index, location in enumerate(locations):
+        database.add(TollPrice(
+            location_id=location.id, amount=Decimal(index + 1),
+            effective_at=datetime.now(UTC) - timedelta(minutes=1), congestion_category="low",
+        ))
+    database.flush()
+    current = database.scalar(select(TollPrice).where(TollPrice.location_id == selected.id))
+    expected = current.amount + Decimal("20.00")
+    outcome = _process(database, f"sg-location-{code}", normalized_plate="GBC1234R", location_id=selected.id)
+    assert outcome.status == "successful" and outcome.amount == expected
+    database.refresh(account)
+    assert account.balance == Decimal("100.00") - expected
+    client = TestClient(database_app)
+    for resource in ("detections", "transactions"):
+        response = client.get(f"/api/data/{resource}", params={"location_id": str(selected.id)}, headers=admin_auth_headers)
+        assert response.status_code == 200, response.text
+        assert len(response.json()) == 1
+        record = response.json()[0]
+        assert record["location_id"] == str(selected.id)
+        if resource == "detections":
+            assert record["plate_origin"] == "singaporean"
+            assert record["origin_reason"] == "singaporean_supported_pattern"
+        else:
+            assert Decimal(record["dynamic_toll_amount"]) == current.amount
+            assert Decimal(record["foreign_vehicle_charge"]) == Decimal("20.00")
+            assert Decimal(record["amount"]) == expected
+        other = next(location for location in locations if location.id != selected.id)
+        scoped = client.get(f"/api/data/{resource}", params={"location_id": str(other.id)}, headers=admin_auth_headers)
+        assert scoped.status_code == 200 and scoped.json() == []
