@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.api.auth import require_admin
 from app.core.settings import Settings
 from app.db.session import get_db
-from app.models import TollLocation
+from app.models import TollLocation, TollTransaction
 from app.schemas.webcam import WebcamBoundingBox, WebcamFrameResult
 from app.services.detection.webcam_processor import (
     FrameProcessorError,
@@ -42,6 +42,12 @@ service = WebcamService(
     ),
     settings.webcam_duplicate_cooldown_seconds,
 )
+
+
+def _is_payment_replay(database: Session, key: str | None) -> bool:
+    return bool(key and database.scalar(
+        select(TollTransaction.id).where(TollTransaction.idempotency_key == key)
+    ))
 
 
 @router.post("/sessions", status_code=status.HTTP_201_CREATED)
@@ -76,13 +82,14 @@ async def process_frame(
         raise HTTPException(status_code=503, detail=str(error)) from error
 
     payment = None
-    if result.plate_text and not result.status.startswith("duplicate_plate"):
+    replay = _is_payment_replay(database, idempotency_key)
+    if result.plate_text and (replay or not result.status.startswith("duplicate_plate")):
         simulator_location = database.scalar(
             select(TollLocation).where(TollLocation.code == "SIMULATOR")
         )
         if simulator_location is None:
             raise HTTPException(status_code=503, detail="Simulator Toll Plaza is not initialized. Run migrations.")
-        if result.charge_eligible and result.plate_origin != "unknown" and has_recent_simulator_plate(
+        if not replay and result.charge_eligible and result.plate_origin != "unknown" and has_recent_simulator_plate(
             database, simulator_location, result.plate_text, datetime.now(UTC), settings.webcam_duplicate_cooldown_seconds
         ):
             result = result.__class__(
@@ -97,20 +104,21 @@ async def process_frame(
                 bounding_box=result.bounding_box,
                 charge_eligible=False,
             )
-        if result.charge_eligible and result.plate_origin != "unknown":
+        if not replay and result.charge_eligible and result.plate_origin != "unknown":
             prepare_webcam_crossing_price(database, simulator_location, datetime.now(UTC))
-        payment = process_toll_event(
-            database,
-            idempotency_key=idempotency_key or f"webcam:{session_id}:{uuid4()}",
-            raw_plate_text=result.raw_plate_text,
-            normalized_plate=result.plate_text,
-            detection_confidence=result.detection_confidence,
-            ocr_confidence=result.ocr_confidence,
-            recognition_accepted=result.charge_eligible,
-            origin_reason=result.origin_reason,
-            location_id=simulator_location.id,
-            source="webcam_alpr",
-        )
+        if replay or not result.status.startswith("duplicate_plate"):
+            payment = process_toll_event(
+                database,
+                idempotency_key=idempotency_key or f"webcam:{session_id}:{uuid4()}",
+                raw_plate_text=result.raw_plate_text,
+                normalized_plate=result.plate_text,
+                detection_confidence=result.detection_confidence,
+                ocr_confidence=result.ocr_confidence,
+                recognition_accepted=result.charge_eligible,
+                origin_reason=result.origin_reason,
+                location_id=simulator_location.id,
+                source="webcam_alpr",
+            )
     box = result.bounding_box
     return WebcamFrameResult(
         status=result.status,
@@ -160,8 +168,9 @@ async def process_image(
     payment = None
     source = "uploaded_image" if location and location.code == "SIMULATOR" else "upload"
     now = datetime.now(UTC)
+    replay = _is_payment_replay(database, idempotency_key)
     if (
-        location and location.code == "SIMULATOR" and result.charge_eligible
+        not replay and location and location.code == "SIMULATOR" and result.charge_eligible
         and result.plate_origin != "unknown" and result.plate_text
         and has_recent_simulator_plate(
             database, location, result.plate_text, now, settings.webcam_duplicate_cooldown_seconds
@@ -179,8 +188,8 @@ async def process_image(
             bounding_box=result.bounding_box,
             charge_eligible=False,
         )
-    if result.plate_text:
-        if location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_origin != "unknown":
+    if result.plate_text and (replay or not result.status.startswith("duplicate_plate")):
+        if not replay and location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_origin != "unknown":
             prepare_webcam_crossing_price(database, location, now)
         payment = process_toll_event(
             database,

@@ -116,3 +116,30 @@ rollover, and unchanged three-page navigation. The local demo database reached
 673 detections, 673 transactions); repeated seed succeeded. Browser preview was
 unavailable because the frontend service was not running. Physical webcam
 verification was not run. No new model-accuracy claim is made.
+
+
+## V3 Simulator, pricing, and navigation - 2026-10-07
+
+J/L/N verification passed: 143 backend tests (74 unit, 69 dedicated PostgreSQL),
+35 ML tests, 80 frontend tests, and production build. The existing bundle-size
+warning remains. New endpoint tests exercise real local sessions, PostgreSQL,
+origin/payment, and telemetry services with controlled inference output; no camera
+hardware, model download, training, or physical inference is performed.
+
+Both sources verify Malaysian and Singaporean success, Singaporean insufficient
+funds, unknown-origin rejection, origin-independent expiry at exactly 60 seconds,
+read-only history retention, and shared cooldown/idempotency without extra records.
+The rolling window excludes future timestamps and reports a fresh derived state
+separately from its last historical crossing. Four V3 bases are checked with floor,
+cap, minimum interval, and hysteresis. Simulator band/multiplier agrees when held.
+
+Frontend behavioral tests verify stored decimal-string components, separate foreign
+charge and final/attempted totals, compact zero-foreign-charge rows, origin labels,
+upload rendering and preview clearing, modal close/focus, three-page navigation
+and retired-route redirects. Pricing history loads only when expanded, uses
+Malaysia-date/location filters, does not retain old-scope data, and never writes.
+Daily congestion/toll history has a table alternative to its chart. Origin evidence
+is explicitly synthetic-text-only and separate from OCR; the positive detector
+review denominator is corrected to 146 scorable images. After final small telemetry
+and audit-empty-state changes, 14 Simulator/window tests and two history tests passed.
+See [behavior and verification](V3_SIMULATOR_PRICING_NAVIGATION.md).

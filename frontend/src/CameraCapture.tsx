@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, X } from "lucide-react";
 import { apiHeaders } from "./App";
+import { AlprResultDetails, type AlprResult } from "./AlprResultDetails";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
-type Box = { left: number; top: number; right: number; bottom: number };
-export type CameraResult = { status: string; message: string; plate_text?: string; detection_confidence?: number; ocr_confidence?: number; bounding_box?: Box; payment_status?: string; payment_amount?: number; payment_duplicate?: boolean };
+export type CameraResult = AlprResult;
 
 export function CameraCapture({ onClose }: { onClose?: () => void }) {
   const video = useRef<HTMLVideoElement>(null); const canvas = useRef<HTMLCanvasElement>(null); const stream = useRef<MediaStream | null>(null); const timer = useRef<number | null>(null); const session = useRef<string | null>(null); const busy = useRef(false); const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
@@ -16,6 +16,6 @@ export function CameraCapture({ onClose }: { onClose?: () => void }) {
   const summary = result ? `${result.plate_text ?? "No plate"} · ${result.status.replace(/_/g, " ")}` : "No frame processed.";
   return <section className="camera-pip" style={position ? { left: position.left, top: position.top, right: "auto" } : undefined} aria-label="Laptop webcam ALPR">
     <header className="camera-header camera-drag-handle" onPointerDown={event => { if ((event.target as HTMLElement).closest("button")) return; const rect = event.currentTarget.parentElement?.getBoundingClientRect(); if (!rect) return; drag.current = { x: event.clientX, y: event.clientY, left: rect.left, top: rect.top }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={event => { if (!drag.current) return; setPosition({ left: Math.max(8, drag.current.left + event.clientX - drag.current.x), top: Math.max(70, drag.current.top + event.clientY - drag.current.y) }); }} onPointerUp={() => { drag.current = null; }}><div><strong>Laptop camera</strong><small>{message}</small></div><div><button className="camera-icon" aria-label={minimized ? "Expand camera" : "Minimize camera"} onClick={() => setMinimized(!minimized)}><Minus size={16} /></button>{onClose && <button className="camera-icon" aria-label="Close camera" onClick={() => { void stop(); onClose(); }}><X size={16} /></button>}</div></header>
-    {!minimized && <><div className="camera-preview"><video ref={video} muted playsInline aria-label="Laptop camera preview" /><span className={`camera-live ${running ? "active" : ""}`}>{running ? "SAMPLING" : "STANDBY"}</span></div><button onClick={() => void (running ? stop() : start())}>{running ? "Stop camera" : "Start camera"}</button><canvas ref={canvas} hidden /><div className="camera-result" aria-live="polite"><strong>{result?.plate_text ?? "—"}</strong><span>{summary}</span>{result && <small>Detection {Math.round((result.detection_confidence ?? 0) * 100)}% · OCR {Math.round((result.ocr_confidence ?? 0) * 100)}%{result.payment_status ? ` · Simulated payment: ${result.payment_status}${typeof result.payment_amount === "number" ? ` RM${result.payment_amount.toFixed(2)}` : ""}` : " · Not charge eligible"}</small>}</div></>}
+    {!minimized && <><div className="camera-preview"><video ref={video} muted playsInline aria-label="Laptop camera preview" /><span className={`camera-live ${running ? "active" : ""}`}>{running ? "SAMPLING" : "STANDBY"}</span></div><button onClick={() => void (running ? stop() : start())}>{running ? "Stop camera" : "Start camera"}</button><canvas ref={canvas} hidden /><div className="camera-result" aria-live="polite"><strong>{result?.plate_text ?? "—"}</strong><span>{summary}</span>{result && <AlprResultDetails result={result} />}</div></>}
   </section>;
 }

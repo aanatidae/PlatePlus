@@ -101,6 +101,8 @@ Treat the following as already implemented unless repository inspection proves o
 
 ### Dashboard / Presentation
 
+- J/L/N completed on 2026-10-07: exact 60-second rolling window with no future crossings, origin-independent webcam/upload expiry, shared duplicate suppression without extra records, and payment replay without new pricing/traffic. Simulator telemetry reports the held band and fresh calculation time separately from last crossing. Origin/charge information is displayed contextually, with final versus attempted totals. Pricing has expandable read-only history/audit; Model Performance separates origin fixture from OCR and uses 146 positive scorable detector-review images. Keep three navigation pages. Tests: 143 backend, 35 ML, 80 frontend, production build; final targeted window/history checks passed. Physical camera remains deferred. See `docs/V3_SIMULATOR_PRICING_NAVIGATION.md`.
+
 The administrator dashboard has exactly three top-level pages:
 
 1. `Overview`
@@ -128,7 +130,7 @@ Current presentation features include:
 
 ## 4. Proposal Alignment Requirements and Status
 
-These are V3 requirements. Origin classification and its synthetic fixture evaluation are complete. Synthetic Singaporean records and the separate foreign-charge payment path are also implemented; network and UI alignment remain tracked separately.
+These are V3 requirements. Origin classification and its synthetic fixture evaluation are complete. Synthetic Singaporean records and the separate foreign-charge payment path are also implemented; network and core origin/charge UI alignment are now complete; final capstone verification remains separate.
 
 ### 4.1 Malaysian vs Singaporean plate-origin classification (implemented in A–C)
 

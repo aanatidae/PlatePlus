@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base
 from app.models import DetectionRecord, DynamicPricingRule, TollLocation
 from app.services.traffic.webcam_crossings import (
+    active_crossing_congestion,
     prepare_webcam_crossing_price,
     webcam_crossing_state,
 )
@@ -85,3 +86,14 @@ def test_uploaded_images_share_the_simulator_crossing_window(webcam_network):
 
     assert telemetry["active_crossings"] == 2
     assert telemetry["congestion_percentage"] == Decimal("20.00")
+
+
+def test_active_window_excludes_exact_expiry_and_future_records(webcam_network):
+    database, location = webcam_network
+    now = datetime.now(UTC)
+    _crossing(database, location, now - timedelta(seconds=60))
+    _crossing(database, location, now - timedelta(seconds=59, milliseconds=999), source="uploaded_image")
+    _crossing(database, location, now)
+    _crossing(database, location, now + timedelta(microseconds=1))
+    database.commit()
+    assert active_crossing_congestion(database, location, now) == (2, Decimal(20))

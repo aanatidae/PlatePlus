@@ -8,7 +8,14 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import DetectionRecord, DynamicPricingRule, TollLocation, TollPrice, TrafficRecord, TrafficSimulationSettings
+from app.models import (
+    DetectionRecord,
+    DynamicPricingRule,
+    TollLocation,
+    TollPrice,
+    TrafficRecord,
+    TrafficSimulationSettings,
+)
 from app.services.traffic.pricing import decide_price
 from app.services.traffic.simulation import rule_for_congestion
 
@@ -27,7 +34,8 @@ def active_crossing_congestion(database: Session, location: TollLocation, now: d
         DetectionRecord.location_id == location.id,
         DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
         DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
-        DetectionRecord.detected_at >= now - timedelta(seconds=60),
+        DetectionRecord.detected_at > now - timedelta(seconds=60),
+        DetectionRecord.detected_at <= now,
     )))
     congestion = min(Decimal("100.00"), Decimal(crossings) * Decimal(100) / location.road_capacity)
     return crossings, congestion
@@ -52,18 +60,19 @@ def webcam_crossing_state(
             DetectionRecord.location_id == location.id,
             DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
             DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
+            DetectionRecord.detected_at <= now,
         )
         .order_by(DetectionRecord.detected_at.desc())
     )
     return {"source": "webcam_alpr", "telemetry": {
-        "measured_at": latest_crossing or now,
+        "measured_at": now,
         "vehicle_count": crossings,
         "vehicles_per_hour": crossings,
         "active_crossings": crossings,
         "crossing_window_seconds": 60,
         "road_capacity": location.road_capacity,
         "congestion_percentage": congestion,
-        "congestion_category": rule.congestion_category,
+        "congestion_category": decision.rule.congestion_category if decision else rule.congestion_category,
         "base_toll_price": location.base_toll,
         "congestion_multiplier": multiplier,
         "current_toll_price": decision.amount if decision else (location.base_toll * multiplier).quantize(Decimal("0.01")),
@@ -85,7 +94,8 @@ def has_recent_simulator_plate(
             DetectionRecord.source.in_(SIMULATOR_ALPR_SOURCES),
             DetectionRecord.normalized_plate == plate,
             DetectionRecord.status.in_(COUNTED_WEBCAM_STATUSES),
-            DetectionRecord.detected_at >= now - timedelta(seconds=cooldown_seconds),
+            DetectionRecord.detected_at > now - timedelta(seconds=cooldown_seconds),
+            DetectionRecord.detected_at <= now,
         ).limit(1)
     ) is not None
 

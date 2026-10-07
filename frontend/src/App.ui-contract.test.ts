@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const app = readFileSync(resolve(import.meta.dirname, "App.tsx"), "utf8");
 const overview = readFileSync(resolve(import.meta.dirname, "NetworkOverview.tsx"), "utf8");
+const activity = readFileSync(resolve(import.meta.dirname, "RecentActivity.tsx"), "utf8");
 const prediction = readFileSync(resolve(import.meta.dirname, "Prediction.tsx"), "utf8");
 const camera = readFileSync(resolve(import.meta.dirname, "CameraCapture.tsx"), "utf8");
 const pricingExplanation = readFileSync(resolve(import.meta.dirname, "PricingExplanation.tsx"), "utf8");
@@ -26,10 +27,10 @@ describe("simplified local-demo dashboard", () => {
     expect(overview).toContain("Pause Live Feed");
     expect(overview).toContain("Reset Demo Activity");
     expect(overview).toContain("Open Camera");
-    expect(overview).toContain("Simulated live feed");
-    expect(overview).toContain("Local webcam ALPR");
+    expect(activity).toContain("Simulated live feed");
+    expect(activity).toContain("Local webcam ALPR");
     expect(overview).toContain("SimulatorImageUpload");
-    expect(overview).toContain("Uploaded image ALPR");
+    expect(activity).toContain("Uploaded image ALPR");
     expect(camera).toContain('"camera-pip"');
     expect(overview).not.toContain("WebcamDrawer");
   });
@@ -48,7 +49,7 @@ describe("simplified local-demo dashboard", () => {
     expect(camera).toContain('"simulator-crossing-accepted"');
     expect(camera).toContain("payment_duplicate");
     expect(overview).toContain("crossing-pulse");
-    expect(overview).toContain("new-webcam-record");
+    expect(activity).toContain("new-webcam-record");
     expect(overview).toContain("simulatorPricingFeedback");
     expect(feedback).toContain("Congestion increased to");
     expect(feedback).toContain("Congestion dropped to");

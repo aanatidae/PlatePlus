@@ -197,8 +197,10 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Malaysian Simulator recognition follows normal toll charge.
 - [x] Singaporean Simulator recognition receives separate simulated foreign charge.
 - [x] Unknown origin fails safely.
-- [ ] Verify 60-second congestion expiry is independent of charge nationality/origin.
-- [ ] Regression-test webcam and uploaded-image paths after V3 changes.
+- [x] Verify 60-second congestion expiry is independent of charge nationality/origin.
+- [x] Regression-test webcam and uploaded-image paths after V3 changes.
+
+Section J completed on 2026-10-07. The active window is now (now - 60 seconds, now], excluding future records and expiring exactly at 60 seconds. Malaysian/Singaporean accepted crossings, including insufficient-balance outcomes, expire identically for webcam and upload; unknown origin never creates an active crossing or debit. Derived telemetry stays fresh while last_crossing_at retains history. Shared source/session cooldown suppresses duplicates without failure-record noise, and idempotent replay skips extra traffic/price creation. PostgreSQL endpoint regressions use the real session/API/payment/telemetry path with controlled inference output; raw input retention remains off. Physical webcam verification was not requested or performed. Verification for J/L/N: 143 backend tests (74 unit, 69 dedicated PostgreSQL), 35 ML tests, 80 frontend tests and production build passed; existing bundle-size warning remains. Final targeted Simulator/window (14) and pricing-history (2) regressions passed after small follow-ups. No dependency/model installation, physical camera test, commit, push, or deployment. See `docs/V3_SIMULATOR_PRICING_NAVIGATION.md`.
 
 ## K. Traffic Simulation
 
@@ -232,9 +234,11 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Pricing audit history exists.
 - [x] Pricing remains rule-based, not ML.
 - [x] Ensure foreign charge is applied only after the pricing decision.
-- [ ] Ensure `Why this price?` explains congestion toll separately from foreign charge.
-- [ ] Verify V3 location base tolls work with existing safeguards.
+- [x] Ensure `Why this price?` explains congestion toll separately from foreign charge.
+- [x] Verify V3 location base tolls work with existing safeguards.
 - [x] Verify foreign charge never changes congestion band/multiplier. (Payment adds it after reading the stored price.)
+
+Section L completed on 2026-10-07. Why this price? explicitly describes the congestion toll independently of the separately configured transaction-only foreign charge. Stored component breakdowns show final or attempted totals without recalculation. Tests exercise each actual V3 location base with floor/cap/interval/hysteresis. Simulator reports its held/applied band consistently with its multiplier. The existing Pricing page now exposes expandable read-only recorded congestion/toll history and network policy audit, with Malaysia-date/category/location scope, bounded records, a chart/table alternative, and empty/error states. Verification for J/L/N: 143 backend tests (74 unit, 69 dedicated PostgreSQL), 35 ML tests, 80 frontend tests and production build passed; existing bundle-size warning remains. Final targeted Simulator/window (14) and pricing-history (2) regressions passed after small follow-ups. No dependency/model installation, physical camera test, commit, push, or deployment. See `docs/V3_SIMULATOR_PRICING_NAVIGATION.md`.
 
 ## M. Simulated Payment
 
@@ -263,8 +267,10 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Retired pages are not required as top-level navigation.
 - [x] Model Performance is a compact modal.
 - [x] Simulator Toll camera/upload is accessed from Overview.
-- [ ] Do not reintroduce removed pages merely because older proposal wording mentions separate views.
-- [ ] Satisfy proposal information requirements inside the current three-page design.
+- [x] Do not reintroduce removed pages merely because older proposal wording mentions separate views.
+- [x] Satisfy proposal information requirements inside the current three-page design.
+
+Section N completed on 2026-10-07. Exactly Overview, Dynamic Pricing Management and Prediction remain in navigation; behavioral tests confirm navigation, retired-route redirects and modal close/focus. Proposal information is contextual: Overview detections show origin patterns/reasons, transaction and camera/upload results show separate stored foreign charge and total, Pricing contains read-only historical congestion/tolls and policy audit, and Model Performance separates OCR from synthetic-text origin evidence and active thresholds. Corrected positive detector review to 146 scorable images. No retired page or new sidebar destination was introduced. Verification for J/L/N: 143 backend tests (74 unit, 69 dedicated PostgreSQL), 35 ML tests, 80 frontend tests and production build passed; existing bundle-size warning remains. Final targeted Simulator/window (14) and pricing-history (2) regressions passed after small follow-ups. No dependency/model installation, physical camera test, commit, push, or deployment. See `docs/V3_SIMULATOR_PRICING_NAVIGATION.md`.
 
 ## O. Overview V3 Alignment
 
@@ -277,12 +283,12 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Simulator Toll presentation feedback exists.
 - [x] Alerts/operational events exist.
 - [x] Map normal locations to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
-- [ ] Show plate origin in recent detections where appropriate.
-- [ ] Show foreign charge separately in Singaporean transactions.
-- [ ] Show final simulated total.
-- [ ] Keep Malaysian transaction rows compact when foreign charge is zero.
-- [ ] Keep Simulator Toll local input buttons.
-- [ ] Verify new charge fields do not break live feed rendering.
+- [x] Show plate origin in recent detections where appropriate. (J/L/N, 2026-10-07.)
+- [x] Show foreign charge separately in Singaporean transactions. (J/L/N, 2026-10-07.)
+- [x] Show final simulated total. (J/L/N, 2026-10-07.)
+- [x] Keep Malaysian transaction rows compact when foreign charge is zero. (J/L/N, 2026-10-07.)
+- [x] Keep Simulator Toll local input buttons. (J/L/N, 2026-10-07.)
+- [x] Verify new charge fields do not break live feed rendering. (J/L/N, 2026-10-07.)
 
 ## P. Dynamic Pricing Management V3 Alignment
 
@@ -290,9 +296,9 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Rule preview exists.
 - [x] Pricing explanation exists.
 - [x] History exists.
-- [ ] Keep foreign charge concept visually separate from congestion bands.
+- [x] Keep foreign charge concept visually separate from congestion bands. (J/L/N, 2026-10-07.)
 - [ ] If admin-configurable foreign charge is surfaced here, place it in a distinct clearly labelled section.
-- [ ] Never imply plate origin changes the congestion multiplier.
+- [x] Never imply plate origin changes the congestion multiplier. (J/L/N, 2026-10-07.)
 - [x] Update location selector to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
 
 ## Q. Prediction
@@ -318,10 +324,10 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Modal has close behavior in current baseline.
 - [x] Verified held-out/development evidence exists.
 - [x] Known limitations are shown.
-- [ ] Add origin-classification evidence only after V3 labelled evaluation exists.
-- [ ] Clearly distinguish OCR accuracy from origin-classification accuracy.
-- [ ] Keep unsupported metrics marked unavailable.
-- [ ] Do not restore AI Intelligence page.
+- [x] Add origin-classification evidence only after V3 labelled evaluation exists. (J/L/N, 2026-10-07.)
+- [x] Clearly distinguish OCR accuracy from origin-classification accuracy. (J/L/N, 2026-10-07.)
+- [x] Keep unsupported metrics marked unavailable. (J/L/N, 2026-10-07.)
+- [x] Do not restore AI Intelligence page. (J/L/N, 2026-10-07.)
 
 ## S. Alerts / Operational Events
 
@@ -345,9 +351,9 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [ ] Integration-test foreign-charge persistence.
 - [ ] Integration-test location-aware Singaporean transaction.
 - [ ] Integration-test upgraded V3 migration.
-- [ ] Re-run existing location/network aggregation tests.
-- [ ] Re-run existing Simulator Toll tests.
-- [ ] Re-run existing wallet/reversal tests.
+- [x] Re-run existing location/network aggregation tests. (J/L/N, 2026-10-07.)
+- [x] Re-run existing Simulator Toll tests. (J/L/N, 2026-10-07.)
+- [x] Re-run existing wallet/reversal tests. (J/L/N, 2026-10-07.)
 
 ## U. Testing — ML
 
@@ -366,14 +372,14 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Location/map tests exist.
 - [x] Prediction tests exist.
 - [ ] Update expected normal toll network.
-- [ ] Test origin display in detection.
-- [ ] Test Singaporean charge breakdown.
-- [ ] Test Malaysian no-foreign-charge case.
+- [x] Test origin display in detection. (J/L/N, 2026-10-07.)
+- [x] Test Singaporean charge breakdown. (J/L/N, 2026-10-07.)
+- [x] Test Malaysian no-foreign-charge case. (J/L/N, 2026-10-07.)
 - [ ] Test V3 Prediction selector options.
 - [ ] Test V3 map labels/routes.
-- [ ] Confirm three-page navigation remains unchanged.
-- [ ] Run `npm test`.
-- [ ] Run `npm run build`.
+- [x] Confirm three-page navigation remains unchanged. (J/L/N, 2026-10-07.)
+- [x] Run `npm test`. (J/L/N, 2026-10-07.)
+- [x] Run `npm run build`. (J/L/N, 2026-10-07.)
 
 ## W. Accessibility / UX Regression
 
@@ -381,14 +387,14 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [x] Keyboard navigation work exists.
 - [x] Reduced-motion behavior exists.
 - [x] Accessible alternative toll selection exists.
-- [ ] Verify new origin labels are not colour-only.
-- [ ] Verify charge breakdown is screen-reader readable.
+- [x] Verify new origin labels are not colour-only. (J/L/N, 2026-10-07.)
+- [x] Verify charge breakdown is screen-reader readable. (J/L/N, 2026-10-07.)
 - [ ] Verify map/location changes remain usable at presentation resolutions.
 - [ ] Verify upload/camera result status remains readable.
 
 ## X. Documentation
 
-- [~] README describes an older current-state network/page set and needs V3 alignment.
+- [x] README describes the V3 network, three-page structure, origin/charge surfaces, and linked history/evidence documentation. (I/J/L/N, 2026-10-07.)
 - [x] Setup documentation exists.
 - [x] Testing/evaluation documentation exists.
 - [x] Demo documentation exists.
@@ -400,9 +406,9 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 - [ ] Update API docs if response models gain origin/charge fields.
 - [ ] Update testing/evaluation docs for origin classification.
 - [ ] Update architecture diagram/documentation.
-- [ ] Update demo flow to include one Malaysian and one Singaporean example.
+- [x] Update demo flow to include one Malaysian and one Singaporean example. (J/L/N, 2026-10-07.)
 - [ ] Keep explicit simulation/no-real-payment boundaries.
-- [ ] Update `.harnessV3` status after implementation.
+- [x] Update `.harnessV3` status after implementation. (J/L/N, 2026-10-07.)
 
 ## Y. Final Capstone Demo Verification
 
@@ -434,7 +440,7 @@ Section I completed on 2026-10-07. Migration `20261007_0014` retains the existin
 3. [x] Add Singaporean synthetic seed records.
 4. [x] Implement separately itemized foreign-vehicle charge.
 5. [x] Align normal network to LDP/AKLEH/NPE/Grand Saga.
-6. [ ] Update Overview transaction/detection display.
+6. [x] Update Overview transaction/detection display. (J/L/N, 2026-10-07.)
 7. [x] Update Prediction/map/location fixtures. (Section I, 2026-10-07.)
 8. [ ] Add V3 unit/integration/frontend tests.
 9. [ ] Update repository documentation.

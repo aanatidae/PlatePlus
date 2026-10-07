@@ -12,14 +12,17 @@ This is a controlled demonstration of a simulated prototype. Do not present any 
 
 ## Suggested presentation
 
-1. Open the administrator sign-in page and state that access is restricted to administrators.
-2. Sign in with the synthetic demo administrator from the local `.env` file. Do not display the password in slides or recordings.
-3. On the Overview, point out the Malaysia-time traffic telemetry, congestion category, toll price, ALPR activity, and simulated financial metrics.
-4. Open Dynamic Pricing to show the four configurable congestion bands: Low (RM2), Moderate (RM3), High (RM4), and Severe (RM5). Explain that changes are stored as simulated audit history.
-5. Open the Simulator, choose a traffic scenario or custom vehicle rate, and run a manual simulation. Explain that the sandbox does not write live traffic, prices, or payment records.
-6. Open Plate Recognition. On the cloud dashboard, explain that raw image upload is intentionally unavailable. On a local operator setup, optionally submit a pre-approved still image to demonstrate plate detection, OCR normalization, confidence gates, vehicle matching, and an idempotent simulated toll result.
-7. Show recent detections and transactions, emphasizing that an unregistered plate, insufficient balance, low confidence, or a replayed idempotency key never produces an additional successful deduction.
-8. Close with the measured prototype evidence: reported YOLO test accuracy of 93.1% and PaddleOCR exact-match accuracy of 84.1% (37/44 held-out crops). Refer to [TESTING_EVALUATION.md](TESTING_EVALUATION.md) for limits.
+1. Sign in with the demo administrator from the local `.env`. Do not display its password in slides or recordings.
+2. In Overview, inspect All Locations and the LDP/AKLEH/NPE/Grand Saga map. Select one location to show its canonical congestion, dynamic toll, activity, and `Why this price?` explanation. All operational data is simulated.
+3. Select Simulator Toll Plaza in Overview. Its Open Camera and Upload Plate Image controls stay here; there is no standalone recognition or simulator page. Physical camera verification remains separately deferred unless explicitly requested.
+4. Using a prepared fictional plate image whose OCR matches a synthetic registered vehicle, demonstrate a Malaysian result with zero foreign charge. Use a prepared Singaporean example where available to show the separately stored dynamic toll, simulated foreign charge, and final total. Do not imply these pattern labels verify legal nationality or registration. See the seed examples and [foreign charge documentation](FOREIGN_VEHICLE_CHARGE.md).
+5. Show that insufficient funds produce an attempted total with no debit, and unknown/ambiguous patterns fail safely. Repeated plates share a cooldown across camera and upload; replaying an event key returns its existing result without another deduction or traffic/price record.
+6. Observe Simulator congestion expire at 60 seconds while processed history remains stored. Its average speed is unavailable. Price safeguards can hold a band even when congestion changes; the explanation displays the applied band.
+7. Open Dynamic Pricing Management to show the four location-relative congestion multipliers and safeguards. Preview the current saved policy. Expand Recorded congestion, toll history and policy audit to inspect recorded Malaysia-time data and the location/date filters. Congestion tolls exclude transaction-only foreign charges.
+8. Open Prediction to compare current and browser-local future traffic/toll values for the four normal locations. The forecast does not mutate live history, wallets, or the demo feed and excludes Simulator.
+9. Open Model Performance from the top bar. Distinguish the user-reported 93.1% detector figure, held-out OCR 37/44 (84.1%), development-only evidence, and synthetic-text-only origin fixture 25/32 (78.1%). Unsupported detector metrics remain unavailable. Close with Escape or the close button.
+
+Automated endpoint regressions use controlled inference output; they do not establish real Singaporean optical recognition accuracy or replace a physical camera check. The administrator navigation remains exactly three pages. See [V3 presentation verification](V3_SIMULATOR_PRICING_NAVIGATION.md).
 
 ## Explicit exclusions to state
 

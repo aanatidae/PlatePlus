@@ -18,7 +18,7 @@ As of 2026-10-02, the repository baseline and plate-origin slice (TODO sections 
 
 Origin evaluation (TODO section D) now has a separate, reproducible 32-case synthetic text fixture. It reports MY/SG/unknown confusion counts, cross-country errors, and safe rejection of overlapping or unsupported patterns. The 25/32 exact-origin result is a selected-fixture result only; OCR held-out and development results remain separate and untouched. No real-world origin accuracy is claimed.
 
-Synthetic Singaporean records and the separate foreign-charge workflow (TODO sections E–F) are complete on this branch. Migration `20261002_0013` stores vehicle registration origin, itemized transaction components, and a separate persisted charge setting. The idempotent seed adds three fictional Singaporean-pattern vehicles/accounts; payment uses the final total for sufficiency, debit, ledger, notification, replay, and reversal. Simulator Toll Plaza accepts eligible Singaporean webcam/upload results through the same path. The RM20.00 seeded foreign charge is a configurable simulated proposal example, not a real-world fee. Backend PostgreSQL integration and unit tests passed; section I network alignment is now complete. Origin/foreign-charge UI surfacing remains pending.
+Synthetic Singaporean records and the separate foreign-charge workflow (TODO sections E–F) are complete on this branch. Migration `20261002_0013` stores vehicle registration origin, itemized transaction components, and a separate persisted charge setting. The idempotent seed adds three fictional Singaporean-pattern vehicles/accounts; payment uses the final total for sufficiency, debit, ledger, notification, replay, and reversal. Simulator Toll Plaza accepts eligible Singaporean webcam/upload results through the same path. The RM20.00 seeded foreign charge is a configurable simulated proposal example, not a real-world fee. Backend PostgreSQL integration and unit tests passed; section I network alignment is now complete. Core origin/foreign-charge UI surfacing is now complete in J/L/N. Final capstone verification remains separate.
 
 ## V3 Target Architecture
 
@@ -133,7 +133,7 @@ Current APIs, map/selectors, traffic generation, and Prediction use only the V3
 network plus separate Simulator. A populated new-highway downgrade is refused
 without deleting history. Local demo migration and repeated seed succeeded.
 Verification passed: 127 backend tests, 35 ML tests, 60 frontend tests and production
-build. Origin/foreign-charge display work remains a separate pending slice.
+build. Origin/foreign-charge display work was subsequently completed in J/L/N.
 
 ### Exit criteria
 
@@ -334,6 +334,29 @@ Remove active V3 references to:
 - Existing All Locations aggregation still works.
 
 ---
+
+## J/L/N completion - 2026-10-07
+
+Simulator webcam/upload regressions verify the exact (now - 60 seconds, now]
+window, origin-independent expiry, future-record exclusion, unknown-origin safety,
+shared cooldown, and replay without extra traffic/price records. Derived telemetry
+is timestamped when calculated; last crossing remains historical. The held pricing
+band agrees with its multiplier. V3 base tolls retain all existing safeguards.
+
+Proposal information stays within Overview, Dynamic Pricing Management, Prediction,
+and the Model Performance modal. Origin pattern labels/reasons and stored charge
+components appear in recent records and both local-input results. Failed amounts
+are attempted totals, and Malaysian zero-foreign-charge rows stay compact. Pricing
+now includes expandable read-only recorded history and policy audit, with bounded
+Malaysia-date/category/location filters and a table alternative to the chart.
+Evidence distinguishes the synthetic origin fixture from OCR and corrects the
+positive detector-review denominator to 146 scorable images.
+
+Verification passed: 143 backend tests (74 unit, 69 dedicated PostgreSQL), 35 ML
+and 80 frontend tests, production build, relevant Ruff and diff checks. Final targeted
+window/history tests passed after small follow-ups. No dependency installation or
+physical camera check was run. Final localhost presentation verification remains
+separate. See `docs/V3_SIMULATOR_PRICING_NAVIGATION.md`.
 
 ## Phase 5 — Dashboard Proposal Alignment
 

@@ -168,6 +168,10 @@ def test_intelligence_summary_exposes_thresholds_and_location_trace(network):
     assert data["evaluation"]["ocr"]["exact_match_accuracy_percent"] == 84.1
     assert data["evaluation"]["development"]["exact_matches"] == 125
     assert data["evaluation"]["development"]["positive_detector_false_negatives"] == 0
+    assert data["evaluation"]["development"]["positive_detector_images"] == 146
+    assert data["evaluation"]["origin"]["fixture_type"] == "synthetic_text_only"
+    assert data["evaluation"]["origin"]["exact_matches"] == 25
+    assert "Not field accuracy" in data["evaluation"]["origin"]["note"]
     assert data["alpr_trace"]["stages"][0]["name"] == "Detector result"
     assert data["pricing_trace"]["location_name"] == "Test toll 0"
     assert data["pricing_trace"]["policy"]["rule_version"] == 1

@@ -160,7 +160,7 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
                 "exact_matches": 125,
                 "scorable_samples": 146,
                 "exact_match_accuracy_percent": 85.6,
-                "positive_detector_images": 150,
+                "positive_detector_images": 146,
                 "positive_detector_false_negatives": 0,
                 "condition_observations": [
                     {"label": "Angled plates", "result": "30/31 exact matches (96.8%); development-only."},
@@ -170,8 +170,15 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
                 ],
                 "note": "Human-reviewed development evidence only; the held-out OCR set was not used for tuning.",
             },
+            "origin": {
+                "fixture_type": "synthetic_text_only", "samples": 32,
+                "exact_matches": 25, "exact_match_percent": 78.1,
+                "cross_country_errors": 0, "ambiguous_rejected": 7,
+                "unsupported_rejected": 8,
+                "note": "Selected synthetic text fixture only, separate from OCR. Not field accuracy, nationality, ownership, or registration verification.",
+            },
         },
-        "charge_eligibility": "A plate enters vehicle lookup only after detection and OCR meet their active thresholds and a supported, unambiguous origin pattern is found. Pattern classification does not verify registration country or ownership. Singaporean deduction remains disabled until a separate simulated foreign charge is configured. Payment remains simulated and may still fail for account or duplicate-protection reasons.",
+        "charge_eligibility": "A plate enters vehicle lookup only after detection and OCR meet their active thresholds and a supported, unambiguous origin pattern is found. Pattern classification does not verify registration country or ownership. Eligible Singaporean simulated transactions add the separately configured foreign-vehicle charge after congestion pricing. A missing charge setting fails safely. Payment remains simulated and may still fail for account or duplicate-protection reasons.",
         "outcome_analysis": {
             "accepted": outcome_counts.get("accepted", 0),
             "low_confidence": outcome_counts.get("low_confidence", 0),

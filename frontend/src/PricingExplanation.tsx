@@ -19,15 +19,16 @@ export function PricingExplanation({ telemetry, source, compact = false }: { tel
   return <details className={`pricing-explanation ${compact ? "compact" : ""}`}>
     <summary>Why this price?</summary>
     <div className="price-chain" aria-label="Current toll pricing decision">
-      {webcam ? <div><span>Webcam crossings</span><strong>{telemetry.active_crossings ?? 0} active / {telemetry.road_capacity ?? 10} capacity</strong></div> : <div><span>{source === "pricing_preview" ? "Preview input" : "Traffic source"}</span><strong>{source === "pricing_preview" ? "Administrator-selected congestion" : "Simulated time-profile estimate"}</strong></div>}
+      {webcam ? <div><span>Local ALPR crossings</span><strong>{telemetry.active_crossings ?? 0} active / {telemetry.road_capacity ?? 10} capacity</strong></div> : <div><span>{source === "pricing_preview" ? "Preview input" : "Traffic source"}</span><strong>{source === "pricing_preview" ? "Administrator-selected congestion" : source === "persisted" ? "Recorded simulated traffic" : "Simulated time-profile estimate"}</strong></div>}
       <span className="chain-arrow" aria-hidden="true">↓</span>
       <div><span>Congestion</span><strong>{Number(telemetry.congestion_percentage).toFixed(1)}%</strong></div>
       <span className="chain-arrow" aria-hidden="true">↓</span>
       <div><span>Pricing band</span><strong>{label(telemetry.congestion_category)}</strong></div>
       <span className="chain-arrow" aria-hidden="true">↓</span>
-      <div><span>Applied rule</span><strong>{base > 0 && multiplier > 0 ? `${money(base)} × ${multiplier.toFixed(2)}` : "Authoritative pricing rule"}</strong></div>
+      <div><span>Base toll × multiplier</span><strong>{base > 0 && multiplier > 0 ? `${money(base)} × ${multiplier.toFixed(2)}` : "Authoritative pricing rule"}</strong></div>
       <span className="chain-arrow" aria-hidden="true">↓</span>
-      <div className="price-chain-result"><span>Current toll</span><strong>{money(telemetry.current_toll_price)}</strong></div>
+      <div className="price-chain-result"><span>Dynamic toll</span><strong>{money(telemetry.current_toll_price)}</strong></div>
     </div>
+    <p className="field-note">Congestion pricing is rule-based and subject to the configured price limits, change interval, and hysteresis. Plate origin does not change its band or multiplier. A separately configured simulated foreign-vehicle charge is added only to an eligible Singaporean transaction; its charge breakdown shows the final total.</p>
   </details>;
 }
