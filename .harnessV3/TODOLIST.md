@@ -297,7 +297,7 @@ Section N completed on 2026-10-07. Exactly Overview, Dynamic Pricing Management 
 - [x] Pricing explanation exists.
 - [x] History exists.
 - [x] Keep foreign charge concept visually separate from congestion bands. (J/L/N, 2026-10-07.)
-- [ ] If admin-configurable foreign charge is surfaced here, place it in a distinct clearly labelled section.
+- [x] If admin-configurable foreign charge is surfaced here, place it in a distinct clearly labelled section. (Dedicated expandable setting section, authenticated existing API; frontend verification passed on 2026-10-07.)
 - [x] Never imply plate origin changes the congestion multiplier. (J/L/N, 2026-10-07.)
 - [x] Update location selector to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
 
@@ -316,7 +316,7 @@ Section N completed on 2026-10-07. Exactly Overview, Dynamic Pricing Management 
 - [x] Simulator Toll Plaza is excluded.
 - [x] Update Prediction normal-location options to LDP/AKLEH/NPE/Grand Saga. (Section I, 2026-10-07.)
 - [x] Verify midnight/date rollover after V3 location changes. (Section I, 2026-10-07.)
-- [ ] Do not add foreign-vehicle charging to traffic prediction.
+- [x] Do not add foreign-vehicle charging to traffic prediction. (All four V3 frame sequences are identical with/without origin/foreign-charge fields; Malaysia-time default and midnight/year rollover verified on 2026-10-07.)
 
 ## R. Model Performance / Evaluation UI
 
@@ -337,8 +337,10 @@ Section N completed on 2026-10-07. Exactly Overview, Dynamic Pricing Management 
 - [x] Repeated failed-payment alerts exist.
 - [x] Backend/API/database operational events exist.
 - [x] Acknowledgement/history exist.
-- [ ] Decide whether repeated origin-classification failures warrant an informational/warning event.
-- [ ] Do not create noisy per-detection alerts without evidence they improve the demo.
+- [~] Decide whether repeated origin-classification failures warrant an informational/warning event. (Implemented decision: reuse the existing per-location rejected-recognition rollup with an origin-rejection count, no separate per-detection alert; PostgreSQL verification pending test-service startup approval.)
+- [~] Do not create noisy per-detection alerts without evidence they improve the demo. (Stable location/type incident, bounded lifecycle events, and recovered-incident UI filtering implemented; PostgreSQL verification pending.)
+
+P/Q/S work in progress on 2026-10-07: separate foreign-charge configuration, fee-independent Prediction with correct Malaysia default time, and coalesced origin-aware operational rollups are implemented. Frontend 89 tests, backend unit 74 tests, ML 35 tests, build, relevant Ruff and diff checks pass. PostgreSQL containers are stopped; the user has been asked for permission to start only `postgres_test` under AGENTS.md service-start rules. Do not claim integration completion before it runs. See `docs/V3_PRICING_PREDICTION_ALERTS.md`.
 
 ## T. Testing — Backend
 

@@ -109,7 +109,7 @@ export default function NetworkOverview() {
     { label: "Locations online", value: `${metrics.locations_online} / ${metrics.locations_total}`, detail: `${metrics.severe_locations} severe · ${metrics.cameras_offline} cameras offline` },
   ] : [];
   async function alertAction(path: string) { await fetch(`${import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000"}${path}`, { method: "POST", headers: { Authorization: `Bearer ${JSON.parse(window.sessionStorage.getItem("capstone-alpr.admin-session") ?? "{}").access_token ?? ""}` } }); window.dispatchEvent(new Event("dashboard-refresh")); }
-  const activeAlerts = (alerts.data ?? []).filter(alert => !alert.acknowledged_at);
+  const activeAlerts = (alerts.data ?? []).filter(alert => alert.status !== "resolved" && !alert.acknowledged_at);
   return <main className="dashboard-page"><section className="page-heading"><div><p className="eyebrow">REAL-TIME TELEMETRY</p><h1>{title}</h1><p>Current traffic, recognition and simulated toll operations.</p></div><div className="refresh-note" role="status">{stale ? "STALE / RECONNECTING" : data ? "MONITORING" : "LOADING"}<br />Last updated: {receivedAt ? time(new Date(receivedAt).toISOString()) : "Awaiting data"}</div></section>
     {(error || network.error) && <p className="form-error" role="alert">{error || network.error}</p>}
     {oldMeasurement && <p className="traffic-notice">The latest traffic measurement is more than two minutes old. Values below are the last available simulated state.</p>}

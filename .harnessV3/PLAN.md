@@ -591,3 +591,13 @@ Recommended evidence:
 10. Local presentation verification.
 
 Do not start with cosmetic frontend changes before the backend data contract is defined.
+
+
+## P/Q/S implementation status - 2026-10-07
+
+Separate simulated foreign-charge admin configuration, Malaysia-time Prediction
+defaults and fee-isolation regressions, and origin-aware aggregate incident lifecycle
+are implemented. Keep origin failures inside existing rejection rollups, rather
+than creating per-detection alerts. Frontend 89, backend unit 74, and ML 35 tests
+and production build pass. Required PostgreSQL regressions await authorization
+to start the stopped dedicated test service. See `docs/V3_PRICING_PREDICTION_ALERTS.md`.

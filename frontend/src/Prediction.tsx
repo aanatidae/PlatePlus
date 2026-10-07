@@ -14,6 +14,11 @@ const category = (value: string) => value.replace(/_/g, " ");
 export const formatRinggit = (value: number) => `RM${Number(value).toFixed(2)}`;
 export const formatPredictionTimestamp = (value: string) => new Date(value).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur", dateStyle: "medium", timeStyle: "short" });
 export const formatPredictionAxisTime = (value: string) => new Date(value).toLocaleTimeString("en-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", minute: "2-digit" });
+export function malaysiaStartTime(value = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(value);
+  const part = (type: string) => parts.find(item => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+}
 
 export function PredictionTooltip({ active, payload }: TooltipContentProps) {
   const point = active ? payload?.[0]?.payload as PredictionChartPoint | undefined : undefined;
@@ -23,7 +28,7 @@ export function PredictionTooltip({ active, payload }: TooltipContentProps) {
 
 export default function Prediction() {
   const { locations, selected, select } = useLocations();
-  const [start, setStart] = useState(() => new Date().toISOString().slice(0, 16));
+  const [start, setStart] = useState(malaysiaStartTime);
   const [duration, setDuration] = useState(60); const [speed, setSpeed] = useState(1);
   const [batch, setBatch] = useState<Batch | null>(null); const [index, setIndex] = useState(0); const [running, setRunning] = useState(false);
   const available = predictionLocations(locations);

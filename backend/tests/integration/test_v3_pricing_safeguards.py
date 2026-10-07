@@ -55,3 +55,20 @@ def test_simulator_explains_the_held_band_with_its_applied_multiplier(database):
     assert telemetry["congestion_category"] == "moderate"
     assert telemetry["congestion_multiplier"] == Decimal("1.5")
     assert telemetry["current_toll_price"] == location.base_toll * Decimal("1.5")
+
+
+def test_foreign_charge_edit_does_not_reprice_or_change_congestion_policy(database, database_app, admin_auth_headers):
+    from fastapi.testclient import TestClient
+
+    from app.models import AdminAuditLog, DynamicPricingRule
+    from app.services.traffic.pricing import reprice_current_locations
+
+    reprice_current_locations(database, database.scalar(select(TrafficSimulationSettings)))
+    database.commit()
+    before_prices = [(row.id, row.amount, row.congestion_category) for row in database.scalars(select(TollPrice).order_by(TollPrice.id))]
+    before_rules = [(row.id, row.multiplier, row.minimum_percentage, row.maximum_percentage) for row in database.scalars(select(DynamicPricingRule).order_by(DynamicPricingRule.id))]
+    response = TestClient(database_app).put("/api/data/foreign-vehicle-charge", headers=admin_auth_headers, json={"amount": "12.50"})
+    assert response.status_code == 200 and Decimal(response.json()["amount"]) == Decimal("12.50")
+    assert [(row.id, row.amount, row.congestion_category) for row in database.scalars(select(TollPrice).order_by(TollPrice.id))] == before_prices
+    assert [(row.id, row.multiplier, row.minimum_percentage, row.maximum_percentage) for row in database.scalars(select(DynamicPricingRule).order_by(DynamicPricingRule.id))] == before_rules
+    assert database.scalar(select(AdminAuditLog).where(AdminAuditLog.action == "foreign_vehicle_charge_updated"))

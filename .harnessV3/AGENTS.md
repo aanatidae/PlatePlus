@@ -101,6 +101,8 @@ Treat the following as already implemented unless repository inspection proves o
 
 ### Dashboard / Presentation
 
+- P/Q/S implementation on 2026-10-07 adds a separate expandable simulated foreign-charge setting, explicit Malaysia-time Prediction initialization, and aggregate origin-rejection context in existing operational incidents. No foreign fee enters Prediction. Repeated-failure rollups use a stable location/type key, preserve history, recover/recur without per-detection event noise, and hide resolved incidents from active issues. Frontend/unit/ML/build checks pass; new PostgreSQL regressions await approval to start the stopped dedicated test service. See `docs/V3_PRICING_PREDICTION_ALERTS.md`.
+
 - J/L/N completed on 2026-10-07: exact 60-second rolling window with no future crossings, origin-independent webcam/upload expiry, shared duplicate suppression without extra records, and payment replay without new pricing/traffic. Simulator telemetry reports the held band and fresh calculation time separately from last crossing. Origin/charge information is displayed contextually, with final versus attempted totals. Pricing has expandable read-only history/audit; Model Performance separates origin fixture from OCR and uses 146 positive scorable detector-review images. Keep three navigation pages. Tests: 143 backend, 35 ML, 80 frontend, production build; final targeted window/history checks passed. Physical camera remains deferred. See `docs/V3_SIMULATOR_PRICING_NAVIGATION.md`.
 
 The administrator dashboard has exactly three top-level pages:

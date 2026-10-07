@@ -1,10 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { PredictionTooltip, currentTelemetryForLocation, formatPredictionTimestamp, formatRinggit, predictionDurationOptions, type LiveSnapshot } from "./Prediction";
+import { PredictionTooltip, currentTelemetryForLocation, formatPredictionTimestamp, formatRinggit, malaysiaStartTime, predictionDurationOptions, type LiveSnapshot } from "./Prediction";
 import { createSimulationFrames } from "./simulator";
 
 describe("Prediction current telemetry", () => {
+  it("initializes the Malaysia input correctly across UTC midnight and month rollover", () => {
+    expect(malaysiaStartTime(new Date("2026-10-07T16:00:00Z"))).toBe("2026-10-08T00:00");
+    expect(malaysiaStartTime(new Date("2026-12-31T17:30:00Z"))).toBe("2027-01-01T01:30");
+  });
+  it.each(["LDP", "AKLEH", "NPE", "GRAND_SAGA"])("keeps %s forecasts independent of plate origin and foreign charge", code => {
+    const location = { id: code, code, display_name: code, base_toll: 2.4, road_capacity: 1200 };
+    const parameters = { congestion: 0, lanes: 3, baseToll: 2.4 };
+    const before = JSON.stringify(location);
+    const frames = createSimulationFrames([location], "time_based", parameters, "2026-10-07T23:30", 720);
+    const withCharge = createSimulationFrames([{ ...location, registration_origin: "singaporean", foreign_vehicle_charge: 999 } as typeof location], "time_based", parameters, "2026-10-07T23:30", 720);
+    expect(withCharge).toEqual(frames);
+    expect(JSON.stringify(location)).toBe(before);
+    expect(frames.at(-1)?.timestamp).toBe("2026-10-08T03:30:00.000Z");
+    expect(Object.keys(frames[0].outputs[0])).not.toContain("foreign_vehicle_charge");
+  });
   it("uses the selected toll's canonical snapshot and rejects an old location", () => {
     const ldp: LiveSnapshot = { location_id: "ldp", live: { traffic: { congestion_percentage: 24, congestion_category: "normal", current_toll_price: 2 }, price: { amount: 2 } } };
     const akleh: LiveSnapshot = { location_id: "akleh", live: { traffic: { congestion_percentage: 36.4, congestion_category: "moderate", current_toll_price: 3 }, price: { amount: 3 } } };
