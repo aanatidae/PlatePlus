@@ -31,6 +31,8 @@
 
 @media(max-width:560px){.network-marker[data-code="AKLEH"]{--marker-top:20%}}
 /* Keep every top-bar action reachable between desktop and mobile breakpoints. */
+/* Modal lives in a body portal, outside the sticky header's filter containing block. */
+.performance-backdrop{--modal-gap:clamp(24px,4vh,40px);display:flex;align-items:center;justify-content:center;padding:var(--modal-gap);height:100dvh}.performance-modal{display:flex;flex-direction:column;max-height:calc(100dvh - var(--modal-gap) - var(--modal-gap));overflow:hidden}.performance-modal-header{flex:0 0 auto}.performance-modal-body{min-height:0;overflow:auto;overscroll-behavior:contain}.performance-modal-body:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 @media(min-width:821px)and (max-width:1100px){.top-control-bar{flex-wrap:wrap;padding-block:8px}.location-control{min-width:0}}
 .network-marker[data-code="NPE"]{--marker-top:58%}
 .simulator-inputs{align-items:flex-start}.simulator-inputs>button{flex:0 1 auto}.simulator-inputs .simulator-upload{flex:1 1 100%;min-width:0}.alpr-result-details{font-size:.78rem}.upload-preview span{font-size:.75rem}

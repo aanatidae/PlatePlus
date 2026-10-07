@@ -1,0 +1,60 @@
+{
+  "verified": true,
+  "evaluated_at": "2026-10-07T16:22:40.704069+00:00",
+  "dataset": {
+    "source": "SG License Plate.v2i.yolo26.zip",
+    "archive_sha256": "c1125a9a693cb652e82a3f1518a7a2446ccdd64ee00398178489aab827076671",
+    "class_names": [
+      "license-plate"
+    ],
+    "split_image_counts": {
+      "train": 5850,
+      "valid": 328,
+      "val": 0,
+      "test": 31
+    },
+    "archive_unchanged": true
+  },
+  "split": "test",
+  "images": 31,
+  "labelled_plates": 33,
+  "annotation_negative_images": 0,
+  "polygon_annotations_converted_to_boxes": 2,
+  "model_sha256": "50826f9351d90f35e8d4bcb24b382c058d94438a0bf7ba59bbffa7ddb265df35",
+  "model_name": "car_plate_yolo_best.pt",
+  "fine_tuned_on_singaporean": false,
+  "ultralytics_version": "8.4.173",
+  "class_mapping": {
+    "dataset_class_0": [
+      "license-plate"
+    ],
+    "model_class_0": "car plate"
+  },
+  "parameters": {
+    "imgsz": 640,
+    "ap_confidence_floor": 0.001,
+    "nms_iou": 0.7,
+    "operational_confidence": 0.5,
+    "matching_iou": 0.5
+  },
+  "standard_metrics": {
+    "precision": 0.8260703744891922,
+    "recall": 0.7878787878787878,
+    "map50": 0.8102867751807709,
+    "map50_95": 0.5666682092240574,
+    "precision_recall_definition": "Ultralytics precision/recall at maximum mean-F1 confidence on this split; not the runtime confidence gate."
+  },
+  "operational_metrics": {
+    "true_positive_plates": 24,
+    "false_negative_plates": 9,
+    "unmatched_predictions": 2,
+    "recall": 0.7272727272727273,
+    "precision": 0.9230769230769231,
+    "images_with_correct_detection": 23,
+    "plate_present_images": 31,
+    "image_hit_rate": 0.7419354838709677,
+    "definition": "One-to-one box matches at IoU >= 0.50 and confidence >= configured runtime threshold."
+  },
+  "false_positive_rate": null,
+  "negative_note": "Annotation-negative images are counted, but no human-verified representative negative set is supplied; no general false-positive rate or accuracy is claimed."
+}

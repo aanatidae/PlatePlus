@@ -34,6 +34,10 @@ def decide_price(database: Session, settings: TrafficSimulationSettings, locatio
     raw = location.base_toll * selected.multiplier
     ceiling = location.base_toll * settings.maximum_toll_multiplier
     amount = max(settings.minimum_toll, min(raw, ceiling)).quantize(Decimal("0.01"))
+    if raw < settings.minimum_toll:
+        reason += "; minimum toll floor applied"
+    elif raw > ceiling:
+        reason += "; maximum multiplier cap applied"
     return PricingDecision(selected, previous.amount if previous else None, amount, reason)
 
 

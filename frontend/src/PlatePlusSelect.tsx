@@ -16,8 +16,8 @@ export function nextEnabledOptionIndex(options: PlatePlusOption[], from: number,
 export type ListboxPosition = { left: number; top: number; width: number; maxHeight: number };
 
 /** Coordinates are viewport-relative because the listbox is portalled and fixed. */
-export function getListboxPosition(rect: DOMRect, menuHeight: number, viewportWidth: number, viewportHeight: number): ListboxPosition {
-  const padding = 12; const gap = 6; const width = Math.min(rect.width, viewportWidth - padding * 2);
+export function getListboxPosition(rect: DOMRect, menuHeight: number, viewportWidth: number, viewportHeight: number, menuWidth = rect.width): ListboxPosition {
+  const padding = 12; const gap = 6; const width = Math.min(Math.max(rect.width, menuWidth), viewportWidth - padding * 2);
   const left = Math.max(padding, Math.min(rect.left, viewportWidth - width - padding));
   const roomBelow = Math.max(0, viewportHeight - rect.bottom - padding); const roomAbove = Math.max(0, rect.top - padding);
   const preferredHeight = Math.min(280, Math.max(menuHeight, 1)); const openUpwards = roomBelow < preferredHeight && roomAbove > roomBelow;
@@ -38,7 +38,8 @@ export function PlatePlusSelect({ label, value, options, onChange, disabled = fa
   const updatePosition = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    setPosition(getListboxPosition(rect, menuRef.current?.scrollHeight ?? 0, window.innerWidth, window.innerHeight));
+    const measuredWidth = menuRef.current?.scrollWidth ?? rect.width;
+    setPosition(getListboxPosition(rect, menuRef.current?.scrollHeight ?? 0, window.innerWidth, window.innerHeight, measuredWidth));
   }, []);
   const openMenu = () => { if (disabled) return; setActiveIndex(selectedIndex >= 0 ? selectedIndex : options.findIndex(option => !option.disabled)); setPosition(null); setOpen(true); };
   const choose = (index: number) => { const option = options[index]; if (!option || option.disabled) return; onChange(option.value); close(true); };
@@ -48,7 +49,7 @@ export function PlatePlusSelect({ label, value, options, onChange, disabled = fa
     const closeOutside = (event: PointerEvent) => { if (!triggerRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) close(); };
     const reposition = () => updatePosition();
     document.addEventListener("pointerdown", closeOutside); window.addEventListener("resize", reposition); window.addEventListener("scroll", reposition, true);
-    requestAnimationFrame(() => menuRef.current?.focus());
+    requestAnimationFrame(() => { updatePosition(); menuRef.current?.focus(); });
     return () => { document.removeEventListener("pointerdown", closeOutside); window.removeEventListener("resize", reposition); window.removeEventListener("scroll", reposition, true); };
   }, [open, updatePosition]);
   const move = (direction: 1 | -1) => setActiveIndex(index => nextEnabledOptionIndex(options, index, direction));
@@ -64,5 +65,5 @@ export function PlatePlusSelect({ label, value, options, onChange, disabled = fa
     else if (event.key === "End") { event.preventDefault(); const enabled = options.map((option, index) => option.disabled ? -1 : index).filter(index => index >= 0); setActiveIndex(enabled.length ? enabled[enabled.length - 1] : -1); }
     else if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(activeIndex); }
   };
-  return <div className="plateplus-select"><span className="plateplus-select-label" id={labelId}>{label}</span><button ref={triggerRef} type="button" className="plateplus-select-trigger" aria-labelledby={labelId} aria-haspopup="listbox" aria-controls={open ? listboxId : undefined} aria-expanded={open} disabled={disabled} title={selected?.label ?? placeholder} onClick={() => open ? close() : openMenu()} onKeyDown={onTriggerKeyDown}><span>{selected?.label ?? placeholder}</span><ChevronDown aria-hidden="true" size={16} /></button>{open && createPortal(<div ref={menuRef} id={listboxId} className="plateplus-select-menu" role="listbox" aria-labelledby={labelId} aria-activedescendant={activeIndex >= 0 ? `${listboxId}-${activeIndex}` : undefined} tabIndex={-1} style={position ?? { left: 0, top: 0, width: 0, maxHeight: 0, visibility: "hidden" }} onKeyDown={onMenuKeyDown}>{options.map((option, index) => <button id={`${listboxId}-${index}`} type="button" role="option" aria-selected={option.value === value} aria-disabled={option.disabled || undefined} className={`${option.value === value ? "selected" : ""} ${index === activeIndex ? "active" : ""}`} disabled={option.disabled} key={option.value} onMouseMove={() => !option.disabled && setActiveIndex(index)} onClick={() => choose(index)}><span>{option.label}</span>{option.value === value && <Check size={15} aria-hidden="true" />}</button>)}</div>, document.body)}</div>;
+  return <div className="plateplus-select"><span className="plateplus-select-label" id={labelId}>{label}</span><button ref={triggerRef} type="button" className="plateplus-select-trigger" aria-labelledby={labelId} aria-haspopup="listbox" aria-controls={open ? listboxId : undefined} aria-expanded={open} disabled={disabled} title={selected?.label ?? placeholder} onClick={() => open ? close() : openMenu()} onKeyDown={onTriggerKeyDown}><span>{selected?.label ?? placeholder}</span><ChevronDown aria-hidden="true" size={16} /></button>{open && createPortal(<div ref={menuRef} id={listboxId} className="plateplus-select-menu" role="listbox" aria-labelledby={labelId} aria-activedescendant={activeIndex >= 0 ? `${listboxId}-${activeIndex}` : undefined} tabIndex={-1} style={position ?? { left: 0, top: 0, width: "max-content", maxWidth: "calc(100vw - 24px)", maxHeight: 280, visibility: "hidden" }} onKeyDown={onMenuKeyDown}>{options.map((option, index) => <button id={`${listboxId}-${index}`} type="button" role="option" aria-selected={option.value === value} aria-disabled={option.disabled || undefined} className={`${option.value === value ? "selected" : ""} ${index === activeIndex ? "active" : ""}`} disabled={option.disabled} key={option.value} title={option.label} onMouseMove={() => !option.disabled && setActiveIndex(index)} onClick={() => choose(index)}><span>{option.label}</span>{option.value === value && <Check size={15} aria-hidden="true" />}</button>)}</div>, document.body)}</div>;
 }

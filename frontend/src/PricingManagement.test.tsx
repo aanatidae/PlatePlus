@@ -5,7 +5,7 @@ import PricingManagement from "./PricingManagement";
 import { readRules, validateRules } from "./pricingRules";
 
 vi.mock("./App", () => ({ apiHeaders: () => ({ Authorization: "Bearer test" }) }));
-vi.mock("./locations", () => ({ useLocations: () => ({ locations: [] }), LocationSelect: () => null }));
+vi.mock("./locations", () => ({ useLocations: () => ({ locations: [{ id: "akleh", code: "AKLEH", display_name: "Simulated AKLEH Toll Plaza" }] }), LocationSelect: () => null }));
 const initial = [
   ["normal", "low", "0.00", "30.00", "1.00"],
   ["moderate", "moderate", "30.01", "60.00", "1.50"],
@@ -69,4 +69,39 @@ describe("congestion pricing form", () => {
     const rules = readRules(initial); rules[index] = { ...rules[index], [field]: value };
     expect(validateRules(rules)).toBeTruthy();
   });
+});
+
+it("requests and visibly renders different saved-policy previews for 10% and 90%, clearing stale results", async () => {
+  const fetch=vi.fn(async (url:string, init?:RequestInit) => {
+    if (url.includes("pricing-preview")) {
+      const percentage=Number(new URL(url).searchParams.get("congestion_percentage"));
+      return new Response(JSON.stringify({location_id:"akleh",congestion_percentage:percentage,congestion_category:percentage===10?"low":"severe",base_toll:"2.40",multiplier:percentage===10?"1.00":"2.50",previous_toll:"2.40",new_toll:percentage===10?"2.40":"6.00",reason:"current congestion band"}));
+    }
+    return new Response(JSON.stringify(url.endsWith("pricing-rules")?initial:{minimum_toll:"0.50",maximum_toll_multiplier:"3.00",minimum_price_change_minutes:5,pricing_hysteresis_percentage:"2.00"}));
+  });
+  vi.stubGlobal("fetch",fetch);
+  render(<PricingManagement />);
+  const input=screen.getByLabelText("Current congestion %");
+  fireEvent.change(input,{target:{value:"10"}});
+  fireEvent.click(screen.getByText("Preview price"));
+  const result=await screen.findByRole("region",{name:"Pricing preview result"});
+  expect(result.textContent).toContain("10.00%"); expect(result.textContent).toContain("Low"); expect(result.textContent).toContain("Preview tollRM2.40");
+  fireEvent.change(input,{target:{value:"90"}});
+  expect(screen.queryByRole("region",{name:"Pricing preview result"})).toBeNull();
+  fireEvent.click(screen.getByText("Preview price"));
+  const high=await screen.findByRole("region",{name:"Pricing preview result"});
+  expect(high.textContent).toContain("90.00%"); expect(high.textContent).toContain("Severe"); expect(high.textContent).toContain("2.50×"); expect(high.textContent).toContain("Preview tollRM6.00");
+  expect(fetch.mock.calls.filter(([url])=>url.includes("pricing-preview")).map(([url])=>new URL(url).searchParams.get("congestion_percentage"))).toEqual(["10","90"]);
+  expect(fetch.mock.calls.every(([, init])=>!init?.method || init.method==="GET")).toBe(true);
+});
+
+it("does not let a late preview response relabel a newly entered congestion", async () => {
+  let resolvePreview!: (response: Response)=>void;
+  vi.stubGlobal("fetch",vi.fn((url:string)=>url.includes("pricing-preview")?new Promise<Response>(resolve=>{resolvePreview=resolve;}):Promise.resolve(new Response(JSON.stringify(url.endsWith("pricing-rules")?initial:{minimum_toll:"0.5"})))));
+  render(<PricingManagement />);
+  const input=screen.getByLabelText("Current congestion %");
+  fireEvent.change(input,{target:{value:"10"}}); fireEvent.click(screen.getByText("Preview price"));
+  fireEvent.change(input,{target:{value:"90"}});
+  resolvePreview(new Response(JSON.stringify({congestion_percentage:10,new_toll:2.40,congestion_category:"low"})));
+  await waitFor(()=>expect(screen.queryByRole("region",{name:"Pricing preview result"})).toBeNull());
 });

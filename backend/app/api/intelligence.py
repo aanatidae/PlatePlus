@@ -15,6 +15,7 @@ from app.api.traffic import _settings
 from app.core.settings import Settings
 from app.db.session import get_db
 from app.models import DetectionRecord, DynamicPricingRule, TollTransaction
+from app.services.detector_evidence import singaporean_detector_evidence
 
 router = APIRouter(
     prefix="/api/intelligence", tags=["AI intelligence"], dependencies=[Depends(require_admin)]
@@ -143,6 +144,7 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
             "ocr": app_settings.ocr_confidence_threshold,
         },
         "evaluation": {
+            "singaporean_detector": singaporean_detector_evidence(),
             "detector": {
                 "accuracy_percent": 93.1,
                 "precision": None,

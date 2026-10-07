@@ -32,6 +32,9 @@ dev = [
 where = ["."]
 include = ["app*"]
 
+[tool.setuptools.package-data]
+app = ["evidence/*.json"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

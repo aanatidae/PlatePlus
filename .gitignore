@@ -49,3 +49,5 @@ ml/evaluation/paddleocr_review/
 ml/evaluation/paddleocr_results/
 /ml/evaluation/development/review/
 .plateplus-demo/
+/.plateplus-eval/
+/SG License Plate.v2i.yolo26.zip

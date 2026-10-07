@@ -124,7 +124,7 @@ def list_pricing_rules(database: DatabaseSession):
 
 @router.get("/pricing-preview")
 def pricing_preview(
-    location_id: UUID, database: DatabaseSession, congestion_percentage: Decimal = Query(ge=0, le=100)
+    location_id: UUID, database: DatabaseSession, congestion_percentage: Decimal = Query(ge=0, le=100, max_digits=5, decimal_places=2)
 ):
     location = database.get(TollLocation, location_id)
     if location is None:

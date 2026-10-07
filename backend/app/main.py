@@ -1,5 +1,7 @@
 """FastAPI entry point for the local ALPR prototype."""
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,7 +18,13 @@ from app.db.session import SessionLocal
 from app.services.operations import record_failure, record_recovery
 
 settings = Settings()
-app = FastAPI(title=settings.app_name)
+@asynccontextmanager
+async def lifespan(app):
+    yield
+    from app.services.demo_feed import demo_feed
+    demo_feed.pause()
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_cors_origins,

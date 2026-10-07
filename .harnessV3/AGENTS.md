@@ -385,6 +385,8 @@ Preserve:
 
 V3 adds a new evaluation requirement:
 
+- Singaporean detector transfer evaluation must remain separate from Malaysian detector, OCR and origin-classification evidence. Display only genuinely evaluated aggregate results with split/count/model provenance and confidence/IoU definitions; do not label recall or mAP as general accuracy. Preserve the supplied Singaporean test split for evaluation, not tuning. Raw archives, extracted data and prediction artifacts stay local/ignored. Future Singaporean fine-tuning requires an explicit user request.
+
 - Test Malaysian vs Singaporean origin classification with explicitly labelled synthetic or human-verified examples.
 - Report origin-classification accuracy/confusion counts separately from OCR exact-match accuracy.
 - Do not use the preserved 44-crop OCR held-out set for tuning.

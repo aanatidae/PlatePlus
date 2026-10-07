@@ -30,8 +30,12 @@ export function useFeed<T>(path: string, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
     let disposed = false;
+    let loading = false;
     let controller: AbortController | undefined;
     const load = async () => {
+      // Poll ticks must not repeatedly abort a slow request before its deadline.
+      if (disposed || loading) return;
+      loading = true;
       controller?.abort();
       const request = new AbortController();
       controller = request;
@@ -51,7 +55,7 @@ export function useFeed<T>(path: string, enabled = true) {
           receivedAt: previous.path === path ? previous.receivedAt : 0,
           error: reason instanceof TypeError ? "PlatePlus cannot reach the API. Use Sync data to retry." : reason instanceof Error ? reason.message : "PlatePlus data is unavailable.",
         }));
-      } finally { window.clearTimeout(timeout); }
+      } finally { window.clearTimeout(timeout); loading = false; }
     };
     void load();
     // Local capstone feed: keep the operations display fresh without a page reload.

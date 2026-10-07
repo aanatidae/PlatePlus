@@ -23,7 +23,7 @@ def monitor(database: DatabaseSession):
 
 @router.get("/demo/feed")
 def demo_feed_status():
-    return {"running": demo_feed.running, "source": "demo_generated", "scope": "normal_toll_locations_only"}
+    return {**demo_feed.status(), "source": "demo_generated", "scope": "normal_toll_locations_only"}
 
 
 @router.post("/demo/feed/start")
@@ -31,7 +31,7 @@ def start_demo_feed(database: DatabaseSession):
     started = demo_feed.start()
     record_event(database, event_type="demo_feed_started" if started else "demo_feed_already_running", source="demo", message="Local simulated live feed started." if started else "Local simulated live feed was already running.")
     database.commit()
-    return {"running": demo_feed.running, "started": started}
+    return {**demo_feed.status(), "started": started}
 
 
 @router.post("/demo/feed/pause")
@@ -39,15 +39,18 @@ def pause_demo_feed(database: DatabaseSession):
     paused = demo_feed.pause()
     record_event(database, event_type="demo_feed_paused" if paused else "demo_feed_already_paused", source="demo", message="Local simulated live feed paused." if paused else "Local simulated live feed was already paused.")
     database.commit()
-    return {"running": demo_feed.running, "paused": paused}
+    return {**demo_feed.status(), "paused": paused}
 
 
 @router.post("/demo/feed/reset")
 def reset_demo_feed(database: DatabaseSession):
+    demo_feed.pause()
+    if demo_feed.worker_alive:
+        raise HTTPException(status_code=409, detail="Feed is stopping; retry reset once the in-flight cycle finishes.")
     summary = reset_demo_activity(database)
     record_event(database, event_type="demo_feed_reset", source="demo", message="Only demo-generated crossing activity was reset.", details=summary)
     database.commit()
-    return {"running": demo_feed.running, **summary}
+    return {**demo_feed.status(), **summary}
 
 @router.get("/alerts")
 def alerts(database: DatabaseSession, location_id: str | None = None, severity: str | None = None, alert_type: str | None = None, acknowledged: bool | None = None, status: str | None = None, source: str | None = None, start_at: datetime | None = None, end_at: datetime | None = None):
