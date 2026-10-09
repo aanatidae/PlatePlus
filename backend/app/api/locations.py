@@ -1,4 +1,4 @@
-"""Read-only toll-location metadata endpoints."""
+"""Toll-location metadata and canonical live Simulator price reconciliation."""
 
 from __future__ import annotations
 
@@ -93,6 +93,8 @@ def _state(database: Session, location: TollLocation) -> dict:
 
     if is_webcam_toll(location):
         webcam = webcam_crossing_state(database, location, now)
+        if webcam.get("price_changed"):
+            database.commit()
         telemetry = webcam["telemetry"]
         hour_ago = now - timedelta(hours=1)
         detections = list(database.scalars(select(DetectionRecord).where(

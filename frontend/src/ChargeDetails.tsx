@@ -8,6 +8,7 @@ export type ChargeComponents = {
 
 export const originLabel = (origin?: string | null) => ({
   malaysian: "Malaysian pattern", singaporean: "Singaporean pattern",
+  foreign_other: "Other foreign pattern",
   unknown: "Unknown / unsupported pattern",
 }[origin ?? "unknown"] ?? "Unknown / unsupported pattern");
 const money = (value: MoneyValue) => `RM${Number(value).toFixed(2)}`;

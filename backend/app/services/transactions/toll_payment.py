@@ -21,6 +21,7 @@ from app.models import (
     Vehicle,
     WalletLedgerEntry,
 )
+from app.services.detection.gemini_fallback import ValidatedFallback, revalidate_evidence
 from app.services.locations import default_toll_location_id
 
 
@@ -65,9 +66,15 @@ def process_toll_event(
     ocr_confidence: float | None,
     recognition_accepted: bool,
     origin_reason: str | None = None,
+    fallback_evidence: ValidatedFallback | None = None,
+    recognition_source: str = "local_alpr",
+    origin_source: str = "local_rules",
+    fallback_used: bool = False,
+    fallback_status: str = "not_requested",
     source: str = "webcam",
     detected_at: datetime | None = None,
     location_id: UUID | None = None,
+    prepared_price_id: UUID | None = None,
 ) -> PaymentOutcome:
     """Persist one recognition event and deduct only once when it is eligible."""
     existing = database.scalar(
@@ -93,6 +100,11 @@ def process_toll_event(
         else OriginDecision("unknown", origin_reason or "not_evaluated_or_rejected")
     )
     eligible = recognition_is_charge_eligible(recognition_accepted, normalized_plate)
+    country = {"malaysian": "Malaysia", "singaporean": "Singapore"}.get(origin.origin)
+    if fallback_evidence is not None:
+        eligible = recognition_accepted and revalidate_evidence(fallback_evidence, normalized_plate)
+        origin = OriginDecision(fallback_evidence.origin, "gemini_validated_pattern") if eligible else OriginDecision("unknown", "invalid_fallback_evidence")
+        country = fallback_evidence.country if eligible else None
     detection = DetectionRecord(
         location_id=location_id,
         detected_at=now,
@@ -100,19 +112,26 @@ def process_toll_event(
         normalized_plate=normalized_plate,
         plate_origin=origin.origin,
         origin_reason=origin.reason,
-        detection_confidence=Decimal(str(detection_confidence or 0)),
+        detection_confidence=Decimal(str(detection_confidence)) if detection_confidence is not None else None,
         ocr_confidence=Decimal(str(ocr_confidence)) if ocr_confidence is not None else None,
         status="accepted" if eligible else "low_confidence",
         review_status="not_required" if eligible else "pending",
         source=source,
+        recognition_source=recognition_source,
+        origin_source=origin_source,
+        origin_country=country,
+        fallback_used=fallback_used,
+        fallback_provider="gemini" if fallback_used else None,
+        fallback_status=fallback_status,
     )
     database.add(detection)
     database.flush()
 
     price = database.scalar(
         select(TollPrice)
-        .where(TollPrice.location_id == location_id, TollPrice.effective_at <= now)
-        .order_by(TollPrice.effective_at.desc())
+        .where(TollPrice.location_id == location_id, TollPrice.effective_at <= now,
+               TollPrice.id == prepared_price_id if prepared_price_id is not None else True)
+        .order_by(TollPrice.effective_at.desc(), TollPrice.created_at.desc(), TollPrice.id.desc())
         .limit(1)
     )
     if not eligible:
@@ -141,7 +160,7 @@ def process_toll_event(
         )
 
     foreign_charge = Decimal("0.00")
-    if origin.origin == "singaporean":
+    if origin.origin in {"singaporean", "foreign_other"}:
         charge_settings = database.get(ForeignVehicleChargeSettings, "default")
         if charge_settings is None:
             detection.status = "error"
@@ -169,7 +188,11 @@ def process_toll_event(
             foreign_charge=foreign_charge,
         )
 
-    if vehicle.registration_origin != origin.origin:
+    if vehicle.registration_origin != origin.origin or (
+        origin.origin == "foreign_other" and vehicle.origin_country != country
+    ) or (
+        vehicle.origin_country is not None and vehicle.origin_country != country
+    ):
         detection.status = "error"
         return _record_failure(
             database, detection, idempotency_key, now, "failed",

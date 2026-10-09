@@ -59,7 +59,7 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
 
     alpr_trace = None
     if detection is not None:
-        detector_passed = float(detection.detection_confidence) >= app_settings.detection_confidence_threshold
+        detector_passed = float(detection.detection_confidence) >= app_settings.detection_confidence_threshold if detection.detection_confidence is not None else None
         ocr_passed = (
             float(detection.ocr_confidence) >= app_settings.ocr_confidence_threshold
             if detection.ocr_confidence is not None
@@ -68,10 +68,13 @@ def intelligence_summary(database: DatabaseSession, location_id: UUID | None = N
         alpr_trace = {
             "detected_at": detection.detected_at,
             "source": detection.source,
+            "recognition_source": detection.recognition_source,
+            "origin_source": detection.origin_source,
+            "fallback_used": detection.fallback_used,
             "stages": [
                 {
                     "name": "Detector result",
-                    "detail": "YOLO located a candidate car-plate region.",
+                    "detail": "Local YOLO confidence is recorded only when available; external fallback is separate.",
                     "value": detection.detection_confidence,
                     "threshold": app_settings.detection_confidence_threshold,
                     "result": _result(detector_passed, "passed", "below detection threshold"),

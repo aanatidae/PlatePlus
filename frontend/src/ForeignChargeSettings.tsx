@@ -59,7 +59,7 @@ export function ForeignChargeSettings() {
   const [open, setOpen] = useState(false);
   return <details className="detail-card foreign-charge-settings" onToggle={event => setOpen(event.currentTarget.open)}>
     <summary>Simulated foreign-vehicle charge</summary>
-    <p className="field-note">Separate from congestion pricing. Eligible Singaporean transactions add this configured amount after the dynamic toll; Malaysian transactions add zero. It does not change congestion bands, multipliers, or traffic prediction. This is prototype configuration, not a real toll-plaza fee.</p>
+    <p className="field-note">Separate from congestion pricing. Eligible Singaporean and supported other-foreign transactions add this configured amount after the dynamic toll; Malaysian transactions add zero. It does not change congestion bands, multipliers, or traffic prediction. This is prototype configuration, not a real toll-plaza fee.</p>
     {open && <ChargeForm />}
   </details>;
 }

@@ -53,7 +53,17 @@ class AccountRead(ORMModel):
 class VehicleCreate(BaseModel):
     user_id: UUID
     plate_number: str = Field(min_length=2, max_length=16)
-    registration_origin: Literal["malaysian", "singaporean"] = "malaysian"
+    registration_origin: Literal["malaysian", "singaporean", "foreign_other"] = "malaysian"
+    origin_country: str | None = Field(default=None, max_length=64)
+
+    @model_validator(mode="after")
+    def require_other_country(self):
+        if self.registration_origin == "foreign_other" and self.origin_country != "United Kingdom":
+            raise ValueError("Other-foreign registrations currently require United Kingdom country.")
+        expected = {"malaysian": "Malaysia", "singaporean": "Singapore"}.get(self.registration_origin)
+        if expected and self.origin_country and self.origin_country != expected:
+            raise ValueError("Country must agree with the declared synthetic registration origin.")
+        return self
     make: str | None = Field(default=None, max_length=80)
     model: str | None = Field(default=None, max_length=80)
     color: str | None = Field(default=None, max_length=40)
@@ -72,6 +82,7 @@ class VehicleRead(ORMModel):
     user_id: UUID
     plate_number: str
     registration_origin: str
+    origin_country: str | None
     make: str | None
     model: str | None
     color: str | None
@@ -160,8 +171,14 @@ class DetectionRecordRead(ORMModel):
     normalized_plate: str | None
     plate_origin: str
     origin_reason: str | None
-    detection_confidence: Decimal
+    detection_confidence: Decimal | None
     ocr_confidence: Decimal | None
+    recognition_source: str
+    origin_source: str
+    origin_country: str | None
+    fallback_used: bool
+    fallback_provider: str | None
+    fallback_status: str
     status: str
     source: str
     image_path: str | None

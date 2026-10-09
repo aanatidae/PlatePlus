@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID, uuid4
@@ -16,6 +17,7 @@ from app.core.settings import Settings
 from app.db.session import get_db
 from app.models import TollLocation, TollTransaction
 from app.schemas.webcam import WebcamBoundingBox, WebcamFrameResult
+from app.services.detection.gemini_fallback import GeminiFallback
 from app.services.detection.webcam_processor import (
     FrameProcessorError,
     WebcamFrameProcessor,
@@ -33,6 +35,7 @@ router = APIRouter(
 )
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"}
 settings = Settings()
+fallback = GeminiFallback(settings)
 service = WebcamService(
     WebcamFrameProcessor(
         YoloPlateDetector(settings.yolo_model_path, settings.detection_confidence_threshold),
@@ -48,6 +51,36 @@ def _is_payment_replay(database: Session, key: str | None) -> bool:
     return bool(key and database.scalar(
         select(TollTransaction.id).where(TollTransaction.idempotency_key == key)
     ))
+
+
+@router.get("/capabilities")
+def capabilities() -> dict[str, bool]:
+    """Safe disclosure flags only; never expose credentials or environment values."""
+    return {"gemini_upload_fallback_enabled": settings.enable_gemini_fallback,
+            "gemini_webcam_fallback_enabled": False}
+
+
+def _image_replay(database: Session, key: str | None) -> WebcamFrameResult | None:
+    if not key:
+        return None
+    transaction = database.scalar(select(TollTransaction).where(TollTransaction.idempotency_key == key))
+    if transaction is None or transaction.detection is None:
+        return None
+    detection = transaction.detection
+    return WebcamFrameResult(
+        status="accepted_for_vehicle_lookup" if detection.status in {"accepted", "unknown_vehicle"} else detection.status,
+        message="Prior event replayed; no new inference, external upload or deduction.",
+        plate_text=detection.normalized_plate, plate_origin=detection.plate_origin,
+        origin_reason=detection.origin_reason, recognition_source=detection.recognition_source,
+        origin_source=detection.origin_source, origin_country=detection.origin_country,
+        fallback_used=detection.fallback_used, fallback_provider=detection.fallback_provider,
+        fallback_status=detection.fallback_status,
+        detection_confidence=detection.detection_confidence, ocr_confidence=detection.ocr_confidence,
+        charge_eligible=detection.status == "accepted", payment_status=transaction.status,
+        payment_amount=transaction.amount, payment_dynamic_toll_amount=transaction.dynamic_toll_amount,
+        payment_foreign_vehicle_charge=transaction.foreign_vehicle_charge,
+        payment_balance_after=transaction.balance_after, payment_duplicate=True,
+    )
 
 
 @router.post("/sessions", status_code=status.HTTP_201_CREATED)
@@ -82,6 +115,7 @@ async def process_frame(
         raise HTTPException(status_code=503, detail=str(error)) from error
 
     payment = None
+    prepared_price = None
     replay = _is_payment_replay(database, idempotency_key)
     if result.plate_text and (replay or not result.status.startswith("duplicate_plate")):
         simulator_location = database.scalar(
@@ -105,7 +139,7 @@ async def process_frame(
                 charge_eligible=False,
             )
         if not replay and result.charge_eligible and result.plate_origin != "unknown":
-            prepare_webcam_crossing_price(database, simulator_location, datetime.now(UTC))
+            prepared_price = prepare_webcam_crossing_price(database, simulator_location, datetime.now(UTC))
         if replay or not result.status.startswith("duplicate_plate"):
             payment = process_toll_event(
                 database,
@@ -118,6 +152,7 @@ async def process_frame(
                 origin_reason=result.origin_reason,
                 location_id=simulator_location.id,
                 source="webcam_alpr",
+                prepared_price_id=prepared_price.id if prepared_price else None,
             )
     box = result.bounding_box
     return WebcamFrameResult(
@@ -160,12 +195,18 @@ async def process_image(
     image_bytes = await image.read(settings.webcam_max_frame_bytes + 1)
     if len(image_bytes) > settings.webcam_max_frame_bytes:
         raise HTTPException(status_code=413, detail="Uploaded image exceeds the local size limit.")
+    previous = _image_replay(database, idempotency_key)
+    if previous is not None:
+        return previous
     try:
         result = service.process_image(image_bytes)
     except FrameProcessorError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
 
+    result = await fallback.resolve(result, image_bytes)
+
     payment = None
+    prepared_price = None
     source = "uploaded_image" if location and location.code == "SIMULATOR" else "upload"
     now = datetime.now(UTC)
     replay = _is_payment_replay(database, idempotency_key)
@@ -176,7 +217,7 @@ async def process_image(
             database, location, result.plate_text, now, settings.webcam_duplicate_cooldown_seconds
         )
     ):
-        result = result.__class__(
+        result = replace(result,
             status="duplicate_plate_within_cooldown",
             message="This plate was already processed recently at Simulator Toll Plaza.",
             plate_text=result.plate_text,
@@ -188,9 +229,9 @@ async def process_image(
             bounding_box=result.bounding_box,
             charge_eligible=False,
         )
-    if result.plate_text and (replay or not result.status.startswith("duplicate_plate")):
+    if (result.plate_text or result.fallback_status != "not_requested") and (replay or not result.status.startswith("duplicate_plate")):
         if not replay and location and location.code == "SIMULATOR" and result.charge_eligible and result.plate_origin != "unknown":
-            prepare_webcam_crossing_price(database, location, now)
+            prepared_price = prepare_webcam_crossing_price(database, location, now)
         payment = process_toll_event(
             database,
             idempotency_key=idempotency_key or f"upload:{uuid4()}",
@@ -200,8 +241,14 @@ async def process_image(
             ocr_confidence=result.ocr_confidence,
             recognition_accepted=result.charge_eligible,
             origin_reason=result.origin_reason,
+            fallback_evidence=result.fallback_evidence,
+            recognition_source=result.recognition_source,
+            origin_source=result.origin_source,
+            fallback_used=result.fallback_used,
+            fallback_status=result.fallback_status,
             source=source,
             location_id=location_id,
+            prepared_price_id=prepared_price.id if prepared_price else None,
         )
     box = result.bounding_box
     return WebcamFrameResult(
@@ -222,4 +269,10 @@ async def process_image(
         if payment and payment.balance_after is not None
         else None,
         payment_duplicate=payment.duplicate if payment else False,
+        recognition_source=result.recognition_source,
+        origin_source=result.origin_source,
+        origin_country=result.origin_country,
+        fallback_used=result.fallback_used,
+        fallback_provider="gemini" if result.fallback_used else None,
+        fallback_status=result.fallback_status,
     )

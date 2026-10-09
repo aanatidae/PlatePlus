@@ -23,7 +23,6 @@ def scoped_overview(database: Session, location_id: UUID | None) -> dict:
     )
     states = [_state(database, location) for location in locations]
     active = [state["telemetry"] for state in states if state["telemetry"]]
-    ids = [location.id for location in locations]
     hour_ago = now - timedelta(hours=1)
     simulator_ids = [location.id for location in locations if location.code == "SIMULATOR"]
     normal_ids = [location.id for location in locations if location.code != "SIMULATOR"]
@@ -57,7 +56,7 @@ def scoped_overview(database: Session, location_id: UUID | None) -> dict:
             func.count(DetectionRecord.id),
             func.avg(
                 func.coalesce(DetectionRecord.ocr_confidence, DetectionRecord.detection_confidence)
-            ),
+            ).filter(DetectionRecord.recognition_source == "local_alpr"),
         ).where(*detection_scope)
     ).one()
     transaction_count = database.scalar(

@@ -52,7 +52,7 @@ describe("simplified local-demo dashboard", () => {
     expect(activity).toContain("new-webcam-record");
     expect(overview).toContain("simulatorPricingFeedback");
     expect(feedback).toContain("Congestion increased to");
-    expect(feedback).toContain("Congestion dropped to");
+    expect(feedback).toContain("Congestion decreased to");
     expect(feedback).toContain("Toll adjusted");
     expect(feedback).toContain("Toll remains");
   });

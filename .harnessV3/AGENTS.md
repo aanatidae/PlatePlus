@@ -1,5 +1,53 @@
 # PlatePlus `.harnessV3` Agent Instructions
 
+## Simulator event pricing — 2026-10-09
+
+Simulator congestion repricing and foreign-vehicle charging are independent:
+active accepted crossings -> congestion -> dynamic toll; origin -> foreign charge;
+final simulated total = dynamic toll + foreign charge. Prepare the active-window
+count + incoming crossing before payment and pass the exact persisted/reused price
+ID. Dedicated webcam_crossing/webcam_crossing_expiry contexts skip normal traffic
+interval/hysteresis holds but preserve floor/cap; do not globally disable guards.
+Canonical live Simulator reads persist only changed amount/band expiry transitions,
+not duplicate prices per poll or generated traffic. Serialize per-plaza decisions.
+Policy changes still reprice the actual window. Earlier held-Simulator-band guidance
+is superseded. 232 backend (118 unit/114 PostgreSQL), 109 UI tests and build pass.
+No fee edit, Gemini request, hardware test, commit/push or main/legacy change. See
+docs/V3_SIMULATOR_EVENT_REPRICING.md for exact root cause and verification.
+
+## Optional external upload fallback — 2026-10-09
+
+Live-setup follow-up: user installed SDK 2.29.0 and privately enabled/configured
+Gemini. Fixed provider HTTP 400 by using response_json_schema with the same strict
+Pydantic schema. Central/default/private model now gemini-3.5-flash: text-only probe
+passed; 3.8 returned 503, 2.5 returned 404. API restarted only; no images transmitted
+in diagnostics. Only allowlisted provider HTTP codes appear in safe errors. 39
+mocked schema/payment tests and Ruff pass. See docs/GEMINI_FALLBACK.md. Earlier
+activation-pending/no-live-call statements below describe the original implementation.
+
+The user explicitly authorized an opt-in Gemini multimodal upload fallback. This
+supersedes uploaded-image local-only statements below only when fallback is enabled
+and invoked. YOLO/PaddleOCR remains primary. Backend `google-genai` only; default
+ENABLE_GEMINI_FALLBACK=false; GEMINI_API_KEY stays in backend environment/private
+ignored root .env and never in frontend/source/logs/responses. No live Gemini call,
+SDK installation, development migration, API restart, commit or push was performed.
+Webcam is still exclusively local; no frame invokes Gemini. Do not enable external
+processing or upload evaluation datasets silently. Describe the Google egress and
+separate provider retention honestly. Model metrics remain local-model evidence.
+
+Unread/no-plate or overlapping supported-origin uploads can invoke one bounded
+15-second request (configurable 1–30 seconds, no retry). Structured high-confidence
+output passes local format/country/text-consistency validation and is revalidated
+by payment. Other-foreign acceptance is initially modern UK format with matching
+declared synthetic country; unsupported countries fail safely. MY adds zero; SG
+and accepted other-foreign origin add the configured separate charge after the
+dynamic toll. Existing account, balance, ledger, refund, location and idempotency
+rules remain mandatory. Completed upload replay skips local/provider inference.
+Migration 20261009_0015 adds safe audit fields, nullable detector confidence and
+other-foreign constraints; existing history is preserved. Update/activate only
+after installing the declared dependency and applying the migration with approval.
+See docs/GEMINI_FALLBACK.md and TODOLIST section AC for verification and limits.
+
 ## Simulator upload runtime recovery — 2026-10-09
 
 Final outcome: user approved Microsoft x64 Visual C++ v14 runtime installation.

@@ -7,6 +7,6 @@ export function simulatorPricingFeedback(previous: SimulatorTelemetry, next: Sim
   const rising = Number(next.congestion_percentage) > Number(previous.congestion_percentage);
   const tollChanged = Number(previous.current_toll_price) !== Number(next.current_toll_price);
   if (acceptedCrossing && rising) return `Congestion increased to ${Number(next.congestion_percentage).toFixed(0)}% → ${tollChanged ? `Toll adjusted from ${money(previous.current_toll_price)} to ${money(next.current_toll_price)}` : `Toll remains ${money(next.current_toll_price)}`}`;
-  if (!rising) return `Congestion dropped to ${Number(next.congestion_percentage).toFixed(0)}% → ${tollChanged ? `Toll adjusted to ${money(next.current_toll_price)}` : `Toll remains ${money(next.current_toll_price)}`}`;
+  if (!rising) return `Congestion decreased to ${Number(next.congestion_percentage).toFixed(0)}% → ${tollChanged ? `Toll adjusted from ${money(previous.current_toll_price)} to ${money(next.current_toll_price)}` : `Toll remains ${money(next.current_toll_price)}`}`;
   return null;
 }

@@ -59,7 +59,7 @@ def test_network_upgrade_preserves_old_history_and_round_trips(test_engine, rese
         with pytest.raises(IntegrityError):
             command.downgrade(config, "20261002_0013")
         with test_engine.connect() as connection:
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20261007_0014"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20261009_0015"
             assert connection.scalar(text("SELECT count(*) FROM detection_records")) == len(history) + 1
     finally:
         reset_schema()

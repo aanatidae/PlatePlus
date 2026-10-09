@@ -60,7 +60,10 @@ def live_overview(database: Annotated[Session, Depends(get_db)], location_id: UU
     hourly_detections = [item for item in all_detections if item.detected_at >= hour_ago]
     accepted = [item for item in hourly_detections if item.status == "accepted"]
     successful_transactions = [item for item in all_transactions if item.status == "successful" and item.processed_at >= hour_ago]
-    average_confidence = sum((item.ocr_confidence or item.detection_confidence) for item in hourly_detections) / len(hourly_detections) if hourly_detections else None
+    confidences = [item.ocr_confidence if item.ocr_confidence is not None else item.detection_confidence
+                   for item in hourly_detections if item.recognition_source == "local_alpr"]
+    confidences = [value for value in confidences if value is not None]
+    average_confidence = sum(confidences) / len(confidences) if confidences else None
     traffic_series = []
     for offset in range(11, -1, -1):
         sample = _telemetry(now - timedelta(minutes=offset * 5), rules)

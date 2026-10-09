@@ -15,10 +15,13 @@ from app.db.session import get_db
 from app.models import (
     Account,
     DetectionRecord,
+    DynamicPricingRule,
+    ForeignVehicleChargeSettings,
     TollLocation,
     TollPrice,
     TollTransaction,
     TrafficRecord,
+    TrafficSimulationSettings,
     User,
     Vehicle,
 )
@@ -26,6 +29,117 @@ from app.services.detection.webcam_processor import ProcessedFrame
 from app.services.detection.webcam_service import WebcamService
 from app.services.traffic.webcam_crossings import webcam_crossing_state
 from app.services.transactions import toll_payment
+
+
+def event_policy(database):
+    settings = database.scalar(select(TrafficSimulationSettings))
+    settings.minimum_price_change_minutes = 999
+    settings.pricing_hysteresis_percentage = Decimal(50)
+    settings.minimum_toll = Decimal("0.50")
+    settings.maximum_toll_multiplier = Decimal("2.50")
+    for rule in database.scalars(select(DynamicPricingRule)):
+        rule.multiplier = {"normal": 1, "moderate": 1.5, "peak_hour": 2, "severe": 2.5}[rule.scenario]
+    database.flush()
+
+
+@pytest.mark.parametrize("source", ["uploaded_image", "webcam_alpr"])
+@pytest.mark.parametrize("origin", ["malaysian", "singaporean"])
+@pytest.mark.parametrize("prior_count,toll,category", [(3, "3.00", "moderate"), (6, "4.00", "high"), (8, "5.00", "severe")])
+def test_crossing_band_price_is_persisted_before_payment(database, admin_auth_headers, monkeypatch, source, origin, prior_count, toll, category):
+    from app.api import locations as location_api
+
+    client, account, location = setup_client(database, monkeypatch, origin, "100")
+    event_policy(database)
+    monkeypatch.setattr(location_api, "datetime", FrozenClock)
+    for index in range(prior_count):
+        database.add(DetectionRecord(location_id=location.id, detected_at=NOW-timedelta(seconds=10), normalized_plate=f"PRIOR{index}", detection_confidence=.99, status="accepted", source="uploaded_image"))
+    database.add(TollPrice(location_id=location.id, effective_at=NOW-timedelta(seconds=1), amount=2, congestion_category="low"))
+    database.flush()
+    fee = database.get(ForeignVehicleChargeSettings, "default").amount
+    body = submit(client, admin_auth_headers, source, location, "repricing-arrival")
+    dynamic = Decimal(toll)
+    assert Decimal(str(body["payment_dynamic_toll_amount"])) == dynamic
+    assert Decimal(str(body["payment_foreign_vehicle_charge"])) == (fee if origin == "singaporean" else 0)
+    assert Decimal(str(body["payment_amount"])) == dynamic + (fee if origin == "singaporean" else 0)
+    transaction = database.scalar(select(TollTransaction).where(TollTransaction.idempotency_key == "repricing-arrival"))
+    price = database.get(TollPrice, transaction.toll_price_id)
+    traffic = database.get(TrafficRecord, price.traffic_record_id)
+    assert price.amount == dynamic and price.congestion_category == category
+    assert traffic.vehicle_count == prior_count + 1
+    assert traffic.congestion_percentage == Decimal((prior_count + 1) * 10)
+    assert traffic.congestion_category == category
+    database.refresh(account)
+    assert account.balance == Decimal(100) - transaction.amount
+    assert database.get(ForeignVehicleChargeSettings, "default").amount == fee
+    app = client.app; app.include_router(location_api.router)
+    live = client.get(f"/api/locations/{location.id}/live", headers=admin_auth_headers)
+    assert live.status_code == 200, live.text
+    assert Decimal(str(live.json()["telemetry"]["current_toll_price"])) == dynamic
+    assert live.json()["telemetry"]["congestion_category"] == category
+    before = counts(database)
+    client.get(f"/api/locations/{location.id}/live", headers=admin_auth_headers)
+    assert counts(database) == before
+
+
+def test_live_read_persists_expiry_transitions_without_price_spam_or_traffic(database, admin_auth_headers, monkeypatch):
+    from app.api import locations as location_api
+
+    event_policy(database)
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR"))
+    for index in range(7):
+        database.add(DetectionRecord(location_id=location.id, detected_at=NOW-timedelta(seconds=55 if index < 2 else 10), detection_confidence=.9, status="accepted", source="webcam_alpr"))
+    database.flush()
+    instant = NOW
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return instant
+    monkeypatch.setattr(location_api, "datetime", Clock)
+    app = FastAPI(); app.include_router(auth_router); app.include_router(location_api.router)
+    app.dependency_overrides[get_db] = lambda: database
+    client = TestClient(app)
+    for offset, expected_count, expected_price in [(0, 7, 4), (6, 5, 3), (61, 0, 2)]:
+        instant = NOW + timedelta(seconds=offset)
+        response = client.get(f"/api/locations/{location.id}/live", headers=admin_auth_headers)
+        assert response.status_code == 200, response.text
+        telemetry = response.json()["telemetry"]
+        assert telemetry["active_crossings"] == expected_count
+        assert Decimal(str(telemetry["current_toll_price"])) == expected_price
+        latest = database.scalar(select(TollPrice).where(TollPrice.location_id == location.id).order_by(TollPrice.effective_at.desc(), TollPrice.created_at.desc()))
+        assert latest.amount == expected_price
+        price_count = database.scalar(select(func.count(TollPrice.id)))
+        for _ in range(3):
+            client.get(f"/api/locations/{location.id}/live", headers=admin_auth_headers)
+        assert database.scalar(select(func.count(TollPrice.id))) == price_count
+    assert database.scalar(select(func.count(TrafficRecord.id))) == 0
+    assert database.scalar(select(func.count(TollTransaction.id))) == 0
+
+
+def test_unknown_vehicle_attempt_uses_post_crossing_price_without_debit(database, admin_auth_headers, monkeypatch):
+    client, account, location = setup_client(database, monkeypatch, "malaysian", "100")
+    vehicle = database.scalar(select(Vehicle).where(Vehicle.plate_number == "VAA1234"))
+    database.delete(vehicle)
+    event_policy(database)
+    for _ in range(3):
+        database.add(DetectionRecord(location_id=location.id, detected_at=NOW-timedelta(seconds=10), detection_confidence=.9, status="accepted", source="uploaded_image"))
+    database.flush()
+    result = submit(client, admin_auth_headers, "uploaded_image", location, "repricing-unknown")
+    assert result["payment_status"] == "unknown_vehicle" and result["payment_amount"] == 3
+    database.refresh(account); assert account.balance == 100
+    assert webcam_crossing_state(database, location, NOW)["telemetry"]["active_crossings"] == 4
+
+
+def test_simulator_event_floor_and_cap_remain_enforced(database):
+    from app.services.traffic.pricing import decide_price
+
+    event_policy(database)
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR"))
+    settings = database.scalar(select(TrafficSimulationSettings))
+    settings.minimum_toll = Decimal("2.10")
+    settings.maximum_toll_multiplier = Decimal(2)
+    database.flush()
+    assert decide_price(database, settings, location, Decimal(0), NOW, context="webcam_crossing").amount == Decimal("2.10")
+    assert decide_price(database, settings, location, Decimal(90), NOW, context="webcam_crossing_expiry").amount == Decimal("4.00")
 
 NOW = datetime(2026, 10, 7, 12, tzinfo=UTC)
 

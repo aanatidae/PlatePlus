@@ -31,7 +31,7 @@ def test_country_charge_checks_and_debits_the_combined_total(
 ):
     location_id = uuid4()
     account = SimpleNamespace(id=uuid4(), balance=Decimal(balance))
-    vehicle = SimpleNamespace(id=uuid4(), user_id=uuid4(), registration_origin=origin)
+    vehicle = SimpleNamespace(id=uuid4(), user_id=uuid4(), registration_origin=origin, origin_country=None)
     price = SimpleNamespace(id=uuid4(), amount=Decimal("2.40"))
     database = Mock()
     database.scalar.side_effect = [None, price, vehicle, account]

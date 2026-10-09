@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import cv2
 import numpy as np
@@ -15,6 +15,9 @@ from alpr.plate.origin import OriginDecision, classify_plate_origin
 from alpr.types import BoundingBox, PlateDetection, recognition_decision
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from app.services.detection.gemini_fallback import ValidatedFallback
 
 
 class FrameProcessorError(RuntimeError):
@@ -33,6 +36,12 @@ class ProcessedFrame:
     ocr_confidence: float | None = None
     bounding_box: BoundingBox | None = None
     charge_eligible: bool = False
+    recognition_source: str = "local_alpr"
+    origin_source: str = "local_rules"
+    origin_country: str | None = None
+    fallback_used: bool = False
+    fallback_status: str = "not_requested"
+    fallback_evidence: ValidatedFallback | None = None
 
 
 class PlateDetector(Protocol):
@@ -128,6 +137,12 @@ class WebcamFrameProcessor:
             self._detection_threshold,
             self._ocr_threshold,
         )
+        if not ocr.normalized_text:
+            return ProcessedFrame(
+                "ocr_unreadable", "Local OCR could not read a plate.",
+                raw_plate_text=ocr.raw_text or None, bounding_box=crop.bounding_box,
+                detection_confidence=detection.confidence, ocr_confidence=ocr.confidence,
+            )
         origin = (
             classify_plate_origin(ocr.normalized_text)
             if confidence_decision.accepted

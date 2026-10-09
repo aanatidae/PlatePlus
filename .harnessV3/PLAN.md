@@ -1,5 +1,35 @@
 # PlatePlus V3 Implementation Plan
 
+## Simulator congestion repricing fix — 2026-10-09
+
+Completed event-driven Simulator repricing before payment and persistent expiry
+reconciliation on canonical live reads. Fixed default traffic cooldown/hysteresis
+holds and repeated held-price timestamp renewal; unchanged amount/band reuses
+history without price spam. Exact prepared price ID feeds transactions, floor/cap
+and normal/policy safeguards remain. Foreign charge/source semantics unchanged.
+232 backend and 109 UI tests/build pass. API restarted, normal feed state preserved;
+no plate/Gemini submission or Simulator charge in live smoke check. No commit/push.
+See docs/V3_SIMULATOR_EVENT_REPRICING.md and TODO AD.
+
+## Optional Gemini upload fallback — 2026-10-09
+
+Live setup is now configured by the user. Corrected SDK schema request to JSON
+Schema; working text-only model probe selects gemini-3.5-flash. Existing API restarted;
+no images/evaluation data sent in troubleshooting. 39 focused mocked regressions
+and Ruff passed. User-image verification remains separate. Earlier activation
+limitations below describe the initial implementation stage.
+
+Implemented the user-requested backend-only secondary recognition/origin path.
+Local YOLO/PaddleOCR stays primary; default off, secret backend key, bounded schema
+output, conservative PlatePlus validation and unchanged synthetic-payment controls.
+Uploads can use external Gemini only when unresolved; webcam never does. SG remains
+explicit, other foreign initially supports modern UK patterns/country registration.
+Migration 0015 and audit/UI/disclosure are implemented; Gemini is excluded from
+local evaluation metrics. All provider tests are mocked; activation still requires
+SDK installation, development migration/configuration and API restart. No real
+provider request or new accuracy claim, no dataset egress, commit or push. See
+docs/GEMINI_FALLBACK.md and TODO AC for exact checks and security evidence.
+
 ## Upload runtime recovery — 2026-10-09
 
 Final outcome: approved Microsoft x64 runtime installation is complete (14.51.36247.0,

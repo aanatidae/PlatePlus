@@ -7,7 +7,14 @@ from typing import Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import DynamicPricingRule, TollLocation, TollPrice, TrafficRecord, TrafficSimulationSettings
+from app.models import (
+    DynamicPricingRule,
+    TollLocation,
+    TollPrice,
+    TrafficRecord,
+    TrafficSimulationSettings,
+)
+
 
 @dataclass(frozen=True)
 class PricingDecision:
@@ -16,19 +23,23 @@ class PricingDecision:
     amount: Decimal
     reason: str
 
-def decide_price(database: Session, settings: TrafficSimulationSettings, location: TollLocation, congestion: Decimal, now: datetime | None = None, *, context: Literal["traffic", "policy_update"] = "traffic") -> PricingDecision:
+def decide_price(database: Session, settings: TrafficSimulationSettings, location: TollLocation, congestion: Decimal, now: datetime | None = None, *, context: Literal["traffic", "policy_update", "webcam_crossing", "webcam_crossing_expiry"] = "traffic") -> PricingDecision:
     now = now or datetime.now(UTC)
     rules = list(database.scalars(select(DynamicPricingRule).order_by(DynamicPricingRule.minimum_percentage)))
     candidate = next(rule for rule in rules if rule.minimum_percentage <= congestion <= rule.maximum_percentage)
-    previous = database.scalar(select(TollPrice).where(TollPrice.location_id == location.id).order_by(TollPrice.effective_at.desc()))
+    previous = database.scalar(select(TollPrice).where(TollPrice.location_id == location.id, TollPrice.effective_at <= now).order_by(TollPrice.effective_at.desc(), TollPrice.created_at.desc(), TollPrice.id.desc()).limit(1))
     selected = candidate; reason = "pricing policy updated" if context == "policy_update" else "current congestion band"
+    if context in {"webcam_crossing", "webcam_crossing_expiry"}:
+        if location.code != "SIMULATOR":
+            raise ValueError("Crossing pricing context is restricted to Simulator Toll Plaza.")
+        reason = "accepted crossing band" if context == "webcam_crossing" else "active crossing window band"
     if previous is not None and context == "traffic":
         previous_rule = next((rule for rule in rules if rule.congestion_category == previous.congestion_category), candidate)
         elapsed = (now - previous.effective_at).total_seconds() / 60
         if elapsed < settings.minimum_price_change_minutes:
             selected, reason = previous_rule, "minimum change interval hold"
         elif selected.id != previous_rule.id:
-            boundary = selected.minimum_percentage if selected.minimum_percentage > previous_rule.minimum_percentage else previous_rule.minimum_percentage
+            boundary = max(previous_rule.minimum_percentage, selected.minimum_percentage)
             if abs(congestion - boundary) < settings.pricing_hysteresis_percentage:
                 selected, reason = previous_rule, "hysteresis hold near band boundary"
     raw = location.base_toll * selected.multiplier
@@ -48,7 +59,7 @@ def reprice_current_locations(database: Session, settings: TrafficSimulationSett
     """
     from app.services.operations import record_event
     from app.services.traffic.simulation import profile_congestion_for_time
-    from app.services.traffic.webcam_crossings import is_webcam_toll, active_crossing_congestion
+    from app.services.traffic.webcam_crossings import active_crossing_congestion, is_webcam_toll
 
     now = now or datetime.now(UTC)
     database.flush()  # Decisions must see all four newly configured rules.

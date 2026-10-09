@@ -1,4 +1,4 @@
-"""Live, local-webcam-derived telemetry for the Simulator Toll Plaza."""
+"""Canonical ALPR-crossing telemetry and pricing for Simulator Toll Plaza."""
 
 from __future__ import annotations
 
@@ -49,11 +49,17 @@ def webcam_crossing_state(
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
     if not {"normal", "moderate", "peak_hour", "severe"}.issubset(rules):
         return {"telemetry": None, "source": "unavailable"}
+    # Serialize arrival/expiry decisions per plaza. The caller commits only a
+    # changed read-side price; arrivals keep the lock until payment commits.
+    database.scalar(select(TollLocation).where(TollLocation.id == location.id).with_for_update())
     crossings, congestion = active_crossing_congestion(database, location, now)
     settings = database.scalar(select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default"))
     rule = rule_for_congestion(rules, congestion)
-    decision = decide_price(database, settings, location, congestion, now) if settings else None
+    decision = decide_price(database, settings, location, congestion, now, context="webcam_crossing_expiry") if settings else None
     multiplier = decision.rule.multiplier if decision else (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00"))
+    selected = decision.rule if decision else rule
+    amount = decision.amount if decision else (location.base_toll * multiplier).quantize(Decimal("0.01"))
+    price, changed = _persist_transition(database, location, now, amount, selected.congestion_category)
     latest_crossing = database.scalar(
         select(DetectionRecord.detected_at)
         .where(
@@ -64,7 +70,7 @@ def webcam_crossing_state(
         )
         .order_by(DetectionRecord.detected_at.desc())
     )
-    return {"source": "webcam_alpr", "telemetry": {
+    return {"source": "webcam_alpr", "price_changed": changed, "telemetry": {
         "measured_at": now,
         "vehicle_count": crossings,
         "vehicles_per_hour": crossings,
@@ -75,7 +81,7 @@ def webcam_crossing_state(
         "congestion_category": decision.rule.congestion_category if decision else rule.congestion_category,
         "base_toll_price": location.base_toll,
         "congestion_multiplier": multiplier,
-        "current_toll_price": decision.amount if decision else (location.base_toll * multiplier).quantize(Decimal("0.01")),
+        "current_toll_price": price.amount,
         "average_speed_kmh": None,
         "plaza_status": location.status,
         "camera_status": "online" if location.status == "operational" else "offline",
@@ -100,17 +106,37 @@ def has_recent_simulator_plate(
     ) is not None
 
 
-def prepare_webcam_crossing_price(database: Session, location: TollLocation, now: datetime) -> None:
+def _persist_transition(database: Session, location: TollLocation, now: datetime,
+                        amount: Decimal, category: str, traffic_id=None) -> tuple[TollPrice, bool]:
+    previous = database.scalar(select(TollPrice).where(
+        TollPrice.location_id == location.id, TollPrice.effective_at <= now,
+    ).order_by(TollPrice.effective_at.desc(), TollPrice.created_at.desc(), TollPrice.id.desc()).limit(1))
+    if previous is not None and previous.amount == amount and previous.congestion_category == category:
+        return previous, False
+    price = TollPrice(
+        traffic_record_id=traffic_id, location_id=location.id, effective_at=now,
+        amount=amount, congestion_category=category, rule_version="webcam-v3",
+        # PostgreSQL now() is constant during a transaction. Explicit creation
+        # time orders two transitions with identical event timestamps correctly.
+        created_at=datetime.now(UTC),
+    )
+    database.add(price)
+    database.flush()
+    return price, True
+
+
+def prepare_webcam_crossing_price(database: Session, location: TollLocation, now: datetime) -> TollPrice | None:
     """Persist a price for the incoming accepted crossing before its payment is processed."""
-    state = webcam_crossing_state(database, location, now)["telemetry"]
-    if state is None:
-        return
-    next_count = state["vehicle_count"] + 1
+    database.scalar(select(TollLocation).where(TollLocation.id == location.id).with_for_update())
+    count, _ = active_crossing_congestion(database, location, now)
+    next_count = count + 1
     congestion = min(Decimal("100.00"), Decimal(next_count) * Decimal(100) / location.road_capacity)
     rules = {item.scenario: item for item in database.scalars(select(DynamicPricingRule))}
+    if not {"normal", "moderate", "peak_hour", "severe"}.issubset(rules):
+        return None
     rule = rule_for_congestion(rules, congestion)
     settings = database.scalar(select(TrafficSimulationSettings).where(TrafficSimulationSettings.singleton_key == "default"))
-    decision = decide_price(database, settings, location, congestion, now) if settings else None
+    decision = decide_price(database, settings, location, congestion, now, context="webcam_crossing") if settings else None
     traffic = TrafficRecord(
         location_id=location.id, measured_at=now, simulation_time=now, vehicle_count=next_count,
         road_capacity=location.road_capacity, congestion_percentage=congestion,
@@ -119,9 +145,7 @@ def prepare_webcam_crossing_price(database: Session, location: TollLocation, now
     )
     database.add(traffic)
     database.flush()
-    database.add(TollPrice(
-        traffic_record_id=traffic.id, location_id=location.id, effective_at=now,
-        amount=decision.amount if decision else (location.base_toll * (rule.multiplier or (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00")))).quantize(Decimal("0.01")),
-        congestion_category=(decision.rule if decision else rule).congestion_category, rule_version="webcam-v2",
-    ))
-    database.flush()
+    amount = decision.amount if decision else (location.base_toll * (rule.amount / rules["normal"].amount if rules["normal"].amount else Decimal("1.00"))).quantize(Decimal("0.01"))
+    price, _ = _persist_transition(database, location, now, amount,
+                                   (decision.rule if decision else rule).congestion_category, traffic.id)
+    return price

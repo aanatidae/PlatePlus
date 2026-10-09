@@ -8,10 +8,15 @@ The normal simulated network contains LDP, AKLEH, NPE, and Grand Saga, plus a se
 
 ## Scope
 
+Optional backend-only Gemini fallback for unresolved **uploads** is implemented,
+disabled by default. Local YOLO/PaddleOCR remains primary; webcam never calls
+Gemini. When enabled and invoked, an individual image/crop is sent externally;
+PlatePlus does not save it. See [activation, security and limitations](docs/GEMINI_FALLBACK.md).
+
 - Traffic data is simulated.
 - Toll payments and account balances are simulated.
 - Toll charging is flat-rate-only: each crossing uses its location's configured flat base toll multiplied by the congestion multiplier, subject to the pricing safeguards. No entry/exit tracking, journey length, or distance-based charging is supported. Base tolls are prototype configuration, not official rates. See [flat-rate scope](docs/FLAT_RATE_SCOPE.md).
-- Unambiguous Malaysian and Singaporean plate patterns can match fictional demo vehicles; Singaporean simulated payments add a separately configured foreign-vehicle charge.
+- Malaysian and Singaporean plate patterns can match fictional demo vehicles; validated Singaporean and supported other-foreign payments add a separate configured simulated foreign charge. Malaysian payments add zero.
 - No real banking, toll infrastructure, traffic-feed, enforcement, or vehicle-owner integrations are in scope.
 - Recognition supports local browser-webcam frames and one-time still-image uploads. Both local inference paths remain unavailable from the cloud dashboard by design.
 - The detector should focus on the `car plate` class.

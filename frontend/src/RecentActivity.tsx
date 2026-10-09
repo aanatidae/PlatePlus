@@ -3,6 +3,7 @@ import { ChargeDetails, originLabel, type ChargeComponents } from "./ChargeDetai
 export type ActivityRecord = ChargeComponents & {
   id: string; location_id: string; detection_id?: string | null;
   normalized_plate?: string | null; plate_origin?: string; origin_reason?: string | null;
+  recognition_source?: string; origin_source?: string; origin_country?: string | null; fallback_used?: boolean;
   detected_at?: string; processed_at?: string; status: string; source?: string;
 };
 const time = (value: string) => new Date(value).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur", dateStyle: "medium", timeStyle: "short" });
@@ -16,6 +17,7 @@ export function RecentActivity({ item, kind, locationName, highlighted = false }
       <small>{item.status === "successful" ? "Final simulated total" : "Attempted simulated total"}</small>
       <ChargeDetails charge={item} compact />
     </>}
+    {kind === "detections" && item.fallback_used && <small>Gemini fallback · {item.origin_country ?? "Origin unresolved"}</small>}
     <small>{locationName} · {source}<br />{time(item.detected_at ?? item.processed_at ?? "")}</small>
   </div>;
 }

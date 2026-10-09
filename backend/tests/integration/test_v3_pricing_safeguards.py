@@ -37,7 +37,7 @@ def test_v3_base_toll_obeys_floor_cap_interval_and_hysteresis(database, code):
     assert changed.amount == location.base_toll * 2 and changed.reason == "current congestion band"
 
 
-def test_simulator_explains_the_held_band_with_its_applied_multiplier(database):
+def test_simulator_event_band_is_not_held_by_normal_traffic_interval(database):
     from app.models import DetectionRecord
 
     now = datetime.now(UTC)
@@ -52,9 +52,9 @@ def test_simulator_explains_the_held_band_with_its_applied_multiplier(database):
     database.flush()
     telemetry = webcam_crossing_state(database, location, now)["telemetry"]
     assert telemetry["congestion_percentage"] == Decimal(70)
-    assert telemetry["congestion_category"] == "moderate"
-    assert telemetry["congestion_multiplier"] == Decimal("1.5")
-    assert telemetry["current_toll_price"] == location.base_toll * Decimal("1.5")
+    assert telemetry["congestion_category"] == "high"
+    assert telemetry["congestion_multiplier"] == Decimal(2)
+    assert telemetry["current_toll_price"] == location.base_toll * Decimal(2)
 
 
 def test_foreign_charge_edit_does_not_reprice_or_change_congestion_policy(database, database_app, admin_auth_headers):

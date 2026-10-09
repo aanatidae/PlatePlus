@@ -1,5 +1,76 @@
 # PlatePlus V3 TODO List
 
+## AD. Simulator event repricing — 2026-10-09
+
+- [x] Identify stale low price: normal traffic interval/hysteresis applied to each
+  ALPR event, repeated held-price records reset interval, expiry never persisted.
+- [x] Prepare active count + 1 before payment with canonical crossing context and
+  exact price ID, row lock and deterministic timestamp tie ordering.
+- [x] Persist downward expiry transitions through canonical live state; reuse price
+  when amount/band unchanged. No poll-generated traffic/detections/payments.
+- [x] Preserve floor/cap, normal interval/hysteresis and explicit policy propagation.
+- [x] Preserve accepted unknown-vehicle/insufficient-balance crossing semantics,
+  MY zero fee, SG/other-foreign separate configured charge and Gemini source neutrality.
+- [x] Arrival tests: both input sources/MY/SG at moderate/high/severe, pinned price
+  linked to incoming TrafficRecord; expiry HTTP 7/RM4 -> 5/RM3 -> 0/RM2, no spam.
+- [x] Gemini mocked threshold transitions, unknown-vehicle attempted amount, cap/floor,
+  old foreign fee/replay/refund/policy tests and rendered canonical UI feedback pass.
+- [x] Verify 232 backend (118 unit + 114 dedicated PostgreSQL), 109 frontend tests
+  in 21 files, production build, changed Python Ruff and diff/key audit. Existing
+  >500 KB bundle warning remains. No actual Gemini/physical camera tests.
+- [x] Restart existing API preserving private environment and previous feed running
+  state; Simulator live smoke shows 0/0%/low/RM2, no input or Simulator charge created.
+- [x] Update V3 only; no fee edit, data reset, dataset/model changes, commit/push or
+  main modification. Prior uncommitted Gemini work remains untouched beyond pricing integration.
+
+Full requested root-cause/sequence/safeguard/charge/test report and this-task file
+inventory: docs/V3_SIMULATOR_EVENT_REPRICING.md.
+
+## AC. Optional backend Gemini upload fallback — 2026-10-09
+
+Follow-up: user installed SDK 2.29.0, migrated/enabled the feature and privately
+configured the key. Fixed live structured-request HTTP 400 using JSON Schema;
+gemini-3.5-flash returned a valid text-only structured result (3.8 returned 503;
+2.5 returned 404). Changed only private model configuration, central default and
+schema request; restarted existing API without changing data/frontend. No diagnostic
+image transmission. 39 focused mocked unit/payment regressions and Ruff passed;
+secret audit passed. No commit/push. User-image live verification remains pending.
+This supersedes operator-activation pending status below for this configured setup.
+
+- [x] Keep local YOLO/PaddleOCR primary; default-disabled backend upload fallback.
+- [x] Centralize no-plate/unread/overlap triggers; bypass clear local, duplicate,
+  payment and native-runtime failure states. Preserve source/text/confidence audit.
+- [x] Add official SDK manifest dependency, configurable Flash model and bounded
+  deadline; no automatic retries. No package installation or live provider calls.
+- [x] Require strict structured response, high qualitative confidence, supported
+  country format and overlap text consistency; reject uncertain/unsupported output.
+- [x] Revalidate internal evidence in payment; retain matching synthetic vehicle,
+  account/balance/price/location/ledger/refund/idempotency rules. MY zero fee, SG and
+  supported UK other-foreign use separately configured fee. Country mismatch fails.
+- [x] Migration 20261009_0015: country/origin/audit fields, nullable detector score,
+  safe existing-record defaults, refusal of lossy downgrade. Dedicated test DB only.
+- [x] Upload replay returns persisted audit/payment before inference/provider call.
+- [x] Webcam stays local-only and never calls Gemini. Dataset/model assets unchanged.
+- [x] Add concise external-processing/result/source/country disclosures, three-page
+  UI preserved; Gemini excluded from local-model accuracy/confidence metrics.
+- [x] Mocked unit/API/PostgreSQL/migration/UI tests and source/bundle/log secret audit.
+- [x] .env ignored/untracked; .env.example blank key/model placeholders; no key
+  written into source/frontend/bundle/logs. No commit/push/main/legacy-harness change.
+- [ ] Operator activation: approve/install declared google-genai dependency, migrate
+  development schema, configure backend key/flag, restart API and opt-in live test.
+  This is intentionally not executed; implementation is complete with mocked evidence.
+
+Verification: **211 backend tests (118 unit + 93 dedicated PostgreSQL)**, **49 ML
+tests**, **108 frontend tests in 20 files**, production build, changed Python Ruff
+and git diff checks passed. Existing >500 KB bundle warning remains. Source, ignored
+frontend env files, bundle and local-log secret audit passed; .env ignored/untracked.
+No real key was supplied/written, no live Gemini request. New coverage: 28 unit, 11
+upload/payment integration, one migration and two UI cases. Full 25-item report and
+changed-file inventory are in docs/GEMINI_FALLBACK.md.
+
+See docs/GEMINI_FALLBACK.md for architecture, trigger/schema details, origin/foreign
+handling, privacy, setup commands, audit semantics and verification limitations.
+
 ## AB. Simulator upload runtime recovery — 2026-10-09
 
 - [x] Diagnose recurring normal-launcher failure: missing VCOMP140.DLL required

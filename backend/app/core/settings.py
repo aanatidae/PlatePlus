@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,6 +34,9 @@ class Settings(BaseSettings):
     webcam_duplicate_cooldown_seconds: float = 20.0
     webcam_max_frame_bytes: int = 5_000_000
     paddleocr_model_storage: Path = Path("../models/paddleocr")
+    enable_gemini_fallback: bool = False
+    gemini_model: str = "gemini-3.5-flash"
+    gemini_timeout_seconds: float = Field(default=15.0, ge=1, le=30)
 
     @property
     def sqlalchemy_database_url(self) -> str:

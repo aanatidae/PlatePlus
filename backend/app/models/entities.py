@@ -102,7 +102,7 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "vehicles"
     __table_args__ = (
-        CheckConstraint("registration_origin IN ('malaysian', 'singaporean')", name="ck_vehicles_registration_origin"),
+        CheckConstraint("registration_origin IN ('malaysian', 'singaporean', 'foreign_other')", name="ck_vehicles_registration_origin"),
     )
 
     user_id: Mapped[UUID] = mapped_column(
@@ -113,6 +113,7 @@ class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     plate_number: Mapped[str] = mapped_column(String(16), unique=True, nullable=False, index=True)
     registration_origin: Mapped[str] = mapped_column(String(16), nullable=False, default="malaysian", server_default="malaysian")
+    origin_country: Mapped[str | None] = mapped_column(String(64))
     make: Mapped[str | None] = mapped_column(String(80))
     model: Mapped[str | None] = mapped_column(String(80))
     color: Mapped[str | None] = mapped_column(String(40))
@@ -315,7 +316,7 @@ class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "detection_records"
     __table_args__ = (
         CheckConstraint(
-            "plate_origin IN ('malaysian', 'singaporean', 'unknown')",
+            "plate_origin IN ('malaysian', 'singaporean', 'foreign_other', 'unknown')",
             name="ck_detection_records_plate_origin",
         ),
         CheckConstraint(
@@ -346,7 +347,13 @@ class DetectionRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     normalized_plate: Mapped[str | None] = mapped_column(String(16), index=True)
     plate_origin: Mapped[str] = mapped_column(String(16), nullable=False, default="unknown", server_default="unknown")
     origin_reason: Mapped[str | None] = mapped_column(String(64))
-    detection_confidence: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False)
+    recognition_source: Mapped[str] = mapped_column(String(24), nullable=False, default="local_alpr", server_default="local_alpr")
+    origin_source: Mapped[str] = mapped_column(String(24), nullable=False, default="local_rules", server_default="local_rules")
+    origin_country: Mapped[str | None] = mapped_column(String(64))
+    fallback_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    fallback_provider: Mapped[str | None] = mapped_column(String(16))
+    fallback_status: Mapped[str] = mapped_column(String(32), nullable=False, default="not_requested", server_default="not_requested")
+    detection_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
     ocr_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     source: Mapped[str] = mapped_column(String(32), nullable=False, default="webcam")

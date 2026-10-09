@@ -4,6 +4,11 @@ These are the current local commands for the prototype. Installing dependencies,
 
 ## Environment
 
+Optional upload-only Gemini fallback is off by default. Follow [backend-only
+activation and disclosure](GEMINI_FALLBACK.md): install the declared SDK only with
+approval, apply migration `20261009_0015`, keep the key in backend environment/private
+ignored root `.env`, then restart the API. Webcam frames do not call Gemini.
+
 1. Copy `.env.example` to `.env`.
 2. Set non-default `DEMO_ADMIN_PASSWORD` and `AUTH_TOKEN_SECRET` values before any shared demonstration.
 3. Keep `ENABLE_LOCAL_WEBCAM=true` only on a local operator machine. The deployed dashboard uses `false`.

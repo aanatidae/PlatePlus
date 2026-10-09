@@ -6,6 +6,12 @@ traffic, owners, wallets and payments remain simulated.
 
 ## Current recognition path
 
+Optional backend-only Gemini can resolve unread/ambiguous uploads after local ALPR.
+It never processes webcam frames. Results pass PlatePlus validation before the
+same synthetic vehicle/account/pricing/payment workflow. When invoked, image/crop
+bytes leave the local machine for Google processing; PlatePlus does not persist
+them. Keys remain backend-only. See [fallback architecture](GEMINI_FALLBACK.md).
+
 1. Accept a still image.
 2. Detect the license plate region using a YOLO model trained for `car plate` only.
 3. Crop the plate region.
@@ -15,7 +21,7 @@ traffic, owners, wallets and payments remain simulated.
 7. Reject overlapping/unsupported patterns; otherwise match an active fictional
    vehicle with the same declared registration origin and its active primary account.
 8. Read that location's latest non-future stored toll; add the configured foreign
-   charge only for Singaporean origin, then debit the combined total once if funded.
+   charge for accepted Singaporean or supported other-foreign origin, then debit the combined total once if funded.
 9. Store detection, itemized transaction, wallet ledger and notification metadata.
 
 ## Service Boundaries
@@ -44,7 +50,7 @@ Pricing is flat-rate-only. The pricing service uses the selected location's conf
 `base_toll` and congestion multiplier, with minimum toll, maximum multiplier, hysteresis,
 and change-interval safeguards. It requires no journey, entry/exit pair, or distance.
 The payment service reads the latest non-future stored price at that same location,
-then adds the separate simulated foreign charge for an eligible Singaporean vehicle.
+then adds the separate simulated foreign charge for an eligible Singaporean or supported other-foreign vehicle.
 All base tolls are prototype configuration unless explicitly sourced. See
 [flat-rate scope](FLAT_RATE_SCOPE.md) and [V3 migration verification](V3_DATABASE_MIGRATIONS.md).
 

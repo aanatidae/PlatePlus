@@ -64,11 +64,10 @@ def overview(
         and (minimum_amount is None or item.amount >= minimum_amount)
     ]
     successful = [item for item in filtered_transactions if item.status == "successful"]
-    average_confidence = (
-        sum((item.ocr_confidence or item.detection_confidence) for item in filtered_detections)
-        / len(filtered_detections)
-        if filtered_detections else None
-    )
+    confidences = [item.ocr_confidence if item.ocr_confidence is not None else item.detection_confidence
+                   for item in filtered_detections if item.recognition_source == "local_alpr"]
+    confidences = [value for value in confidences if value is not None]
+    average_confidence = sum(confidences) / len(confidences) if confidences else None
 
     def traffic_item(item: TrafficRecord) -> dict:
         return {"measured_at": item.measured_at, "congestion_percentage": item.congestion_percentage, "congestion_category": item.congestion_category, "vehicle_count": item.vehicle_count, "road_capacity": item.road_capacity}
