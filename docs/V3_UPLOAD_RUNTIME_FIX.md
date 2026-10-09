@@ -1,5 +1,46 @@
 # Simulator image-upload runtime recovery — 2026-10-09
 
+## Final outcome: approved runtime repair verified
+
+The user approved installation. Microsoft's signed x64 Visual C++ v14 installer
+was downloaded from `https://aka.ms/vc14/vc_redist.x64.exe`; its Authenticode
+signature was valid with a Microsoft Corporation publisher. Runtime version
+**14.51.36247.0** installed, including `C:\Windows\System32\vcomp140.dll`.
+The installer returned **3010** (success, reboot required); no reboot was performed.
+
+With the original failing API's exact PATH, a fresh subprocess now imports Torch
+and Paddle 3.2.2 successfully without any Codex DLL path or diagnostic preload.
+Only the existing API was restarted, preserving its original normal-launcher
+environment and all database data. Actual fictional ambiguous-plate upload then
+returned HTTP 200/CORS, recognized `SBA1234A`, safely classified unknown origin,
+and replayed the earlier RM0.00 rejection using the existing idempotency key.
+`payment_duplicate=true`; no new debit was created. No physical webcam test or
+user-image accuracy claim is made. Setup documentation now records this prerequisite.
+Installation logs and API logs remain ignored under `.plateplus-demo/logs/`.
+
+This resolves the normal-launcher runtime failure described below; the previous
+successful Codex-environment check alone was insufficient.
+
+## Follow-up: normal launcher still fails — confirmed root cause
+
+After the user restarted from the normal launcher, uploads again returned the
+readable OCR-unavailable response. The earlier successful API had inherited Codex's
+extra runtime PATH directories; that result did not establish normal-launcher
+recovery. The retained DLL-directory handles cannot supply a missing dependency.
+
+The machine is missing **VCOMP140.DLL** from its normal 64-bit runtime search path.
+PE import inspection shows Paddle's `mkldnn.dll` requires that Microsoft OpenMP DLL.
+A fresh subprocess with the failing API's exact PATH reproduces the Paddle import
+failure. With the identical PATH, preloading only an already-existing VCOMP140 DLL
+from Codex's bundled Poppler runtime makes `import paddle` succeed. This isolates
+the missing library; no DLL was copied, installed, or added to the application.
+
+The durable remedy is install/repair of Microsoft's supported x64 Visual C++ v14
+Redistributable, followed by API restart and normal-launcher verification. Official
+source: https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
+Installation initially awaited explicit user approval under `.harnessV3/AGENTS.md`
+section 15; the approved repair and normal-launcher verification are recorded above.
+
 ## Observed failure
 
 The running local API received Simulator upload requests, but returned HTTP 500.

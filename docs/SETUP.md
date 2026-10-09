@@ -8,6 +8,16 @@ These are the current local commands for the prototype. Installing dependencies,
 2. Set non-default `DEMO_ADMIN_PASSWORD` and `AUTH_TOKEN_SECRET` values before any shared demonstration.
 3. Keep `ENABLE_LOCAL_WEBCAM=true` only on a local operator machine. The deployed dashboard uses `false`.
 
+### Windows local OCR prerequisite
+
+Install or repair the [Microsoft x64 Visual C++ v14 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+with approval before local PaddleOCR use. Paddle's `mkldnn.dll` requires the Microsoft
+OpenMP runtime `VCOMP140.DLL`. If it is missing, image uploads and webcam inference
+can report that local OCR is unavailable despite the Python packages being installed.
+Restart the API after runtime installation and follow the installer's reboot guidance.
+Verify from your normal launcher, without relying on another application's DLL paths.
+See [the diagnosed upload failure and repair](V3_UPLOAD_RUNTIME_FIX.md).
+
 ## PostgreSQL
 
 The project uses Docker-based PostgreSQL for development and a separate temporary PostgreSQL service for integration tests.

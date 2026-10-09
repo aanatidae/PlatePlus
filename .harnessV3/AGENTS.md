@@ -2,6 +2,22 @@
 
 ## Simulator upload runtime recovery — 2026-10-09
 
+Final outcome: user approved Microsoft x64 Visual C++ v14 runtime installation.
+Microsoft-signed installer installed 14.51.36247.0 and system VCOMP140.DLL; exit 3010
+reports reboot required, no reboot performed. Fresh Paddle import and actual upload
+now pass with the original failing API PATH and no Codex DLL paths/preload. Restarted
+only the existing API with its original environment. Existing ambiguous fixture/key
+returns HTTP 200/CORS, correct OCR, unknown origin, duplicate RM0.00 rejection; no
+new debit. Setup prerequisite documented. This supersedes the unresolved note below.
+
+Follow-up supersedes the recovery claim below: normal-launcher OCR still fails
+because **VCOMP140.DLL**, required by Paddle's mkldnn.dll, is missing from normal
+64-bit runtime resolution. Codex's extra inherited PATH masked it in the successful
+API check. Fresh process with the failing API PATH reproduces failure; preloading
+only Codex's existing VCOMP140 DLL fixes import with identical PATH. No DLL copied
+or installed at that diagnostic stage. Microsoft x64 Visual C++ v14 runtime approval,
+installation and normal-launcher upload verification were subsequently completed above.
+
 Simulator uploads were reaching the local API but failing during Paddle native DLL
 loading, producing unhandled HTTP 500 and browser NetworkError. The OCR adapter now
 retains Windows Paddle DLL search handles and explicitly loads Torch/Paddle; shared

@@ -2,6 +2,20 @@
 
 ## AB. Simulator upload runtime recovery — 2026-10-09
 
+- [x] Diagnose recurring normal-launcher failure: missing VCOMP140.DLL required
+  by Paddle mkldnn.dll. Reproduce with failing API PATH and isolate via a diagnostic
+  preload of only the existing DLL. Earlier successful API inherited Codex PATH.
+- [x] Obtain user approval and install Microsoft-signed x64 Visual C++ v14 runtime
+  14.51.36247.0. Exit 3010 requires reboot to finish updates; no reboot performed.
+- [x] Verify fresh Paddle import with original failing PATH and real upload after
+  restart using the original environment without Codex PATH. HTTP 200/CORS, correct
+  ambiguous-fixture OCR, unknown origin, replayed RM0.00 result; no new debit.
+- [x] Document the Windows runtime prerequisite in `docs/SETUP.md`.
+
+The earlier runtime recovery result below was specific to Codex-launched API,
+not a completed normal-launcher fix. The approved runtime installation and separate
+normal-launcher verification above now resolve that environment failure.
+
 - [x] Trace upload NetworkError to actual API logs: Paddle `libpaddle` DLL import
   failure during OCR initialization, unhandled HTTP 500.
 - [x] Retain installed Windows Paddle DLL directory handles and explicitly load

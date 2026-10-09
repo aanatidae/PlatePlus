@@ -2,6 +2,18 @@
 
 ## Upload runtime recovery — 2026-10-09
 
+Final outcome: approved Microsoft x64 runtime installation is complete (14.51.36247.0,
+exit 3010/reboot required, no reboot performed). Fresh imports and real upload pass
+using the original failing API PATH without Codex dependencies. API restarted with
+its original environment; ambiguous fixture replays zero-charge result, no new debit.
+Windows setup prerequisite documented. This supersedes the pending note below.
+
+Follow-up: normal-launcher verification remains blocked on approval to install/repair
+Microsoft's x64 Visual C++ v14 Redistributable. Paddle's mkldnn.dll needs missing
+VCOMP140.DLL; identical failing-launcher PATH plus only an existing Microsoft DLL
+preload isolates the cause. Earlier successful API inherited Codex's extra PATH.
+No installation or permanent DLL workaround performed; safe 503 handling works.
+
 The local Simulator upload failure is recovered: running-API Paddle DLL errors were
 masked as browser NetworkError. Windows search-handle retention and explicit native
 initialization harden loading; shared inference exceptions now return safe readable
