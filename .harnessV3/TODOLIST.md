@@ -1,5 +1,24 @@
 # PlatePlus V3 TODO List
 
+## AB. Simulator upload runtime recovery — 2026-10-09
+
+- [x] Trace upload NetworkError to actual API logs: Paddle `libpaddle` DLL import
+  failure during OCR initialization, unhandled HTTP 500.
+- [x] Retain installed Windows Paddle DLL directory handles and explicitly load
+  Torch/Paddle; preserve cached assets and existing OCR settings.
+- [x] Convert shared detector/OCR runtime failures to readable HTTP 503 before
+  payment, retaining detailed exceptions only in API logs.
+- [x] Verify HTTP/CORS/no-payment failure regressions and DLL constructor failure
+  handling; backend unit 90 and ML 49 tests passed.
+- [x] Restart only the verified existing API, preserving original logs, frontend,
+  PostgreSQL and synthetic history; verify real ambiguous-fixture upload returns
+  HTTP 200, unknown origin and RM0.00. No successful debit or history reset.
+
+Fresh processes initialized successfully even before the patch; the precise cause
+of old-process DLL resolution failure remains unproven. No new browser/hardware
+camera test, dependencies/models, training, commit/push or deployment. See
+`docs/V3_UPLOAD_RUNTIME_FIX.md`. Legacy harnesses remain unchanged.
+
 Legend:
 
 - `[x]` verified implemented in current repository baseline

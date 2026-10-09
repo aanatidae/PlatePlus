@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import sys
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,7 @@ class PaddleOcrPlateRecognizer:
             str(model_storage_directory) if model_storage_directory is not None else None
         )
         self._ocr: Any | None = None
+        self._dll_directories: list[Any] = []
 
     def recognize(self, crop: np.ndarray) -> OcrResult:
         if crop.size == 0:
@@ -54,21 +57,33 @@ class PaddleOcrPlateRecognizer:
 
         # PaddleOCR imports ModelScope, which imports Torch. Loading Torch first
         # avoids a Windows DLL load-order conflict when YOLO and Paddle coexist.
-        import torch  # noqa: F401
-
         if self._model_storage_directory:
             os.environ.setdefault("PADDLE_PDX_CACHE_HOME", self._model_storage_directory)
         try:
-            from paddleocr import PaddleOCR
-        except ImportError as error:
-            raise RuntimeError(
-                "PaddleOCR is not installed. Install the ML PaddleOCR extra before running recognition."
-            ) from error
+            import torch  # noqa: F401
 
-        self._ocr = PaddleOCR(
-            lang="en",
-            use_doc_orientation_classify=False,
-            use_doc_unwarping=False,
-            use_textline_orientation=False,
-        )
+            # Keep Windows search-directory handles alive throughout inference.
+            # Do not rely on the launching shell's PATH for Paddle's bundled DLLs.
+            if sys.platform == "win32" and not self._dll_directories:
+                spec = find_spec("paddle")
+                if spec and spec.submodule_search_locations:
+                    root = Path(next(iter(spec.submodule_search_locations)))
+                    for directory in (root / "libs", root / "base"):
+                        if directory.is_dir():
+                            self._dll_directories.append(os.add_dll_directory(str(directory)))
+
+            import paddle  # noqa: F401
+            from paddleocr import PaddleOCR
+
+            self._ocr = PaddleOCR(
+                lang="en",
+                use_doc_orientation_classify=False,
+                use_doc_unwarping=False,
+                use_textline_orientation=False,
+            )
+        except (ImportError, OSError) as error:
+            raise RuntimeError(
+                "Local OCR could not load its Paddle runtime. Restart the local API; "
+                "if this persists, check the installed Paddle dependencies and API logs."
+            ) from error
         return self._ocr

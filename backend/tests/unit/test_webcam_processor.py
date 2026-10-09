@@ -95,3 +95,43 @@ def test_processor_rejects_invalid_image_bytes() -> None:
 
     with pytest.raises(FrameProcessorError, match="could not be decoded"):
         processor.process(b"not-an-image")
+
+
+@pytest.mark.parametrize("failure", [ImportError("DLL load failed"), RuntimeError("inference failed")])
+def test_ocr_runtime_failure_is_readable_and_never_reaches_payment(failure) -> None:
+    from unittest.mock import patch
+
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.testclient import TestClient
+
+    from app.api.auth import require_admin
+    from app.api.webcam import router, service
+    from app.db.session import get_db
+
+    class BrokenRecognizer:
+        def recognize(self, crop):
+            raise failure
+
+    processor = WebcamFrameProcessor(
+        _Detector([PlateDetection(BoundingBox(20, 20, 100, 45), confidence=0.9)]),
+        BrokenRecognizer(), 0.5, 0.7,
+    )
+    app = FastAPI()
+    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"])
+    app.include_router(router)
+    app.dependency_overrides[require_admin] = lambda: None
+    app.dependency_overrides[get_db] = lambda: object()
+    with patch.object(service, "_processor", processor), patch(
+        "app.api.webcam.process_toll_event"
+    ) as payment, TestClient(app) as client:
+        response = client.post(
+            "/api/webcam/images",
+            headers={"Origin": "http://localhost:5173"},
+            files={"image": ("plate.jpg", _frame_bytes(), "image/jpeg")},
+        )
+    assert response.status_code == 503
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert "Local OCR is unavailable" in response.json()["detail"]
+    assert "No toll was charged" in response.json()["detail"]
+    payment.assert_not_called()

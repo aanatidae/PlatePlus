@@ -1,5 +1,15 @@
 # PlatePlus V3 Implementation Plan
 
+## Upload runtime recovery — 2026-10-09
+
+The local Simulator upload failure is recovered: running-API Paddle DLL errors were
+masked as browser NetworkError. Windows search-handle retention and explicit native
+initialization harden loading; shared inference exceptions now return safe readable
+503 responses. Restarted only the existing API and verified a real cached ambiguous
+fixture upload (HTTP 200/CORS, unknown origin, zero charge). Backend unit 90 and ML
+49 tests passed; hardware camera remains deferred. The old-process DLL failure was
+not reproducible in fresh processes. See `docs/V3_UPLOAD_RUNTIME_FIX.md`.
+
 ## Purpose
 
 V3 aligns the current working PlatePlus repository with the latest capstone proposal and presentation feedback without rebuilding already-complete functionality.

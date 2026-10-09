@@ -1,5 +1,17 @@
 # PlatePlus `.harnessV3` Agent Instructions
 
+## Simulator upload runtime recovery — 2026-10-09
+
+Simulator uploads were reaching the local API but failing during Paddle native DLL
+loading, producing unhandled HTTP 500 and browser NetworkError. The OCR adapter now
+retains Windows Paddle DLL search handles and explicitly loads Torch/Paddle; shared
+inference failures become readable HTTP 503 before any payment. Only the existing API
+was restarted. A real cached fictional ambiguous-plate upload returned HTTP 200 with
+CORS, unknown origin and RM0.00; no successful debit. Backend unit 90 and ML 49 tests
+passed. Fresh initialization also worked before the patch, so the exact old-process
+DLL resolution cause remains unproven. No install/download/training, database reset,
+physical camera test, commit/push or deployment. See `docs/V3_UPLOAD_RUNTIME_FIX.md`.
+
 ## 1. Authority and Purpose
 
 This folder is the authoritative Codex guidance for the current PlatePlus capstone hardening phase.

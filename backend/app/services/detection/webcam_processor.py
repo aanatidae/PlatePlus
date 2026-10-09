@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -12,6 +13,8 @@ from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 from alpr.plate.crop import extract_plate_crop, select_best_plate_detection
 from alpr.plate.origin import OriginDecision, classify_plate_origin
 from alpr.types import BoundingBox, PlateDetection, recognition_decision
+
+logger = logging.getLogger(__name__)
 
 
 class FrameProcessorError(RuntimeError):
@@ -98,12 +101,27 @@ class WebcamFrameProcessor:
         if image is None:
             raise FrameProcessorError("The webcam frame could not be decoded.")
 
-        detection = select_best_plate_detection(self._detector.detect(image))
+        try:
+            detection = select_best_plate_detection(self._detector.detect(image))
+        except FrameProcessorError:
+            raise
+        except Exception as error:
+            logger.exception("Local plate detection failed")
+            raise FrameProcessorError(
+                "Local plate detection is unavailable. Check the local API logs and restart the API."
+            ) from error
         if detection is None:
             return ProcessedFrame("no_plate_detected", "No license plate was detected in this frame.")
 
         crop = extract_plate_crop(image, detection)
-        ocr = self._recognizer.recognize(crop.image)
+        try:
+            ocr = self._recognizer.recognize(crop.image)
+        except Exception as error:
+            logger.exception("Local plate OCR failed")
+            raise FrameProcessorError(
+                "Local OCR is unavailable. Restart the local API; "
+                "if this persists, check its Paddle runtime and API logs. No toll was charged."
+            ) from error
         confidence_decision = recognition_decision(
             detection.confidence,
             ocr.confidence,
