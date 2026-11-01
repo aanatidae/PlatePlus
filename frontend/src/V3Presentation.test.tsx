@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { webcrypto } from "node:crypto";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { ChargeDetails } from "./ChargeDetails";
 import { RecentActivity } from "./RecentActivity";
@@ -51,6 +52,13 @@ describe("V3 information within the existing presentation pages", () => {
     expect(screen.getByText(/Plate origin does not change its band or multiplier/)).toBeTruthy();
     expect(screen.queryByText("RM20.00")).toBeNull();
   });
+  it("explains the recorded pricing band separately from current congestion", () => {
+    render(<PricingExplanation source="mixed" telemetry={{ congestion_percentage: 33, congestion_category: "moderate", pricing_category: "high", base_toll_price: 2.8, congestion_multiplier: 2, current_toll_price: 5.6 }} />);
+    expect(screen.getByText("Peak hour")).toBeTruthy();
+    expect(screen.getByText("RM2.80 × 2.00")).toBeTruthy();
+    expect(screen.getByText("RM5.60")).toBeTruthy();
+    expect(screen.getByText(/Current congestion is Moderate; the recorded toll uses the Peak hour pricing band/)).toBeTruthy();
+  });
   it("marks classification fixture evidence as separate from OCR and field accuracy", () => {
     render(<OriginEvidence evidence={{ samples: 32, exact_matches: 25, exact_match_percent: 78.1, cross_country_errors: 0, ambiguous_rejected: 7, unsupported_rejected: 8, note: "Selected synthetic text fixture only, separate from OCR. Not field accuracy, nationality, ownership, or registration verification." }} />);
     expect(screen.getByText("25/32 · 78.1%")).toBeTruthy();
@@ -63,6 +71,7 @@ describe("V3 information within the existing presentation pages", () => {
     expect(screen.getByText("RM22.00")).toBeTruthy();
   });
   it("shows upload origin and payment components and removes its ephemeral preview on clear", async () => {
+    vi.stubGlobal("crypto", webcrypto);
     const revoke = vi.fn();
     vi.stubGlobal("URL", class extends URL { static createObjectURL = vi.fn(() => "blob:local-test"); static revokeObjectURL = revoke; });
     const fetch = vi.fn(async () => new Response(JSON.stringify({ status: "accepted_for_vehicle_lookup", message: "Accepted", plate_text: "GBC1234R", plate_origin: "singaporean", payment_status: "successful", payment_amount: 22, payment_dynamic_toll_amount: 2, payment_foreign_vehicle_charge: 20 })));

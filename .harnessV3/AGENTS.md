@@ -1,5 +1,51 @@
 # PlatePlus `.harnessV3` Agent Instructions
 
+## Bounded local inference and upload recovery — 2026-11-01
+
+Never execute YOLO/PaddleOCR synchronously on an async API event loop. Local webcam
+and upload inference now run through one cached, serialized child process, called
+from a thread. `LOCAL_INFERENCE_TIMEOUT_SECONDS` defaults to 60 (range 1–120).
+Terminate/reap a hung worker and lazily replace it on retry; native work must not
+queue without bounds or continue into pricing/payment after timeout. The worker
+has no database/provider/payment access and retains no image files. API shutdown
+closes it. Optional Gemini remains parent-side, upload-only and separately bounded.
+
+Uploads also have a 150-second browser transport deadline, cancellation/stale-result
+guards and safe retry identity. Preserve an uncertain event's content hash/random
+key in sessionStorage through refresh; never persist image bytes or filenames.
+Clear that identity only after a complete successful HTTP response. Live local
+recognition completed in 12.31s while 23 health/location probes stayed responsive
+(max combined 94ms); replay returned in 78ms. Browser timeout/refresh/retry checks,
+128 unit tests, relevant PostgreSQL tests, 114 frontend tests and build passed.
+The wedged local API was replaced and its previously started feed restored.
+See `docs/V3_UPLOAD_RECOVERY.md`; physical webcam remains deferred.
+
+## Stable map viewport and continuous roads — 2026-11-01
+
+Overview's map has a bounded responsive height independent of the selected-location
+panel, including long upload outcomes. `network-map.css` owns that viewport and road
+presentation. All four schematic routes extend beyond and are clipped to the Selangor
+outline; do not restore floating road fragments or arbitrary interior endpoints.
+Keep layered pavement/edges/dashed markings, readable HTML route labels, existing
+location selection and the not-to-scale boundary. Desktop/laptop/tablet/mobile
+mock-upload checks confirm unchanged map size, fitted marker containment and two
+outline crossings per road. 110 frontend tests and build passed. No real inference,
+external image transmission or backend change was needed for this UI task. See
+`docs/V3_MAP_LAYOUT.md`.
+
+## Traffic status versus recorded pricing band — 2026-11-01
+
+Normal-location live `congestion_category` is derived from the displayed congestion
+percentage and current configured ranges. Never overwrite traffic status with a
+stored TollPrice category. `pricing_category` separately exposes the recorded price
+band; Why this price? uses it and explains a mismatch without changing the toll.
+This supersedes earlier normal-telemetry guidance coupling status to stored prices.
+NPE's mixed telemetry reproduced ~33.5%/high before the fix and ~33.5%/moderate
+afterwards, retaining RM5.60/high only for pricing. 121 backend unit, 17 targeted
+PostgreSQL and 110 frontend tests plus build/Ruff passed. Local API restarted and
+the prior running feed state restored; no reset, policy edit or hardware test.
+See `docs/V3_CONGESTION_LABEL_FIX.md`.
+
 ## Simulator event pricing — 2026-10-09
 
 Simulator congestion repricing and foreign-vehicle charging are independent:

@@ -1,6 +1,7 @@
 """Query/HTTP behavior on temporary SQLite; PostgreSQL migrations remain integration-only."""
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -58,13 +59,18 @@ def network():
         db.add_all(locations)
         db.flush()
         now = datetime.now(UTC)
-        for index, name in enumerate(["normal", "moderate", "peak_hour", "severe"]):
+        for index, (name, category, low, high) in enumerate([
+            ("normal", "low", "0", "30"),
+            ("moderate", "moderate", "30.01", "60"),
+            ("peak_hour", "high", "60.01", "80"),
+            ("severe", "severe", "80.01", "100"),
+        ]):
             db.add(
                 DynamicPricingRule(
                     scenario=name,
-                    congestion_category=name,
-                    minimum_percentage=0,
-                    maximum_percentage=100,
+                    congestion_category=category,
+                    minimum_percentage=Decimal(low),
+                    maximum_percentage=Decimal(high),
                     amount=2 + index,
                 )
             )
@@ -157,6 +163,68 @@ def test_selected_overview_returns_only_its_recent_records_and_never_writes(netw
     assert {item["location_id"] for item in data["transactions"]["items"]} == {str(locations[0].id)}
     assert len(data["locations"]) == 1
     assert writes == []
+
+
+@pytest.mark.parametrize("persisted_traffic", [True, False])
+def test_live_congestion_uses_current_rules_without_overwriting_recorded_price(
+    network, monkeypatch, persisted_traffic
+):
+    from app.services.traffic import simulation
+
+    client, db, locations = network
+    location = locations[0]
+    traffic = db.scalar(select(TrafficRecord).where(TrafficRecord.location_id == location.id))
+    # Reproduce NPE: current 33% traffic alongside an older Peak Hour toll.
+    traffic.congestion_percentage = Decimal("33.00")
+    traffic.congestion_category = "high"  # Historical category must not override current policy.
+    price = db.scalar(select(TollPrice).where(TollPrice.location_id == location.id))
+    price.congestion_category = "high"
+    price.amount = Decimal("5.60")
+    if not persisted_traffic:
+        db.delete(traffic)
+        monkeypatch.setattr(simulation, "profile_congestion_for_time", lambda *_: Decimal("33.00"))
+    db.commit()
+
+    writes = []
+
+    def observe(connection, cursor, statement, *args):
+        if statement.lstrip().upper().startswith(("INSERT", "UPDATE", "DELETE")):
+            writes.append(statement)
+
+    event.listen(db.bind, "before_cursor_execute", observe)
+    try:
+        paths = [
+            (f"/api/locations/{location.id}/live", lambda data: data["telemetry"]),
+            ("/api/locations/network/live", lambda data: next(
+                item["telemetry"] for item in data["locations"] if item["id"] == str(location.id)
+            )),
+            (f"/api/live/overview?location_id={location.id}", lambda data: data["live"]["traffic"]),
+            ("/api/live/overview?scope=all_locations", lambda data: next(
+                item["telemetry"] for item in data["locations"] if item["location"]["id"] == str(location.id)
+            )),
+        ]
+        for path, telemetry in paths:
+            response = client.get(path)
+            assert response.status_code == 200, response.text
+            live = telemetry(response.json())
+            assert Decimal(str(live["congestion_percentage"])) == Decimal(33)
+            assert live["congestion_category"] == "moderate"
+            assert live["pricing_category"] == "high"
+            assert Decimal(str(live["current_toll_price"])) == Decimal("5.60")
+        assert writes == []
+    finally:
+        event.remove(db.bind, "before_cursor_execute", observe)
+
+    # Configurable ranges, rather than fixed UI thresholds, determine the label.
+    rules = {rule.scenario: rule for rule in db.scalars(select(DynamicPricingRule))}
+    rules["normal"].maximum_percentage = Decimal(40)
+    rules["moderate"].minimum_percentage = Decimal("40.01")
+    db.commit()
+    live = client.get(f"/api/locations/{location.id}/live").json()["telemetry"]
+    assert live["congestion_category"] == "low"
+    assert live["pricing_category"] == "high"
+    db.refresh(price)
+    assert price.amount == Decimal("5.60") and price.congestion_category == "high"
 
 
 def test_intelligence_summary_exposes_thresholds_and_location_trace(network):

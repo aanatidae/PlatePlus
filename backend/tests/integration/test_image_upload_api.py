@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.api import webcam as webcam_api
 from app.api.auth import router as auth_router
@@ -15,10 +15,12 @@ from app.models import (
     TollLocation,
     TollPrice,
     TollTransaction,
+    TrafficRecord,
     User,
     Vehicle,
+    WalletLedgerEntry,
 )
-from app.services.detection.webcam_processor import ProcessedFrame
+from app.services.detection.webcam_processor import FrameProcessorError, ProcessedFrame
 
 
 class _SuccessfulImageService:
@@ -171,3 +173,35 @@ def test_singaporean_simulator_upload_returns_separate_charge_components(
     transaction = database.scalar(select(TollTransaction).where(TollTransaction.location_id == location.id))
     assert transaction.foreign_vehicle_charge == Decimal("20.00")
     assert transaction.amount == Decimal(str(body["payment_amount"]))
+
+
+def test_timed_out_upload_leaves_prices_crossings_wallets_and_history_unchanged(
+    database, admin_auth_headers, monkeypatch
+):
+    class TimedOutService:
+        def process_image(self, _image):
+            raise FrameProcessorError("Local plate processing timed out. No simulated payment was made.")
+
+    location = database.scalar(select(TollLocation).where(TollLocation.code == "SIMULATOR"))
+    models = (DetectionRecord, TollTransaction, TollPrice, TrafficRecord, WalletLedgerEntry)
+
+    def snapshot():
+        return (
+            tuple(database.scalar(select(func.count()).select_from(model)) for model in models),
+            [(row.id, row.balance) for row in database.scalars(select(Account).order_by(Account.id))],
+        )
+
+    app = FastAPI()
+    app.include_router(auth_router)
+    app.include_router(webcam_api.router)
+    app.dependency_overrides[get_db] = lambda: database
+    monkeypatch.setattr(webcam_api, "service", TimedOutService())
+    before = snapshot()
+    response = TestClient(app).post(
+        f"/api/webcam/images?location_id={location.id}",
+        files={"image": ("fixture.png", b"image", "image/png")},
+        headers={**admin_auth_headers, "Idempotency-Key": "timeout-no-payment"},
+    )
+    assert response.status_code == 503
+    assert "timed out" in response.json()["detail"]
+    assert snapshot() == before

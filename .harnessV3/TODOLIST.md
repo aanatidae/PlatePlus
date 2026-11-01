@@ -1,5 +1,69 @@
 # PlatePlus V3 TODO List
 
+## AG. Upload timeout and API responsiveness — 2026-11-01
+
+- [x] Confirm the live API health probe times out during stalled local OCR; trace
+  synchronous inference inside async upload/webcam handlers.
+- [x] Move local native inference to a cached single child process via threadpool;
+  bound admission, worker startup/inference wait and terminate/reap on timeout.
+- [x] Return readable 503 errors before fallback/pricing/payment; preserve original
+  recognition, origin, fee, cooldown, idempotency and ledger behavior.
+- [x] Close the worker on API shutdown; keep it separate from DB/provider access.
+- [x] Add frontend deadline, warm-up feedback, clear/unmount cancellation and stale
+  response guards. Reuse pending image/location event keys after timeout or refresh
+  using session-only content hashes/nonces, never image bytes or filenames.
+- [x] Verify real child hang/crash recovery and concurrent API health; ensure timeout
+  leaves database crossing/price/history/ledger/wallet state unchanged.
+- [x] Pass 128 backend unit tests, 64 existing targeted PostgreSQL tests plus the
+  added timeout regression (six upload tests passed after adding it), 114 frontend
+  tests, production build, changed Python Ruff and diff checks.
+- [x] Run cached local fictional MY/SG worker smoke checks (16.95s then 2.78s).
+  Recover the wedged API and verify real MY upload (12.31s), 23 concurrent health/
+  location probes (max combined 94ms) and replay (78ms). Existing synthetic wallet
+  correctly reports insufficient funds; no top-up/reset performed.
+- [x] Browser-check accelerated timeout, restored controls, refresh and same-image
+  retry identity with mocked responses and no actual external calls.
+- [x] Restore the last recorded running feed state and update V3/setup docs. Keep
+  existing user edits/dataset changes; no install, training, camera test or Git publish.
+
+Evidence and limitations: `docs/V3_UPLOAD_RECOVERY.md`.
+
+## AF. Stable map size and continuous highways — 2026-11-01
+
+- [x] Prevent the details panel's long upload outcome from stretching the map;
+  use top-aligned grid items and bounded responsive map heights.
+- [x] Redraw all four highway paths as continuous routes entering and leaving
+  the Selangor boundary, clipped at the outline with no interior dead ends.
+- [x] Add pavement, narrow road edges and dashed centre markings; preserve route
+  selection highlighting and keep labels readable without SVG text distortion.
+- [x] Browser-check mocked upload expansion at 1920x1080, 1366x768, 1024x768 and
+  390x844: map height unchanged, all fitted markers contained/non-overlapping,
+  no horizontal page overflow and exactly two outline crossings per route.
+- [x] Pass 110 frontend tests, production build, React review and diff checks.
+- [x] Preserve all three pages, local camera/upload flows, backend and user changes;
+  no actual model/provider calls, data reset, install, commit or push.
+
+Evidence and implementation details: `docs/V3_MAP_LAYOUT.md`.
+
+## AE. Current congestion label versus pricing band — 2026-11-01
+
+- [x] Reproduce NPE mixed telemetry: ~33.5% incorrectly labelled high from its
+  separately stored Peak Hour/RM5.60 price.
+- [x] Classify normal live congestion using the current configured percentage
+  ranges, including persisted measurements and time-profile fallback.
+- [x] Expose the recorded price band as `pricing_category`; Why this price? keeps
+  the recorded toll explanation separate and explains differing traffic status.
+- [x] Cover selected/network/location live APIs, custom ranges, immutable history
+  and read-only normal telemetry in regression tests; verify explanation rendering.
+- [x] Pass 121 backend unit tests, 17 relevant dedicated PostgreSQL integration
+  tests, 110 frontend tests, production build, changed Python Ruff and diff checks.
+- [x] Restart only the verified API; confirm actual NPE now reports moderate at
+  ~33.5%, retaining its recorded toll. Restore the previously running demo feed.
+- [x] Update V3 guidance; preserve legacy harnesses, existing user changes, pricing
+  policy and history. No dependency install, model/hardware test or Git publishing.
+
+See `docs/V3_CONGESTION_LABEL_FIX.md` for cause, contract and verification evidence.
+
 ## AD. Simulator event repricing — 2026-10-09
 
 - [x] Identify stale low price: normal traffic interval/hysteresis applied to each

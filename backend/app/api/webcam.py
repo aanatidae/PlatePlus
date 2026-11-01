@@ -7,10 +7,10 @@ from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from alpr.ocr.paddleocr_recognizer import PaddleOcrPlateRecognizer
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.api.auth import require_admin
 from app.core.settings import Settings
@@ -18,10 +18,9 @@ from app.db.session import get_db
 from app.models import TollLocation, TollTransaction
 from app.schemas.webcam import WebcamBoundingBox, WebcamFrameResult
 from app.services.detection.gemini_fallback import GeminiFallback
+from app.services.detection.inference_worker import InferenceConfig, IsolatedFrameProcessor
 from app.services.detection.webcam_processor import (
     FrameProcessorError,
-    WebcamFrameProcessor,
-    YoloPlateDetector,
 )
 from app.services.detection.webcam_service import WebcamService
 from app.services.traffic.webcam_crossings import (
@@ -36,13 +35,12 @@ router = APIRouter(
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"}
 settings = Settings()
 fallback = GeminiFallback(settings)
+processor = IsolatedFrameProcessor(InferenceConfig(
+    settings.yolo_model_path.resolve(), settings.paddleocr_model_storage.resolve(),
+    settings.detection_confidence_threshold, settings.ocr_confidence_threshold,
+), settings.local_inference_timeout_seconds)
 service = WebcamService(
-    WebcamFrameProcessor(
-        YoloPlateDetector(settings.yolo_model_path, settings.detection_confidence_threshold),
-        PaddleOcrPlateRecognizer(settings.paddleocr_model_storage),
-        settings.detection_confidence_threshold,
-        settings.ocr_confidence_threshold,
-    ),
+    processor,
     settings.webcam_duplicate_cooldown_seconds,
 )
 
@@ -110,7 +108,7 @@ async def process_frame(
     if len(frame_bytes) > settings.webcam_max_frame_bytes:
         raise HTTPException(status_code=413, detail="Webcam frame exceeds the local size limit.")
     try:
-        result = service.process_frame(session_id, frame_bytes)
+        result = await run_in_threadpool(service.process_frame, session_id, frame_bytes)
     except FrameProcessorError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
 
@@ -199,7 +197,7 @@ async def process_image(
     if previous is not None:
         return previous
     try:
-        result = service.process_image(image_bytes)
+        result = await run_in_threadpool(service.process_image, image_bytes)
     except FrameProcessorError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
 

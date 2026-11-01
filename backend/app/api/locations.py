@@ -77,6 +77,8 @@ def get_location(location_id: UUID, database: DatabaseSession):
 
 
 def _state(database: Session, location: TollLocation) -> dict:
+    from app.services.traffic.simulation import rule_for_congestion
+
     if location.status == "retired":
         return {"location": location, "telemetry": None,
                 "telemetry_source": "retired", "metrics": {}}
@@ -130,16 +132,22 @@ def _state(database: Session, location: TollLocation) -> dict:
                 "vehicles_per_hour": traffic.vehicle_count,
                 "road_capacity": traffic.road_capacity,
                 "congestion_percentage": traffic.congestion_percentage,
-                "congestion_category": traffic.congestion_category,
             }
         )
         source = "persisted"
         from app.services.traffic.simulation import average_speed_for_profile
 
         fallback["average_speed_kmh"] = average_speed_for_profile(location, traffic.congestion_percentage)
+    # Traffic status describes the displayed percentage under the current rules.
+    # A persisted price may retain an earlier band because of pricing safeguards
+    # or because the current traffic is a time-profile fallback.
+    fallback["congestion_category"] = rule_for_congestion(
+        rules, fallback["congestion_percentage"]
+    ).congestion_category
+    fallback["pricing_category"] = fallback["congestion_category"]
     if price:
         fallback["current_toll_price"] = price.amount
-        fallback["congestion_category"] = price.congestion_category
+        fallback["pricing_category"] = price.congestion_category
         fallback["congestion_multiplier"] = (price.amount / location.base_toll).quantize(Decimal("0.01")) if location.base_toll else Decimal(1)
         source = "persisted" if traffic else "mixed"
     fallback["plaza_status"] = location.status

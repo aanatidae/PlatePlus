@@ -8,8 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
 from app.api.database import router as database_router
-from app.api.live import router as live_router
 from app.api.intelligence import router as intelligence_router
+from app.api.live import router as live_router
 from app.api.locations import router as locations_router
 from app.api.operations import router as operations_router
 from app.api.traffic import router as traffic_router
@@ -23,6 +23,12 @@ async def lifespan(app):
     yield
     from app.services.demo_feed import demo_feed
     demo_feed.pause()
+    if settings.enable_local_webcam:
+        from starlette.concurrency import run_in_threadpool
+
+        from app.api.webcam import processor
+
+        await run_in_threadpool(processor.close)
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 app.add_middleware(

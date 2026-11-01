@@ -1,5 +1,37 @@
 # PlatePlus V3 Implementation Plan
 
+## Upload stall containment and recovery — 2026-11-01
+
+Completed local native-inference isolation, bounded timeout/worker replacement and
+browser request cancellation with persistent safe retry identity. Slow/hung scans
+cannot occupy the API event loop or make a late payment after worker timeout.
+Actual cached fictional MY/SG scans, concurrent live health/location checks,
+idempotent replay, synthetic hang/crash/busy recovery and browser refresh/retry
+checks passed, alongside backend/database/frontend regressions and build. The API
+was recovered without resetting history, changing dependencies or invoking Gemini.
+See `docs/V3_UPLOAD_RECOVERY.md`.
+
+## Map viewport and route geometry — 2026-11-01
+
+Completed independent map sizing and continuous boundary-to-boundary highway paths.
+Long recognition/payment outcomes can expand the details panel while map dimensions
+remain stable. Lightweight SVG roads now use pavement, edges, dashed centre markings
+and outline clipping; HTML route labels retain their proportions across viewports.
+Four-size installed-Edge checks, 110 frontend tests and production build passed.
+Existing map interactions, toll locations and simulated processing remain intact.
+See `docs/V3_MAP_LAYOUT.md`.
+
+## Congestion label consistency — 2026-11-01
+
+Completed separation of normal live traffic classification from stored pricing
+bands. Map, selected-location and current Overview/Prediction telemetry use the
+configured range for the displayed percentage; the pricing explanation retains
+the recorded price band independently. Verified actual NPE mixed telemetry changes
+from high to moderate at ~33.5% while preserving its recorded RM5.60 toll. Existing
+pricing safeguards and Simulator behavior are unchanged. 121 backend unit tests,
+17 targeted PostgreSQL tests, 110 frontend tests, build and Ruff passed. Local API
+restarted and feed running state restored. See `docs/V3_CONGESTION_LABEL_FIX.md`.
+
 ## Simulator congestion repricing fix — 2026-10-09
 
 Completed event-driven Simulator repricing before payment and persistent expiry

@@ -1,6 +1,7 @@
 type PricingTelemetry = {
   congestion_percentage: number;
   congestion_category: string;
+  pricing_category?: string;
   current_toll_price: number;
   base_toll_price?: number;
   congestion_multiplier?: number;
@@ -16,6 +17,8 @@ export function PricingExplanation({ telemetry, source, compact = false }: { tel
   const webcam = source === "webcam_alpr";
   const base = Number(telemetry.base_toll_price ?? 0);
   const multiplier = Number(telemetry.congestion_multiplier ?? 0);
+  const pricingCategory = telemetry.pricing_category ?? telemetry.congestion_category;
+  const differentBand = label(pricingCategory) !== label(telemetry.congestion_category);
   return <details className={`pricing-explanation ${compact ? "compact" : ""}`}>
     <summary>Why this price?</summary>
     <div className="price-chain" aria-label="Current toll pricing decision">
@@ -23,12 +26,13 @@ export function PricingExplanation({ telemetry, source, compact = false }: { tel
       <span className="chain-arrow" aria-hidden="true">↓</span>
       <div><span>Congestion</span><strong>{Number(telemetry.congestion_percentage).toFixed(1)}%</strong></div>
       <span className="chain-arrow" aria-hidden="true">↓</span>
-      <div><span>Pricing band</span><strong>{label(telemetry.congestion_category)}</strong></div>
+      <div><span>Pricing band</span><strong>{label(pricingCategory)}</strong></div>
       <span className="chain-arrow" aria-hidden="true">↓</span>
       <div><span>Base toll × multiplier</span><strong>{base > 0 && multiplier > 0 ? `${money(base)} × ${multiplier.toFixed(2)}` : "Authoritative pricing rule"}</strong></div>
       <span className="chain-arrow" aria-hidden="true">↓</span>
       <div className="price-chain-result"><span>Dynamic toll</span><strong>{money(telemetry.current_toll_price)}</strong></div>
     </div>
+    {differentBand && <p className="field-note">Current congestion is {label(telemetry.congestion_category)}; the recorded toll uses the {label(pricingCategory)} pricing band. The recorded toll remains in effect until repriced.</p>}
     <p className="field-note">Congestion pricing is rule-based and subject to the configured price limits, change interval, and hysteresis. Plate origin does not change its band or multiplier. A separately configured simulated foreign-vehicle charge is added only to an eligible Singaporean transaction; its charge breakdown shows the final total.</p>
   </details>;
 }

@@ -180,3 +180,26 @@ default is a simulated proposal example, not an official fee. Changing it affect
 future transactions, not stored charges, congestion bands or Prediction.
 See [API contracts](API.md), [schema](DATABASE_SCHEMA.md) and
 [origin rules](PLATE_ORIGIN.md).
+
+## Local upload timeout and recovery
+
+Local YOLO/PaddleOCR scans run in one cached worker process. The first scan may
+take longer while models initialize; later scans reuse them. The API and dashboard
+remain responsive during inference. A stalled scan stops after
+`LOCAL_INFERENCE_TIMEOUT_SECONDS` (default 60 seconds, configurable from 1 to 120)
+and returns a readable error before any simulated payment. Retry the image to
+start a fresh worker. A concurrent scan receives a busy response rather than
+joining an unlimited queue.
+
+The browser request is bounded to 150 seconds, including optional external fallback
+and response transport. Clearing the image or leaving its view stops the browser's
+wait; this alone does not prove that an already submitted event made no payment.
+Retrying the same image after an uncertain response or page refresh reuses its
+pending event key and retrieves any completed result without another deduction.
+Only an image-content hash and random key are kept in this browser session; the
+image and filename are not stored. Choose the image again after refreshing.
+
+No dependency installation, model download, training or migration is needed for
+this change. Restart the local API once to load updated backend code; the existing
+frontend development server reloads its changes. See
+[upload recovery verification](V3_UPLOAD_RECOVERY.md).

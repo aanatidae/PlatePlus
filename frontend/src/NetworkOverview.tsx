@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { LocateFixed, MapPin, RotateCcw } from "lucide-react";
 import { locationPath, useFeed, useLocations, type TollLocation } from "./locations";
 import { mapPositionForLocation, NETWORK_ROUTES, SELANGOR_OUTLINE } from "./selangorNetwork";
@@ -54,6 +54,7 @@ export default function NetworkOverview() {
   const canonical = selected === "all" ? data : network.data;
   const [now, setNow] = useState(Date.now());
   const mapRef = useRef<HTMLDivElement>(null);
+  const roadClipId = useId();
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [view, setView] = useState({ x: 0, y: 0, zoom: 1 });
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 10_000); return () => window.clearInterval(timer); }, []);
@@ -132,7 +133,18 @@ export default function NetworkOverview() {
       <div className="network-layout"><div ref={mapRef} className="network-map selangor-map" aria-label="Stylized Selangor toll-road network" onPointerDown={(event) => { if ((event.target as HTMLElement).closest("button")) return; drag.current = { x: event.clientX - view.x, y: event.clientY - view.y }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (drag.current) setView(previous => ({ ...previous, x: event.clientX - drag.current!.x, y: event.clientY - drag.current!.y })); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onWheel={(event) => { event.preventDefault(); setView(previous => ({ ...previous, zoom: Math.max(.9, Math.min(1.25, previous.zoom + (event.deltaY < 0 ? .07 : -.07))) })); }}>
         <div className="map-toolbar"><span>SELANGOR · SIMULATED NETWORK · NOT TO SCALE</span><button className="map-tool" onClick={fitNetwork} title="Fit network" aria-label="Fit the whole toll network"><LocateFixed size={15} /></button><button className="map-tool" onClick={fitNetwork} title="Reset view" aria-label="Reset network map view"><RotateCcw size={14} /></button></div>
         <div className="map-canvas" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` }}>
-          <svg className="selangor-routes" viewBox="0 0 700 400" preserveAspectRatio="none" aria-hidden="true"><path className="selangor-outline" d={SELANGOR_OUTLINE} />{NETWORK_ROUTES.map(route => <g key={route.id} className={`route ${selectedRoute === route.id ? "route-selected" : ""}`}><path d={route.path} /><text x={route.labelX} y={route.labelY}>{route.label}</text></g>)}</svg>
+          <svg className="selangor-routes" viewBox="0 0 700 400" preserveAspectRatio="none" aria-hidden="true">
+            <defs><clipPath id={roadClipId}><path d={SELANGOR_OUTLINE} /></clipPath></defs>
+            <path className="selangor-outline" d={SELANGOR_OUTLINE} />
+            <g clipPath={`url(#${roadClipId})`}>{NETWORK_ROUTES.map(route => <g key={route.id} data-route={route.id} className={`route ${selectedRoute === route.id ? "route-selected" : ""}`}>
+              <path className="road-shadow" d={route.path} />
+              <path className="road-edge" d={route.path} />
+              <path className="road-surface" d={route.path} />
+              <path className="road-markings" d={route.path} />
+            </g>)}</g>
+            <path className="selangor-boundary" d={SELANGOR_OUTLINE} />
+          </svg>
+          {NETWORK_ROUTES.map(route => <span key={route.id} className={`network-route-label ${selectedRoute === route.id ? "selected" : ""}`} style={{ left: `${route.labelX / 7}%`, top: `${route.labelY / 4}%` }} aria-hidden="true">{route.label}</span>)}
         {locations.map(location => {
           const state = states.find(item => item.location.id === location.id);
           const tone = state?.telemetry?.congestion_category ?? "unavailable";

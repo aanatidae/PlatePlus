@@ -2,6 +2,7 @@
 // Provider results are synthetic; the browser never contacts Gemini.
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+import { webcrypto } from "node:crypto";
 import { AlprResultDetails } from "./AlprResultDetails";
 import { SimulatorImageUpload } from "./SimulatorImageUpload";
 
@@ -17,6 +18,7 @@ it("shows external recognition and origin evidence separately from local confide
 });
 
 it("discloses external processing and sends uploads only to PlatePlus", async () => {
+  vi.stubGlobal("crypto", webcrypto);
   vi.stubGlobal("URL", class extends URL { static createObjectURL = () => "blob:fixture"; static revokeObjectURL = vi.fn(); });
   const fetch = vi.fn(async () => new Response(JSON.stringify({ status: "no_plate_detected", message: "Gemini fallback unavailable. No simulated payment made.", fallback_status: "gemini_unavailable" })));
   vi.stubGlobal("fetch", fetch);

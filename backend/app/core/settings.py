@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     webcam_frame_interval_ms: int = 750
     webcam_duplicate_cooldown_seconds: float = 20.0
     webcam_max_frame_bytes: int = 5_000_000
+    local_inference_timeout_seconds: float = Field(default=60, ge=1, le=120)
     paddleocr_model_storage: Path = Path("../models/paddleocr")
     enable_gemini_fallback: bool = False
     gemini_model: str = "gemini-3.5-flash"
